@@ -2,13 +2,6 @@
 
 //
 #ifdef ESP32
-#include <WiFi.h>
-#else
-#include <ESP8266WiFi.h>
-#endif
-
-//
-#ifdef ESP32
 #include <ESP32Time.h>
 #endif
 
@@ -24,6 +17,9 @@ static bool DS1307_INITIALIZED = false;
 //
 #include <NTPClient.h>
 #include <Time.h>
+
+//
+#include "wifi.hpp"
 #include "timed.hpp"
 
 //
@@ -104,7 +100,7 @@ static ESP32Time rtc;
 //
 void _syncTime_() {
     // set correct timezone
-    if (WiFi.status() == WL_CONNECTED) {
+    if (WiFiConnected()) {
         timeClient.begin();
         timeClient.setTimeOffset(3600 * 7);
     }
@@ -113,7 +109,7 @@ void _syncTime_() {
     Serial.println("Syncing time...");
 
     //
-    if (WiFi.status() == WL_CONNECTED && (timeClient.isTimeSet() || timeClient.update())) {
+    if (WiFiConnected() && (timeClient.isTimeSet() || timeClient.update())) {
         Serial.println("Through NTP...");
 #ifdef ENABLE_DS1307
         ds1307_setEpoch(timeClient.getEpochTime());
@@ -149,7 +145,7 @@ time_t _getTime_() {
     }
 #else
 
-    if (WiFi.status() == WL_CONNECTED && (timeClient.update() || timeClient.isTimeSet())) {
+    if (WiFiConnected() && (timeClient.update() || timeClient.isTimeSet())) {
         Serial.println("Through NTP...");
         return time_t(timeClient.getEpochTime());
     } 

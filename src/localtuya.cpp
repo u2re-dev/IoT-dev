@@ -14,21 +14,9 @@
 //#define ARDUINO_HTTP_SERVER_NO_BASIC_AUTH
 //#include <Base64.h>
 //#include <ArduinoHttpServer.h>
-#include <ESPAsyncWebServer.h>
-#include <Arduino.h>
 
-//
+#include <Arduino.h>
 #include <Wire.h>
-#include <OLEDDisplay.h>
-#include <OLEDDisplayFonts.h>
-#include <OLEDDisplayUi.h>
-#include <SH1106.h>
-#include <SH1106Spi.h>
-#include <SH1106Wire.h>
-#include <SSD1306.h>
-#include <SSD1306I2C.h>
-#include <SSD1306Spi.h>
-#include <SSD1306Wire.h>
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
@@ -44,13 +32,10 @@
 //#define DHTTYPE DHT11
 //DHT dht(DHTPIN, DHTTYPE);
 #include "tuya.hpp"
+#include "display.hpp"
 
 //
-#ifdef ESP32
-#include <thread>
-#include <SimplyAtomic.h>
-#endif
-
+#include <ESPAsyncWebServer.h>
 
 //
 #ifdef ESP32
@@ -60,34 +45,9 @@ static const int CS_PIN = 15;
 #endif
 
 //
-static std::atomic<unsigned long> previousMillis;
-static const unsigned long interval = 60000;
-
-//
-#ifdef ESP32
-static WiFiEventId_t wifiConnectHandler;
-static WiFiEventId_t wifiDisconnectHandler;
-#else
-static WiFiEventHandler wifiConnectHandler;
-static WiFiEventHandler wifiDisconnectHandler;
-#endif
-
-//
-static _NvString_<15> ssid("ssid");
-static _NvString_<15> password("password");
-
-// Initialize the OLED display using Wire library
-static SSD1306Wire display(0x3c, SDA, SCL);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
-static OLEDDisplayUi ui( &display );
-
-//
 static const uint16_t kRecvPin = 27;
 static IRrecv irrecv(kRecvPin);
 static decode_results results;
-
-//
-static std::atomic<bool> CONNECTED; //= false;
-//std::atomic<bool> LOADING_SD;// = true;
 static nv_bool LOADING_SD;
 
 //
@@ -96,155 +56,12 @@ void handleIR();
 //
 static AsyncWebServer server(80);
 
-//
-void switchScreen(bool dbg, uint dvID);
 
-//
-#ifndef ESP32
-void onWifiConnect(const WiFiEventStationModeGotIP& event) 
-#else
-void onWifiConnect(WiFiEvent_t event, WiFiEventInfo_t info)
-#endif
-{
-    Serial.println("Connected to Wi-Fi sucessfully.");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-
-    //
-    _screen_[0]._LINE_1_= "Connected to WiFi!";
-    _screen_[0]._LINE_2_= WiFi.localIP().toString();
-
-    //
-    Serial.print("RRSI: ");
-    Serial.println(WiFi.RSSI());
-
-    //
-    //WiFi.persistent(true);
-    //WiFi.setAutoConnect(true);
-    //WiFi.setAutoReconnect(true);
-
-    //ATOMIC() {
-    //
-    //switchScreen(false, CURRENT_DEVICE);
-    //server.begin();
-    CONNECTED = true;
-    //}
-}
-
-//
-#ifndef ESP32
-void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) 
-#else
-void onWifiDisconnect(WiFiEvent_t event, WiFiEventInfo_t info)
-#endif
-{
-    //server.end();
-
-    //
-    //ATOMIC() {
-        CONNECTED = false;
-        _screen_[0]._LINE_2_= "Disconnected...";
-        Serial.println("Disconnected from Wi-Fi, trying to connect...");
-        //switchScreen(true, CURRENT_DEVICE);
-    //}
-    //server.end();
-
-    
-
-    //
-    //WiFi.disconnect(true);
-    WiFi.begin(ssid, password);
-    WiFi.reconnect();
-    
-    //WiFi.disconnect(true);
-    //initWiFi();
-    //WiFi.reconnect();
-}
-
-//
-void initWiFi() {
-#ifndef ESP32
-    Serial.println("Workaround WiFi...");
-    WiFi.persistent(false);
-    WiFi.setAutoConnect(false);
-    WiFi.setAutoReconnect(false);
-    WiFi.printDiag(Serial);
-    WiFi.mode(WIFI_OFF); //workaround
-    WiFi.mode(WIFI_STA);
-
-    //
-    WiFi.disconnect(true);
-    WiFi.enableSTA(true);
-#endif
-
-    //Register event handlers
-    Serial.println("WiFi events...");
-#ifndef ESP32
-    wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-    wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-#else
-    //Serial.println("WiFi events...");
-    //WiFi.onEvent(WiFiEvent);
-    //WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
-
-    wifiDisconnectHandler = WiFi.onEvent(onWifiDisconnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
-    wifiConnectHandler = WiFi.onEvent(onWifiConnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
-#endif
-
-    Serial.println("Connecting to WiFi...");
-    WiFi.begin(ssid, password);
-    
-    //WiFi.reconnect();
-    
-
-    //
-#ifndef ESP32
-    while (!(WiFi.localIP().isSet() || WiFi.status() == WL_CONNECTED))
-#else
-    while (WiFi.status() != WL_CONNECTED) 
-#endif
-    {
-        handleIR();
-#ifndef ESP32
-        ui.update();
-#endif
-        delay(1);
-    }
-}
-
-//
-void handleWiFi() {
-
-}
 
 //
 static TuyaDevice3 device[2] = { TuyaDevice3(&_screen_[1], "dev0"), TuyaDevice3(&_screen_[2], "dev1") };
 
-//
-void switchScreen(bool dbg, uint dvID) {
-    if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
-        ui.switchToFrame(DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
-        DEBUG_SCREEN = dbg;
-        CURRENT_DEVICE = max(min(dvID, 1u), 0u);
-        ui.setFrameAnimation(/*SLIDE_LEFT*/SLIDE_LEFT);
-        ui.setTimePerTransition(0);
-        ui.transitionToFrame(dbg ? 0 : max(min(dvID+1, 2u), 1u));
-        ui.setTimePerTransition(400);
-    }
-}
 
-//
-#ifdef ESP32
-std::thread displayTask;
-void displayThread() {
-    while(true) {
-        //ATOMIC() {
-            ui.update();
-        //}
-        delay(1);
-    }
-}
-#endif
 
 //
 static const char *filename = "/keys.json";  // <- SD library uses 8.3 filenames
@@ -447,203 +264,6 @@ void handleIR() {
 }
 
 //
-void _drawScreen_(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, uint SCREEN_ID) {
-    display->setFont(ArialMT_Plain_10);
-    display->setTextAlignment(TEXT_ALIGN_LEFT);
-
-    //
-    display->drawString(0 + x, 11 + y, _screen_[SCREEN_ID]._LINE_1_.toString());
-    display->drawString(0 + x, 22 + y, _screen_[SCREEN_ID]._LINE_2_.toString());
-    display->drawString(0 + x, 33 + y, _screen_[SCREEN_ID]._LINE_3_.toString());
-}
-
-//
-void drawS0(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-    _drawScreen_(display, state, x, y, 0);
-}
-
-//
-void drawS1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-    _drawScreen_(display, state, x, y, 1);
-}
-
-//
-void drawS2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-    _drawScreen_(display, state, x, y, 2);
-}
-
-//
-void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
-    display->setTextAlignment(TEXT_ALIGN_RIGHT);
-    display->setFont(ArialMT_Plain_10);
-    time_t _time_ = getTime();
-    display->drawString(128, 0, String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60));
-
-    display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->setFont(ArialMT_Plain_10);
-    display->drawString(0, 0, DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)));
-}
-
-//
-static FrameCallback frames[] = { drawS0, drawS1, drawS2 };
-static OverlayCallback overlays[] = { msOverlay };
-
-//
-void initDisplay() {
-    // The ESP is capable of rendering 60fps in 80Mhz mode
-    // but that won't give you much time for anything else
-    // run it in 160Mhz mode or just set it to 30 fps
-    ui.setTargetFPS(60);
-    //ui.setActiveSymbol(activeSymbol);
-    //ui.setInactiveSymbol(inactiveSymbol);
-    ui.setIndicatorPosition(BOTTOM);
-    ui.setIndicatorDirection(LEFT_RIGHT);
-    ui.setFrameAnimation(SLIDE_LEFT);
-    ui.setFrames(frames, 3);
-    ui.disableAutoTransition();
-    ui.setOverlays(overlays, 1);
-    ui.init();
-
-    //
-    display.flipScreenVertically();
-    display.setFont(ArialMT_Plain_10);
-    display.setTextAlignment(TEXT_ALIGN_LEFT);
-#ifndef ESP32
-    ui.update();
-#endif
-}
-
-/*
-#ifdef ESP32
-void WiFiEvent(WiFiEvent_t event)
-{
-    Serial.printf("[WiFi-event] event: %d\n", event);
-
-    switch (event) {
-        case ARDUINO_EVENT_WIFI_READY: 
-            Serial.println("WiFi interface ready");
-            break;
-        case ARDUINO_EVENT_WIFI_SCAN_DONE:
-            Serial.println("Completed scan for access points");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_START:
-            Serial.println("WiFi client started");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_STOP:
-            Serial.println("WiFi clients stopped");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-            Serial.println("Connected to access point");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-            Serial.println("Disconnected from WiFi access point");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
-            Serial.println("Authentication mode of access point has changed");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-            Serial.print("Obtained IP address: ");
-            Serial.println(WiFi.localIP());
-            break;
-        case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-            Serial.println("Lost IP address and IP address is reset to 0");
-            break;
-        case ARDUINO_EVENT_WPS_ER_SUCCESS:
-            Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode");
-            break;
-        case ARDUINO_EVENT_WPS_ER_FAILED:
-            Serial.println("WiFi Protected Setup (WPS): failed in enrollee mode");
-            break;
-        case ARDUINO_EVENT_WPS_ER_TIMEOUT:
-            Serial.println("WiFi Protected Setup (WPS): timeout in enrollee mode");
-            break;
-        case ARDUINO_EVENT_WPS_ER_PIN:
-            Serial.println("WiFi Protected Setup (WPS): pin code in enrollee mode");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_START:
-            Serial.println("WiFi access point started");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_STOP:
-            Serial.println("WiFi access point  stopped");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
-            Serial.println("Client connected");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-            Serial.println("Client disconnected");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-            Serial.println("Assigned IP address to client");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
-            Serial.println("Received probe request");
-            break;
-        case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
-            Serial.println("AP IPv6 is preferred");
-            break;
-        case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-            Serial.println("STA IPv6 is preferred");
-            break;
-        case ARDUINO_EVENT_ETH_GOT_IP6:
-            Serial.println("Ethernet IPv6 is preferred");
-            break;
-        case ARDUINO_EVENT_ETH_START:
-            Serial.println("Ethernet started");
-            break;
-        case ARDUINO_EVENT_ETH_STOP:
-            Serial.println("Ethernet stopped");
-            break;
-        case ARDUINO_EVENT_ETH_CONNECTED:
-            Serial.println("Ethernet connected");
-            break;
-        case ARDUINO_EVENT_ETH_DISCONNECTED:
-            Serial.println("Ethernet disconnected");
-            break;
-        case ARDUINO_EVENT_ETH_GOT_IP:
-            Serial.println("Obtained IP address");
-            break;
-        default: break;
-    }}
-#endif
-*/
-
-//
-void handleServer() {
-  /*
-#ifndef ESP32
-    if (WiFi.localIP().isSet() || WiFi.status() == WL_CONNECTED)
-#else
-    if (WiFi.status() == WL_CONNECTED) 
-#endif
-    {
-        //if (server.hasClient()) {
-            WiFiClient client = server.available();
-            if (client) {
-                if (client.connected()) {
-                    if (client.available()) {
-                        size_t _len_ = client.available(); char* _buf_ = (char*)calloc(1, _len_);
-                        client.readBytes(_buf_, _len_);
-                        Serial.println(cString(_buf_, _len_));
-                        free(_buf_);
-
-                        //ArduinoHttpServer::StreamHttpRequest<512> request(client);
-                        //bool success = request.readRequest();
-                        //if (success)
-                        {
-                            //const char *body = request.getBody();
-                            //const String& fn3 = request.getResource()[3];
-                            
-                            //
-                            //Serial.println(body);
-                        }
-                    }
-                }
-            }
-        //}
-    }*/
-}
-
-//
 void setup() {
     //
     //EEPROM.begin(48);
@@ -742,6 +362,16 @@ void setup() {
     initWiFi();
 
     //
+    while (!WiFiConnected())
+    {
+        handleIR();
+#ifndef ESP32
+        ui.update();
+#endif
+        delay(1);
+    }
+
+    //
     Serial.println("Setting timer...");
 
     //
@@ -831,13 +461,7 @@ void loop() {
     handleWiFi();
     _syncTimeFn_();
 
-//
-#ifndef ESP32
-    if (WiFi.localIP().isSet() || WiFi.status() == WL_CONNECTED)
-#else
-    if (WiFi.status() == WL_CONNECTED) 
-#endif
-    {
+    if (WiFiConnected()) {
         timeClient.update();
 
         //

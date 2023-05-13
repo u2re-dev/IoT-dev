@@ -7,7 +7,8 @@
 #include "timed.hpp"
 #include "rtc.hpp"
 #include "net_com.hpp"
-#include "display.hpp"
+#include "screen.hpp"
+#include "wifi.hpp"
 
 //#include <ArduinoWebsockets.h>
 #include <Arduino_JSON.h>
@@ -299,11 +300,7 @@ public:
         }
 
         //
-#ifndef ESP32
-        if ((WiFi.status() == WL_CONNECTED || WiFi.localIP().isSet()) && !client.connected()) 
-#else
-        if ((WiFi.status() == WL_CONNECTED) && !client.connected()) 
-#endif
+        if (WiFiConnected() && !client.connected()) 
         {
             //md5String(_udp_key, _udp_key_md5_);
             if (client.connect(IP_ADDRESS, 6668)) {
