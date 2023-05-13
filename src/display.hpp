@@ -102,6 +102,9 @@ static OverlayCallback overlays[] = { msOverlay };
 
 //
 void initDisplay() {
+    //
+    Serial.println("Init Display...");
+
     // The ESP is capable of rendering 60fps in 80Mhz mode
     // but that won't give you much time for anything else
     // run it in 160Mhz mode or just set it to 30 fps
@@ -122,6 +125,12 @@ void initDisplay() {
     display.setTextAlignment(TEXT_ALIGN_LEFT);
 #ifndef ESP32
     ui.update();
+#endif
+
+    //
+#ifdef ESP32
+    Serial.println("Pinning to Core...");
+    displayTask = std::thread(displayThread);
 #endif
 }
 

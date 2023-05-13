@@ -186,3 +186,53 @@ unsigned long getTime() {
     return _current_time_ + (_syncTimeFn_.millisSince()/1000);
 }
 
+void initRTC() {
+    
+    // Initialize I2C
+    Wire1.setPins(21, 22);
+    Wire1.setClock(3400 * 1000);
+    Wire1.begin();
+
+    //
+    time_t compiled = cvt_date(__DATE__, __TIME__);
+    Serial.println("Compiled Epoch: " + String(compiled));
+
+    //
+#ifdef ENABLE_DS1307
+    if (ds1307.autoprobe()) {
+        ds1307.init();
+
+        //
+        DS1307_INITIALIZED = true;
+
+        //
+        time_t now = ds1307_getEpoch();
+        Serial.println("RTC Epoch: " + String(now));
+
+        //
+        if (compiled > now) {
+            Serial.println("RTC DS1307 has wrong time, reset...");
+            ds1307_setEpoch(compiled);
+        }
+    } else {
+        DS1307_INITIALIZED = false;
+    }
+#endif
+
+    //
+#ifdef ESP32
+    time_t inow = rtc.getEpoch();
+#ifdef ENABLE_DS1307
+    time_t icom = max(compiled, ds1307_getEpoch());
+#else
+    time_t icom = compiled;
+#endif
+    Serial.println("ESP32 RTC Epoch: " + String(inow));
+    if (icom > inow) {
+        Serial.println("Internal RTC has wrong time, reset...");
+        rtc.setTime(icom);
+    }
+#endif
+
+    _syncTimeFn_();
+}

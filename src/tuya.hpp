@@ -1,6 +1,16 @@
 #pragma once
 
 //
+#include "aes.hpp"
+#ifndef ESP32
+#include "crc.hpp"
+#else
+#include <esp32/rom/crc.h>
+#endif
+#include "sha256.hpp"
+#include "md5.hpp"
+
+//
 #include "f_string.hpp"
 #include "nv_typed.hpp"
 #include "nv_string.hpp"
@@ -12,16 +22,6 @@
 
 //#include <ArduinoWebsockets.h>
 #include <Arduino_JSON.h>
-
-//
-#include "aes.hpp"
-#ifndef ESP32
-#include "crc.hpp"
-#else
-#include <esp32/rom/crc.h>
-#endif
-#include "sha256.hpp"
-#include "md5.hpp"
 
 //
 static const uint8_t prefix[4] = {0x00, 0x00, 0x55, 0xAA};

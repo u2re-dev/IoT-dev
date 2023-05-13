@@ -19,3 +19,9 @@ struct SCREEN {
 static SCREEN _screen_[3];
 static std::atomic<uint> CURRENT_DEVICE; //= 0;
 static std::atomic<bool> DEBUG_SCREEN;// = true;
+
+//
+void initScreen() {
+    CURRENT_DEVICE = 0;
+    DEBUG_SCREEN = true;
+}
