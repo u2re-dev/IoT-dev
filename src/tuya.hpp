@@ -22,18 +22,6 @@
 #include "sha256.hpp"
 #include "md5.hpp"
 
-
-
-
-
-
-//
-static const uint8_t zero_md5[12] = {
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00
-};
-
 //
 static const uint8_t prefix[4] = {0x00, 0x00, 0x55, 0xAA};
 static const uint8_t suffix[4] = {0x00, 0x00, 0xAA, 0x55};
@@ -45,8 +33,6 @@ static uint8_t _udp_key_md5_[16];
 //
 static const _String_<16> _udp_key = "yGAdlopoPVldABfn";
 static const _String_<16> _local_nonce_ = "0123456789abcdef";
-
-
 
 //
 class TuyaDevice3 {
