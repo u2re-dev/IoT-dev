@@ -457,6 +457,7 @@ public:
             size_t _s_length_ = _string_.length();
             uint8_t* _data_ = encryptJson((uint8_t*)_local_key_.c_str(), _string_, _s_length_);
             if (!_sending_) { _sending_ = (uint8_t*)calloc(1, LIMIT); };
+            if (!_debug_) { _debug_ = (char*)calloc(1, LIMIT<<1); };
             encodeMessage((uint8_t*)_sending_, /*0x0d*/cmdId, _data_, _s_length_, _hmac_key_);
             send(client, (uint8_t const*)_sending_, calculateSizeOfRequest(_s_length_, _hmac_key_));
             lastTime = millis();
@@ -470,6 +471,7 @@ public:
             size_t _s_length_ = _string_.length();
             uint8_t* _data_ = encryptRaw((uint8_t*)_local_key_.c_str(), _string_, _s_length_);
             if (!_sending_) { _sending_ = (uint8_t*)calloc(1, LIMIT); };
+            if (!_debug_) { _debug_ = (char*)calloc(1, LIMIT<<1); };
             encodeMessage((uint8_t*)_sending_, /*0x0d*/cmdId, _data_, _s_length_, _hmac_key_);
             send(client, (uint8_t const*)_sending_, calculateSizeOfRequest(_s_length_, _hmac_key_));
             lastTime = millis();

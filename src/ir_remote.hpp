@@ -80,10 +80,11 @@ void handleIR(TuyaDevice3* device) {
 
                 switchScreen(false, CURRENT_DEVICE);
             } else {
-
+                Serial.println("Trying to send command...");
                 //
                 JSONVar _irMap_ = device[CURRENT_DEVICE].getIRMap();
                 if (_irMap_.hasOwnProperty(cmdCode)) {
+                    Serial.println("Sending command...");
                     if (JSON.typeof(_irMap_[cmdCode]["20"]).startsWith("boolean")) {
                         device[CURRENT_DEVICE].ENABLED = (bool)_irMap_[cmdCode]["20"];
                     }
