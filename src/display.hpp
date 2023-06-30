@@ -28,7 +28,7 @@ void switchScreen(bool dbg, uint dvID);
 
 
 // Initialize the OLED display using Wire library
-static SSD1306Wire display(0x3c, SDA, SCL);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
+static SSD1306Wire display(0x3c, 15, 16/*SDA, SCL*/);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
 static OLEDDisplayUi ui( &display );
 
 //

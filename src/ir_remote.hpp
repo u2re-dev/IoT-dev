@@ -10,7 +10,7 @@
 #include <IRutils.h>
 
 //
-static const uint16_t kRecvPin = 27;
+static const uint16_t kRecvPin = 8;//27;
 static IRrecv irrecv(kRecvPin);
 static decode_results results;
 

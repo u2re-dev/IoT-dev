@@ -6,7 +6,7 @@
 #endif
 
 //
-#define ENABLE_DS1307
+//#define ENABLE_DS1307
 
 //
 #ifdef ENABLE_DS1307

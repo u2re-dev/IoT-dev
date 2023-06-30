@@ -21,7 +21,7 @@ static const char *filename = "/keys.json";
 
 //
 #ifdef ESP32
-static const int CS_PIN = 5;
+static const int CS_PIN = 10;//5;
 #else
 static const int CS_PIN = 15;
 #endif
