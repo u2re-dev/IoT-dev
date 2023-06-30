@@ -7,7 +7,14 @@
 #else
 #include <esp32/rom/crc.h>
 #endif
+
+//
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include "mbedtls/md.h"
+#else
 #include "sha256.hpp"
+#endif
+
 #include "md5.hpp"
 
 //
@@ -151,10 +158,19 @@ protected:
         //
         if (hmac) {
 //#ifndef ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+            mbedtls_md_context_t ctx;
+            mbedtls_md_init(&ctx);
+            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) hmac, 16);
+            mbedtls_md_hmac_update(&ctx, (const unsigned char *) mem, length + wret);
+            mbedtls_md_hmac_finish(&ctx, mem + length + wret);
+            mbedtls_md_free(&ctx);
+#else
             sf_hmac_sha256(hmac, 16, mem, length + wret, mem + length + wret, 32);
+#endif
 //#else
-            //ets_efuse_write_key(ETS_EFUSE_BLOCK_KEY4, ETS_EFUSE_KEY_PURPOSE_HMAC_UP, hmac, 16);
-            //esp_hmac_calculate(HMAC_KEY4, mem, length + wret, mem + length + wret);
+            //
 //#endif
         } else {
 #ifdef ESP32
@@ -561,8 +577,19 @@ public:
                         
     //#else             
                         size_t hlen = 48;
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+                        mbedtls_md_context_t ctx;
+                        mbedtls_md_init(&ctx);
+                        mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+                        mbedtls_md_hmac_starts(&ctx, (const unsigned char *) _local_key_.c_str(), 16);
+                        mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.c_str(), 16);
+                        mbedtls_md_hmac_finish(&ctx, _remote_hmac_);
+                        mbedtls_md_free(&ctx);
+#else
                         sf_hmac_sha256(_local_key_.c_str(), 16, _remote_nonce_.c_str(), 16, _remote_hmac_, hlen);
-    //#endif
+#endif
+
                         AES_ECB_encrypt(&cipher, _remote_hmac_);
                         AES_ECB_encrypt(&cipher, _remote_hmac_ + 16);
                         AES_ECB_encrypt(&cipher, _remote_hmac_ + 32);
