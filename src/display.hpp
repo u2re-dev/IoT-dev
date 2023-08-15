@@ -3,7 +3,7 @@
 //
 #ifdef ESP32
 #include <thread>
-#include <SimplyAtomic.h>
+//#include <SimplyAtomic.h>
 #endif
 
 //
@@ -36,10 +36,10 @@ void switchScreen(bool dbg, uint dvID) {
     if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
         ui.switchToFrame(DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
         DEBUG_SCREEN = dbg;
-        CURRENT_DEVICE = max(min(dvID, 1u), 0u);
+        CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
         ui.setFrameAnimation(/*SLIDE_LEFT*/SLIDE_LEFT);
         ui.setTimePerTransition(0);
-        ui.transitionToFrame(dbg ? 0 : max(min(dvID+1, 2u), 1u));
+        ui.transitionToFrame(dbg ? 0 : std::max(std::min(dvID+1, 2u), 1u));
         ui.setTimePerTransition(400);
     }
 }

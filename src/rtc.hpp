@@ -16,7 +16,7 @@ static bool DS1307_INITIALIZED = false;
 
 //
 #include <NTPClient.h>
-#include <Time.h>
+//#include <Time.h>
 
 //
 #include "wifi.hpp"

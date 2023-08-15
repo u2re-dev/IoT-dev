@@ -1,6 +1,8 @@
 #pragma once
 
 //
+#include <cstdio>
+#include <cstdlib>
 #ifndef _AES_H_
 #define _AES_H_
 
@@ -869,7 +871,7 @@ PKCS7_unPadding* removePadding(const void* const data, const uint64_t dataLength
     unpaddingResult->dataWithoutPadding = data;//dataWithoutPadding;
 
     // paddington law
-    bzero((void*)data + (dataLength - paddingBytesAmount), paddingBytesAmount);
+    bzero((uint8_t*)data + (dataLength - paddingBytesAmount), paddingBytesAmount);
 
     //
     return unpaddingResult;
