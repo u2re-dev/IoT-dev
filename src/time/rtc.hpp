@@ -19,24 +19,14 @@ static bool DS1307_INITIALIZED = false;
 //#include <Time.h>
 
 //
-#include "wifi.hpp"
-#include "timed.hpp"
+#include "../network/wifi.hpp"
+#include "./timed.hpp"
 
 //
 //WiFiUDP client;
 static WiFiUDP ntpUDP;
 static NTPClient timeClient(ntpUDP, "pool.ntp.org");
 static const uint64_t unix_shift = 946684800;
-
-
-//
-/*void setInternalTime(uint64_t epoch = 0, uint32_t us = 0)
-{
-  struct timeval tv;
-  tv.tv_sec = epoch;
-  tv.tv_usec = us;
-  settimeofday(&tv, NULL);
-}*/
 
 //
 int64_t getTimestamp(int year, int mon, int mday, int hour, int min, int sec)
@@ -49,12 +39,6 @@ int64_t getTimestamp(int year, int mon, int mday, int hour, int min, int sec)
     if ( (mon > 2) && (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ) days_since_1970 += 1; /* +Schalttag, wenn Jahr Schaltjahr ist */
     return sec + 60 * (min + 60 * (hour + 24 * days_since_1970) );
 }
-
-// Function that gets current epoch time
-/*unsigned long getTime() {
-  timeClient.update();
-  return timeClient.getEpochTime();
-}*/
 
 //
 #ifdef ENABLE_DS1307

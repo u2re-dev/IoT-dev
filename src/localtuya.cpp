@@ -6,17 +6,15 @@
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
-#include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <ESPAsyncWebServer.h>
+#include "./graphics/display.hpp"
 
 //
-#include "tuya.hpp"
-#include "display.hpp"
-#include "sd_card.hpp"
-#include "ir_remote.hpp"
-#include "http_server.hpp"
+#include "./tuya/tuya.hpp"
+#include "./network/http_server.hpp"
+
+//
+#include "./modules/sd_card.hpp"
+#include "./modules/ir_remote.hpp"
 
 //
 thread_local static JSONVar testProgramTemplate[3];

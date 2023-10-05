@@ -126,23 +126,7 @@ ESP.reset();
     #endif
 }
 
-
-
-/*! \brief Convert RGB to HSV color space
-  
-  Converts a given set of RGB values `r', `g', `b' into HSV
-  coordinates. The input RGB values are in the range [0, 1], and the
-  output HSV values are in the ranges h = [0, 360], and s, v = [0,
-  1], respectively.
-  
-  \param fR Red component, used as input, range: [0, 1]
-  \param fG Green component, used as input, range: [0, 1]
-  \param fB Blue component, used as input, range: [0, 1]
-  \param fH Hue component, used as output, range: [0, 360]
-  \param fS Hue component, used as output, range: [0, 1]
-  \param fV Hue component, used as output, range: [0, 1]
-  
-*/
+//
 void RGBtoHSV(float& fR, float& fG, float fB, float& fH, float& fS, float& fV) {
   float fCMax = max(max(fR, fG), fB);
   float fCMin = min(min(fR, fG), fB);
@@ -175,22 +159,7 @@ void RGBtoHSV(float& fR, float& fG, float fB, float& fH, float& fS, float& fV) {
   }
 }
 
-
-/*! \brief Convert HSV to RGB color space
-  
-  Converts a given set of HSV values `h', `s', `v' into RGB
-  coordinates. The output RGB values are in the range [0, 1], and
-  the input HSV values are in the ranges h = [0, 360], and s, v =
-  [0, 1], respectively.
-  
-  \param fR Red component, used as output, range: [0, 1]
-  \param fG Green component, used as output, range: [0, 1]
-  \param fB Blue component, used as output, range: [0, 1]
-  \param fH Hue component, used as input, range: [0, 360]
-  \param fS Hue component, used as input, range: [0, 1]
-  \param fV Hue component, used as input, range: [0, 1]
-  
-*/
+//
 void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) {
   float fC = fV * fS; // Chroma
   float fHPrime = fmod(fH / 60.0, 6);

@@ -1,9 +1,9 @@
 #pragma once
 
 //
-#include "aes.hpp"
+#include "../crypto/aes.hpp"
 #ifndef ESP32
-#include "crc.hpp"
+#include "../checksum/crc.hpp"
 #else
 #include <esp32/rom/crc.h>
 #endif
@@ -15,17 +15,23 @@
 #include "sha256.hpp"
 #endif
 
-#include "md5.hpp"
+#include "../checksum/md5.hpp"
 
 //
-#include "f_string.hpp"
-#include "nv_typed.hpp"
-#include "nv_string.hpp"
-#include "timed.hpp"
-#include "rtc.hpp"
-#include "net_com.hpp"
-#include "screen.hpp"
-#include "wifi.hpp"
+#include "../utils/f_string.hpp"
+#include "../storage/nv_typed.hpp"
+#include "../storage/nv_string.hpp"
+
+//
+#include "../graphics/screen.hpp"
+
+//
+#include "../time/timed.hpp"
+#include "../time/rtc.hpp"
+
+//
+#include "../network/net_com.hpp"
+#include "../network/wifi.hpp"
 
 //#include <ArduinoWebsockets.h>
 #include <Arduino_JSON.h>
@@ -137,25 +143,10 @@ protected:
 
         //
         *(uint32_t*)(mem + 12) = bswap32(length+(hmac ? 32 : 4)+4);
+        memcpy(mem + wret, buf, length);
 
-        //
-        /*if (protocol33) {
-            uint8_t* mem_ = mem + wret;
-            memcpy(mem_, String("3.3").c_str(), 3);
-            bzero(mem_ + 3, 12);
-            memcpy(mem_ + 3 + 12, buf, length);
-            length = 12+3+length;
-        } else {*/
-            memcpy(mem + wret, buf, length);
-        //}
-// 
         //
         if (_padding_) { freePaddingResult(_padding_); }; _padding_ = 0;
-
-        //
-        //Serial.println("Calculation CRC32!");
-
-        //
         if (hmac) {
 //#ifndef ESP32
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -237,9 +228,6 @@ protected:
         }
 
         //
-        //Serial.println("Encrypted JSON!");
-
-        //
         return (uint8_t*)data_;
     }
 
@@ -284,22 +272,6 @@ protected:
 public: 
 
     //
-    /*void setAutoProgram(std::function<void(TuyaDevice3&)> program, unsigned programInterval = 2000) {
-        autoProgram = program;
-        autoProgramInterval = programInterval;
-    }
-
-    //
-    void handleAutoProgram() {
-        if ((millis() - lastProgram) >= autoProgramInterval) {
-            lastProgram = millis();
-            if (autoProgram && connected && client.connected()) {
-                autoProgram(*this);
-            }
-        }
-    }*/
-
-    //
     bool isConnected() { return connected && client.connected(); };
 
     //
@@ -337,31 +309,10 @@ public:
                           _hmac_key_ = (uint8_t*)calloc(1, 16);
                         }
                         memcpy(_hmac_key_, _local_key_.c_str(), 16);
-
-                        //encodeMessage(_sending_, 3, encryptRaw((uint8_t*)_local_key_, _local_nonce_, _s_length_), _s_length_, _hmac_key_);
-                        //send(client, _sending_, calculateSizeOfRequest(_s_length_, _hmac_key_));
-
-                        //
-                        //sendMessageRaw(0x3, _local_nonce_);
-
-                        //
-                        //size_t hlen = 16;
-                        //uint8_t* _msg_ = (uint8_t*)calloc(1, hlen);
-                        //memcpy(_msg_, _local_nonce_.c_str(), hlen);
                         
                         //
                         sendMessageRaw(0x3, _local_nonce_);
                         received = true;
-
-                        //
-                        /*AES_ctx cipher;
-                        AES_init_ctx(&cipher, (uint8_t*)_local_key_);
-                        AES_ECB_encrypt(&cipher, _msg_);
-                        encodeMessage(_sending_, 0x3, _msg_, hlen, _hmac_key_);
-                        free(_msg_);*/
-
-                        //
-                        //send(client, _sending_, calculateSizeOfRequest(hlen, _hmac_key_));
                     } else {
                         JSONVar _head_;
                         _head_["gwId"] = _device_id_.toString();
@@ -371,25 +322,16 @@ public:
                         sendMessageRaw(0xa, _store_ = JSON.stringify(_head_));
                         received = true;
                     }
-
-                    //
-                    //lastTime = millis();
-
-                    
-                    //waitToReceive(client, _len_);
-                    //handleReceive();
                 } else {
                     connected = false;
                     attemp++;
                     lastAttemp = millis();
-                    //Serial.println("Tuya connection failed!");
                     _screen_->_LINE_1_ = "Tuya connection failed!";
                 }
             } else {
                 connected = false;
                 attemp++;
                 lastAttemp = millis();
-                //Serial.println("Tuya connection failed!");
                 _screen_->_LINE_1_ = "Tuya connection failed!";
             }
         } else {
@@ -429,25 +371,12 @@ public:
             lastAttemp = millis();
             tuyaInit();
         }
-
-        //
-        //if (!client.connected()) {
-            //Serial.println("Tuya: Connection Probably Died!");
-            //_screen_->_LINE_1_ = "Tuya connection died!";
-        //}
-        /*delay(1);
-        if (!client.connected()) {
-            attemp++;
-            lastAttemp = millis();
-        }*/
     }
 
     //
     void sendControl(JSONVar _dps_) {
         if (client.connected() && connected) {
             JSONVar _var_;
-            //_dps_["20"] = (JSON.typeof(_dps_["20"]).startsWith("boolean") ? (bool)_dps_["20"] : true) && ENABLED;
-            //_dps_["20"] = (JSON.typeof(_dps_["20"]).startsWith("boolean") ? (bool)_dps_["20"] : false) || ENABLED;
             if (!protocol33) {
                 _var_["protocol"] = 5;
                 _var_["t"] = getTime();
@@ -522,11 +451,6 @@ public:
 
     //
     uint32_t handleReceive() {
-        // let the websockets client check for incoming messages
-        //if(client.available()) {
-            //client.poll();
-        //}
-        
         uint32_t cmdId = 0;
 
         //
@@ -536,12 +460,8 @@ public:
             if (_len_ > 0) {
                 received = true;
                 lastReceive = millis();
-                //if ((_ctime_ - lastTime) >= 30000) {
-                    //lastTime = millis();
-                //}
 
                 //
-                
                 uint8_t* encoded = decodeMessage(cmdId, _received_, _len_, _hmac_key_);
                 Serial.println("RCommand: " + String(cmdId, HEX) + ", CmdLen: " + String(_len_));
 
@@ -552,10 +472,6 @@ public:
                             Serial.println("Connected to Tuya device!");
                             _screen_->_LINE_1_= "Connected to Tuya device!";
                             connected = true;
-
-                            //JSONVar _tmp_;
-                            //_tmp_["20"] = (bool)ENABLED;
-                            //sendControl(_tmp_);
                         }
                         connected = true;
                         received = true;
@@ -572,10 +488,7 @@ public:
                         _remote_nonce_ = (char const*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_);
                         Serial.println("Remote Nonce: " + cString(_remote_nonce_, 16));
 
-                        //
-    //#ifdef ESP32
-                        
-    //#else             
+                        //       
                         size_t hlen = 48;
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -655,23 +568,3 @@ public:
     }
 
 };
-
-/*
-// TODO: device scan
-uint8_t* decodeUDP(uint8_t* buf, size_t& length) {
-    AES_ctx cipher;
-    AES_init_ctx(&cipher, _udp_key_md5_);
-
-    //
-    for (unsigned I=20;I<length-8;I+=16) {
-      AES_ECB_decrypt(&cipher, buf+I);
-    }
-
-    if (_unpad_) { freeUnPaddingResult(_unpad_); };
-    _unpad_ = removePadding(buf+20, length-20-8);
-
-    //
-    length = _unpad_->dataLengthWithoutPadding;
-    return (uint8_t*)_unpad_->dataWithoutPadding;
-}*/
-

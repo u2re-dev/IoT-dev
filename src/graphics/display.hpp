@@ -19,8 +19,8 @@
 #include <SSD1306Wire.h>
 
 //
-#include "screen.hpp"
-#include "rtc.hpp"
+#include "./screen.hpp"
+#include "../time/rtc.hpp"
 
 //
 void switchScreen(bool dbg, uint dvID);

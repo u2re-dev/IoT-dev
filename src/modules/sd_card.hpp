@@ -1,9 +1,16 @@
 #pragma once
 
 //
-#include "wifi.hpp"
-#include "screen.hpp"
-#include "tuya.hpp"
+#include <Arduino.h>
+#include <Wire.h>
+#include <SPI.h>
+
+//
+#include "../network/wifi.hpp"
+#include "../tuya/tuya.hpp"
+
+//
+#include "../graphics/screen.hpp"
 
 //#include <FS.h>
 #include <SD.h>
@@ -78,23 +85,6 @@ static const int CS_PIN = 15;
         //
         device[0].loadConfig(doc["devices"][0]);
         device[1].loadConfig(doc["devices"][1]);
-
-        
-
-        // eenforce enabled state
-        /*
-        device[0].setAutoProgram([](TuyaDevice3& _device_){
-            JSONVar _tmp_;
-            _tmp_["20"] = _device_.ENABLED;
-            _device_.sendControl(_tmp_);
-        }, 2000);
-        device[1].setAutoProgram([](TuyaDevice3& _device_){
-            JSONVar _tmp_;
-            _tmp_["20"] = _device_.ENABLED;
-            _device_.sendControl(_tmp_);
-        }, 2000);*/
-
-        //device[0].setAutoProgram(testPrograms[0], 2000);
 
         //
         delay(10);

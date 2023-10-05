@@ -1,8 +1,14 @@
 #pragma once
 
 //
-#include "tuya.hpp"
-#include "sd_card.hpp"
+#include <Arduino.h>
+#include <Wire.h>
+#include <SPI.h>
+
+//
+#include "./sd_card.hpp"
+#include "../tuya/tuya.hpp"
+#include "../graphics/display.hpp"
 
 //
 #include <IRremoteESP8266.h>

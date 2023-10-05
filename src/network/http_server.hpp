@@ -1,7 +1,8 @@
 #pragma once
 
 //
-#include "tuya.hpp"
+#include <ESPAsyncWebServer.h>
+#include "../tuya/tuya.hpp"
 
 //
 static AsyncWebServer server(80);
