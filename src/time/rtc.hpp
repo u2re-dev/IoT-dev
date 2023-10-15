@@ -15,6 +15,7 @@ static bool DS1307_INITIALIZED = false;
 #endif
 
 //
+#include <Wire.h>
 #include <NTPClient.h>
 //#include <Time.h>
 
@@ -173,9 +174,9 @@ unsigned long getTime() {
 void initRTC() {
     
     // Initialize I2C
-    Wire1.setPins(21, 22);
-    Wire1.setClock(3400 * 1000);
-    Wire1.begin();
+    Wire.setPins(43, 44);
+    Wire.setClock(3400 * 1000);
+    Wire.begin();
 
     //
     time_t compiled = cvt_date(__DATE__, __TIME__);

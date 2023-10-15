@@ -8,7 +8,7 @@
 //
 #include "./sd_card.hpp"
 #include "../tuya/tuya.hpp"
-#include "../graphics/display.hpp"
+//#include "../graphics/display.hpp"
 
 //
 #include <IRremoteESP8266.h>
@@ -16,7 +16,7 @@
 #include <IRutils.h>
 
 //
-static const uint16_t kRecvPin = 8;//27;
+static const uint16_t kRecvPin = 3;
 static IRrecv irrecv(kRecvPin);
 static decode_results results;
 

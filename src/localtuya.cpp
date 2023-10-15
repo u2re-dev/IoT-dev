@@ -6,7 +6,8 @@
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
-#include "./graphics/display.hpp"
+//#include "./graphics/display.hpp"
+#include "./graphics/tft_display.hpp"
 
 //
 #include "./tuya/tuya.hpp"
@@ -60,7 +61,7 @@ void setup() {
     //
     Serial.setDebugOutput(true);
     Serial.begin(115200);
-    Wire.setClock(3400 * 1000);
+    //Wire.setClock(3400 * 1000);
 
     //
     initScreen();
@@ -76,9 +77,6 @@ void setup() {
 
     //
     while (LOADING_SD) {
-    #ifndef ESP32
-        ui.update();
-    #endif
         delay(1);
     }
 
@@ -89,9 +87,6 @@ void setup() {
     while (!WiFiConnected())
     {
         handleIR(device);
-#ifndef ESP32
-        ui.update();
-#endif
         delay(1);
     }
 
@@ -116,9 +111,5 @@ void loop() {
 
     _syncTimeFn_();
     handleDevices();
-
-#ifndef ESP32
-    ui.update();
-#endif
     delay(1);
 }
