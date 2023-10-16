@@ -174,9 +174,9 @@ unsigned long getTime() {
 void initRTC() {
     
     // Initialize I2C
-    Wire.setPins(43, 44);
-    Wire.setClock(3400 * 1000);
-    Wire.begin();
+    //Wire.setPins(43, 44);
+    //Wire.setClock(3400 * 1000);
+    //Wire.begin();
 
     //
     time_t compiled = cvt_date(__DATE__, __TIME__);

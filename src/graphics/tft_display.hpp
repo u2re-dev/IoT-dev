@@ -32,28 +32,42 @@ void switchScreen(bool dbg, uint dvID) {
 
 //
 void msOverlay(TFT_eSPI *display) {
-    display->setTextColor(TFT_BLACK, TFT_WHITE, true);
+    display->setTextColor(TFT_WHITE, TFT_BLACK, true);
     time_t _time_ = getTime();
-    display->drawRightString(String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60), 0, 0, 2);
-    display->drawString(DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)), 0, 0, 2);
+
+    display->fillRect(10, 10, 320 - 20, 20, TFT_BLACK);
+    display->drawRightString(String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60), 310, 10, 2);
+    display->drawString(DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)), 10, 10, 2);
 }
 
 //
 void _drawScreen_(TFT_eSPI *display, int16_t x, int16_t y, uint SCREEN_ID) {
-    display->setTextColor(TFT_BLACK, TFT_WHITE, true);
-    display->drawString(_screen_[SCREEN_ID]._LINE_1_.toString(), 0 + x, 11 + y, 2);
-    display->drawString(_screen_[SCREEN_ID]._LINE_2_.toString(), 0 + x, 22 + y, 2);
-    display->drawString(_screen_[SCREEN_ID]._LINE_3_.toString(), 0 + x, 33 + y, 2);
+    display->setTextColor(TFT_WHITE, TFT_BLACK, true);
+
+    display->fillRect(10, 10 + 20, 320 - 20, 20, TFT_BLACK);
+    display->drawString(_screen_[SCREEN_ID]._LINE_1_.toString(), 10 + x, 10 + 20 + y, 2);
+
+    display->fillRect(10, 10 + 40, 320 - 20, 20, TFT_BLACK);
+    display->drawString(_screen_[SCREEN_ID]._LINE_2_.toString(), 10 + x, 10 + 40 + y, 2);
+
+    display->fillRect(10, 10 + 60, 320 - 20, 20, TFT_BLACK);
+    display->drawString(_screen_[SCREEN_ID]._LINE_3_.toString(), 10 + x, 10 + 60 + y, 2);
 }
+
+//
+static thread_local size_t lT = millis();
 
 //
 #ifdef ESP32
 std::thread displayTask;
 void displayThread() {
     while(true) {
-        _drawScreen_(&tft, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
-        msOverlay(&tft);
-        delay(20);
+        if ((millis() - lT) >= 100) {
+            _drawScreen_(&tft, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
+            msOverlay(&tft);
+            lT = millis();
+        }
+        delay(1);
     }
 }
 #endif
@@ -67,9 +81,10 @@ void initDisplay(void)
     pinMode(PIN_POWER_ON, OUTPUT);
     digitalWrite(PIN_POWER_ON, HIGH);
 
+    //
     tft.init();
     tft.setRotation(1);
-    tft.fillScreen(TFT_WHITE);
+    tft.fillScreen(TFT_BLACK);
 
     //
 #ifdef ESP32
