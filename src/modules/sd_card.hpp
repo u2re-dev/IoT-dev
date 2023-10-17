@@ -1,6 +1,12 @@
 #pragma once
 
 //
+#define SD_CS         10
+#define SPI_MOSI      11 
+#define SPI_SCK       12
+#define SPI_MISO      13
+
+//
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -23,15 +29,13 @@ bool reloadConfig(TuyaDevice3* device) {
     bool LOADED = false;
     //LOADING_SD = true;
 
-//
-static const char *filename = "/keys.json";
+    // Initialize SPI bus for microSD Card
+    pinMode(SD_CS, INPUT);      
+    digitalWrite(SD_CS, HIGH); 
+    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
 
 //
-#ifdef ESP32
-static const int CS_PIN = 10;//5;
-#else
-static const int CS_PIN = 15;
-#endif
+static const char *filename = "/keys.json";
 
     //
     Serial.println("Reading from SD...");
@@ -40,7 +44,7 @@ static const int CS_PIN = 15;
 
     //
     //bool loaded = false;
-    if (SD.begin(CS_PIN)) {
+    if (SD.begin(SD_CS)) {
         // Open file for writing
         Serial.println("SD connected...");
         File file = SD.open(filename, FILE_READ);
