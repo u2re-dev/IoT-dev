@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include <SD.h>
 
 //
 #include "../network/wifi.hpp"
@@ -19,23 +20,26 @@
 #include "../graphics/screen.hpp"
 
 //#include <FS.h>
-#include <SD.h>
 
 //
 static nv_bool LOADING_SD;
 
 //
-bool reloadConfig(TuyaDevice3* device) {
-    bool LOADED = false;
-    //LOADING_SD = true;
-
-    // Initialize SPI bus for microSD Card
-    pinMode(SD_CS, INPUT);      
-    digitalWrite(SD_CS, HIGH); 
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+SPIClass SPI0(HSPI);
 
 //
-static const char *filename = "/keys.json";
+bool reloadConfig(TuyaDevice3* device) {
+    //
+    LOADING_SD = false;
+    bool LOADED = false;
+
+    // Initialize SPI bus for microSD Card
+    pinMode(SD_CS, OUTPUT);
+    digitalWrite(SD_CS, HIGH);
+    digitalRead(SD_CS);
+
+    //
+    static const char *filename = "/keys.json";
 
     //
     Serial.println("Reading from SD...");
@@ -43,15 +47,16 @@ static const char *filename = "/keys.json";
     _screen_[0]._LINE_2_ = filename;
 
     //
-    //bool loaded = false;
-    if (SD.begin(SD_CS)) {
+    SPI0.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SD_CS);
+    if (SD.begin(SD_CS), &SPI0) {
+        LOADING_SD = true;
         // Open file for writing
         Serial.println("SD connected...");
         File file = SD.open(filename, FILE_READ);
         if (!file) {
           Serial.println("Failed to read file, HALTED!");
           _screen_[0]._LINE_1_ = "Failed to read file, HALTED!";
-          return false;
+          return (LOADING_SD = false);
         }
 
         //
@@ -59,7 +64,7 @@ static const char *filename = "/keys.json";
         if (JSON.typeof(doc) == "undefined") {
           Serial.println(F("Failed to read file, using default configuration"));
           _screen_[0]._LINE_1_ = "Wrong file, HALTED!";
-          return false;
+          return (LOADING_SD = false);
         }
         
         //

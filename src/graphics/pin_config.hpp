@@ -3,6 +3,7 @@
 
 /*ESP32S3*/
 #define PIN_LCD_BL                   38
+#define PIN_POWER_ON                 15
 
 #define PIN_LCD_D0                   39
 #define PIN_LCD_D1                   40
@@ -12,8 +13,6 @@
 #define PIN_LCD_D5                   46
 #define PIN_LCD_D6                   47
 #define PIN_LCD_D7                   48
-
-#define PIN_POWER_ON                 15
 
 #define PIN_LCD_RES                  5
 #define PIN_LCD_CS                   6

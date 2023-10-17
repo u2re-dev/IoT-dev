@@ -54,18 +54,17 @@ void handleDevices() {
 
 //
 void setup() {
-    //
-    //EEPROM.begin(48);
-    nvs.begin("nvs", false);
+    initScreen();
+    initDisplay();
 
     //
     Serial.setDebugOutput(true);
     Serial.begin(115200);
-    //Wire.setClock(3400 * 1000);
 
     //
-    initScreen();
-    initDisplay();
+    nvs.begin("nvs", false);
+
+    //
     initRTC();
     initIR();
 

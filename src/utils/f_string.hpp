@@ -4,19 +4,28 @@
 #include <functional>
 #include <utility>
 #include <atomic>
+#include <String.h>
 
 //
-String cString(char const* data, size_t length) {
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+//
+#include <WString.h>
+
+//
+inline String cString(char const* data, size_t length) {
     String _str_(data);
-    _str_.reserve(min(_str_.length(), length));
-    return _str_.substring(0, min(_str_.length(), length));
+    _str_.reserve(std::min(_str_.length(), length));
+    return _str_.substring(0, std::min(_str_.length(), length));
 }
 
 //
-String cString(uint8_t const* data, size_t length) {
+inline String cString(uint8_t const* data, size_t length) {
     String _str_((char const*)data);
-    _str_.reserve(min(_str_.length(), length));
-    return _str_.substring(0, min(_str_.length(), length));
+    _str_.reserve(std::min(_str_.length(), length));
+    return _str_.substring(0, std::min(_str_.length(), length));
 }
 
 
@@ -47,7 +56,7 @@ public:
 
     _StringWrite_(char* _str_, size_t _len_) {
         _chars_ = _str_;
-        _length_ = min(strlen(_str_), _len_);
+        _length_ = std::min(strlen(_str_), _len_);
     }
 
     _StringWrite_& operator =(char const* _str_) {
@@ -118,7 +127,7 @@ public:
 
     _StringView_(String const& _str_) {
         _chars_ = _str_.c_str();
-        _length_ = min(_str_.length(), strlen(_chars_));
+        _length_ = std::min(_str_.length(), strlen(_chars_));
     }
 
     _StringView_(char const* _str_) {
@@ -128,7 +137,7 @@ public:
 
     _StringView_(char const* _str_, size_t _len_) {
         _chars_ = _str_;
-        _length_ = min(strlen(_str_), _len_);
+        _length_ = std::min(strlen(_str_), _len_);
     }
 
     _StringView_& operator =(_StringView_ _str_) {
@@ -187,44 +196,44 @@ public:
 
     _String_(_String_ const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
     
     _String_(char const* _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_, _length_ = min(strlen(_str_), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_, _length_ = std::min(strlen(_str_), MAX_STRING_LENGTH));
     }
 
     _String_(char const* _str_, size_t length) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_, _length_ = min(min(strlen(_str_), length), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_, _length_ = std::min(std::min(strlen(_str_), length), MAX_STRING_LENGTH));
     }
 
     _String_(_StringView_ _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 
     _String_(String const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 
     _String_& operator =(_StringView_ _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
         return *this;
     }
 
     _String_& operator =(String const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
         return *this;
     }
 
     _String_& operator =(char const* _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_, _length_ = min(strlen(_str_), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_, _length_ = std::min(strlen(_str_), MAX_STRING_LENGTH));
         return *this;
     }
 

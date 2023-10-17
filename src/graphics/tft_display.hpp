@@ -7,10 +7,10 @@
 #endif
 
 //
-#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
-#include <SPI.h>
 #include "pin_config.hpp"
+#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 
+//
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
 #error  "The current version is not supported for the time being, please use a version below Arduino ESP32 3.0"
 #endif
@@ -78,9 +78,16 @@ void initDisplay(void)
     Serial.begin(115200);
     Serial.println("Init Display...");
 
+    //
     pinMode(PIN_POWER_ON, OUTPUT);
-    digitalWrite(PIN_POWER_ON, HIGH);
+    pinMode(PIN_LCD_BL, OUTPUT);
+    delay(100);
 
+    //
+    digitalWrite(PIN_POWER_ON, HIGH);
+    digitalWrite(PIN_LCD_BL, HIGH);
+    delay(100);
+    
     //
     tft.init();
     tft.setRotation(1);
