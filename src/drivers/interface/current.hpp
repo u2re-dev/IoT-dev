@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../drivers/memory/f_string.hpp"
+#include "../memory/f_string.hpp"
 
 //
 #include <functional>
@@ -9,6 +9,10 @@
 #include <atomic>
 
 //
+std::function<void(uint32_t)> handler;
+
+//
+static std::atomic<bool> LOADING_SD;
 static std::atomic<uint> CURRENT_DEVICE;
 static std::atomic<bool> DEBUG_SCREEN;
 static std::atomic<uint32_t> BG_COLOR;
@@ -25,6 +29,7 @@ void initState() {
     DEBUG_SCREEN = true;
     LAST_TIME = millis();
     INTERRUPTED = false;
+    LOADING_SD = false;
 }
 
 //
@@ -49,3 +54,22 @@ struct OVERLAY {
 void _LOG_(const uint8_t L, String const& string) {
     debug_info._LINE_[L] = string;
 }
+
+//
+void switchScreen(bool dbg, uint dvID) {
+    if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
+        DEBUG_SCREEN = dbg;
+        CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
+    }
+}
+
+//
+#define I2C_SDA 44
+#define I2C_SCL 43
+#define I2C_SLAVE_ADDR 0x32
+
+//
+#define SD_CS         10
+#define SPI_MOSI      11 
+#define SPI_SCK       12
+#define SPI_MISO      13

@@ -22,15 +22,11 @@
 //#include "../memory/f_string.hpp"
 #include "../drivers/persistent/nv_typed.hpp"
 #include "../drivers/persistent/nv_string.hpp"
-
-//
-#include "../interface/current.hpp"
+#include "../drivers/interface/current.hpp"
 
 //
 #include "../time/timed.hpp"
-
-//
-#include "../network/net_com.hpp"
+#include "./net_com.hpp"
 
 //#include <ArduinoWebsockets.h>
 #include <Arduino_JSON.h>

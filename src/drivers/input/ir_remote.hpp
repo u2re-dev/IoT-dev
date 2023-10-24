@@ -20,7 +20,7 @@ static decode_results results;
 std::function<void(uint32_t)> handler;
 
 //
-void handleIR(std::function<void(uint32_t)> handler) {
+void handleInput(std::function<void(uint32_t)> handler) {
     if (irrecv.decode(&results)) {
         if (results.value != -1LL && results.command != 0) {
             _LOG_(2, "Last IR: " + String(results.command, HEX));
@@ -34,7 +34,9 @@ void handleIR(std::function<void(uint32_t)> handler) {
     }
 }
 
-void initIR() {
+//
+void initInput(std::function<void(uint32_t)> $) {
     Serial.println("Enabling IR...");
     irrecv.enableIRIn();
+    handler = $;
 }

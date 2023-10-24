@@ -3,3 +3,10 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+./data
+/data
+./data/
+./data/*
+data/*
+/data/*

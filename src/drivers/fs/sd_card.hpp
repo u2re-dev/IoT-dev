@@ -1,33 +1,17 @@
 #pragma once
 
 //
-#define SD_CS         10
-#define SPI_MOSI      11 
-#define SPI_SCK       12
-#define SPI_MISO      13
-
-//
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 
 //
-#include "../network/wifi.hpp"
+#include "../interface/current.hpp"
+#include "../persistent/nv_typed.hpp"
 
 //
-#include "../../interface/current.hpp"
-
-//#include <FS.h>
-
-//
-static nv_bool LOADING_SD;
-
-//
-SPIClass SPI0(HSPI);
-
-//
-bool reloadConfig(std::function<void(JSONVar&)> handler) {
+bool loadConfigSD(std::function<void(JSONVar&)> handler) {
     //
     LOADING_SD = false;
     bool LOADED = false;
@@ -46,8 +30,9 @@ bool reloadConfig(std::function<void(JSONVar&)> handler) {
     _LOG_(1, filename);
 
     //
+    SPIClass SPI0(HSPI);
     SPI0.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SD_CS);
-    if (SD.begin(SD_CS), &SPI0) {
+    if (SD.begin(SD_CS)) {
         LOADING_SD = true;
         // Open file for writing
         Serial.println("SD connected...");
@@ -55,7 +40,6 @@ bool reloadConfig(std::function<void(JSONVar&)> handler) {
         if (!file) {
           Serial.println("Failed to read file, HALTED!");
           _LOG_(0, "Failed to read file, HALTED!");
-          _STOP_EXCEPTION_();
           return (LOADING_SD = false);
         }
 
@@ -64,7 +48,6 @@ bool reloadConfig(std::function<void(JSONVar&)> handler) {
         if (JSON.typeof(doc) == "undefined") {
           Serial.println(F("Failed to read file, using default configuration"));
           _LOG_(0, "Wrong file, HALTED!");
-          _STOP_EXCEPTION_();
           return (LOADING_SD = false);
         }
         

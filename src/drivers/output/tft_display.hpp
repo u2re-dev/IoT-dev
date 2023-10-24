@@ -6,7 +6,6 @@
 #endif
 
 //
-#include "../config/pin_config.hpp"
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 
 //
@@ -16,18 +15,11 @@
 
 //
 #include "../time/rtc.hpp"
-#include "../../interface/current.hpp"
+#include "../interface/pin_config.hpp"
+#include "../interface/current.hpp"
 
 //
 TFT_eSPI tft = TFT_eSPI();
-
-//
-void switchScreen(bool dbg, uint dvID) {
-    if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
-        DEBUG_SCREEN = dbg;
-        CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
-    }
-}
 
 //
 void msOverlay(TFT_eSPI *display) {

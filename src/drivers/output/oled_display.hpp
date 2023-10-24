@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../interface/current.hpp"
+#include "../../interface/current.hpp"
 
 //
 #ifdef ESP32
