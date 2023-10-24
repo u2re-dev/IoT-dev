@@ -1,6 +1,9 @@
 #pragma once
 
 //
+#define BG_COLOR TFT_RED
+
+//
 #ifdef ESP32
 #include <thread>
 //#include <SimplyAtomic.h>
@@ -32,25 +35,25 @@ void switchScreen(bool dbg, uint dvID) {
 
 //
 void msOverlay(TFT_eSPI *display) {
-    display->setTextColor(TFT_WHITE, TFT_BLACK, true);
+    display->setTextColor(TFT_WHITE, BG_COLOR, true);
     time_t _time_ = getTime();
 
-    display->fillRect(10, 10, 320 - 20, 20, TFT_BLACK);
+    display->fillRect(10, 10, 320 - 20, 20, BG_COLOR);
     display->drawRightString(String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60), 310, 10, 2);
     display->drawString(DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)), 10, 10, 2);
 }
 
 //
 void _drawScreen_(TFT_eSPI *display, int16_t x, int16_t y, uint SCREEN_ID) {
-    display->setTextColor(TFT_WHITE, TFT_BLACK, true);
+    display->setTextColor(TFT_WHITE, BG_COLOR, true);
 
-    display->fillRect(10, 10 + 20, 320 - 20, 20, TFT_BLACK);
+    display->fillRect(10, 10 + 20, 320 - 20, 20, BG_COLOR);
     display->drawString(_screen_[SCREEN_ID]._LINE_1_.toString(), 10 + x, 10 + 20 + y, 2);
 
-    display->fillRect(10, 10 + 40, 320 - 20, 20, TFT_BLACK);
+    display->fillRect(10, 10 + 40, 320 - 20, 20, BG_COLOR);
     display->drawString(_screen_[SCREEN_ID]._LINE_2_.toString(), 10 + x, 10 + 40 + y, 2);
 
-    display->fillRect(10, 10 + 60, 320 - 20, 20, TFT_BLACK);
+    display->fillRect(10, 10 + 60, 320 - 20, 20, BG_COLOR);
     display->drawString(_screen_[SCREEN_ID]._LINE_3_.toString(), 10 + x, 10 + 60 + y, 2);
 }
 
@@ -91,7 +94,7 @@ void initDisplay(void)
     //
     tft.init();
     tft.setRotation(3);
-    tft.fillScreen(TFT_BLACK);
+    tft.fillScreen(BG_COLOR);
 
     //
 #ifdef ESP32
