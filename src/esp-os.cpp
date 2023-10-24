@@ -6,7 +6,7 @@
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
-#include "./drivers/output/tft_display.hpp"
+#include "./core/output/tft_display.hpp"
 #include "./handler/device.hpp"
 #include "./handler/command.hpp"
 #include "./handler/fs.hpp"

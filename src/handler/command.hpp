@@ -2,8 +2,8 @@
 
 //
 #include "../modules/http_server.hpp"
-#include "../drivers/input/keypad_handle.hpp"
-#include "../drivers/interface/current.hpp"
+#include "../core/input/keypad_handle.hpp"
+#include "../core/interface/current.hpp"
 #include "./fs.hpp"
 
 //

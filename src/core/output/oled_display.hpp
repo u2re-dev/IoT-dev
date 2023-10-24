@@ -1,9 +1,6 @@
 #pragma once
 
 //
-#include "../../interface/current.hpp"
-
-//
 #ifdef ESP32
 #include <thread>
 //#include <SimplyAtomic.h>
@@ -23,10 +20,11 @@
 
 //
 #include "../time/rtc.hpp"
-#include "../../interface/current.hpp"
+#include "../interface/current.hpp"
+#include "../interface/i2c.hpp"
 
 // Initialize the OLED display using Wire library
-static SSD1306Wire display(0x3c, 15, 16/*SDA, SCL*/);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
+static SSD1306Wire display(I2C_OLED_ADDR, I2C_SDA, I2C_SCL/*SDA, SCL*/);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
 static OLEDDisplayUi ui( &display );
 
 //

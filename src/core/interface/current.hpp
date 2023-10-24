@@ -2,6 +2,7 @@
 
 //
 #include "../memory/f_string.hpp"
+#include "./pin_config.hpp"
 
 //
 #include <functional>
@@ -53,6 +54,7 @@ struct OVERLAY {
 //
 void _LOG_(const uint8_t L, String const& string) {
     debug_info._LINE_[L] = string;
+    delay(10);
 }
 
 //
@@ -63,13 +65,3 @@ void switchScreen(bool dbg, uint dvID) {
     }
 }
 
-//
-#define I2C_SDA 44
-#define I2C_SCL 43
-#define I2C_SLAVE_ADDR 0x32
-
-//
-#define SD_CS         10
-#define SPI_MOSI      11 
-#define SPI_SCK       12
-#define SPI_MISO      13

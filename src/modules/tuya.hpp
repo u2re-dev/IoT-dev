@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../core/aes.hpp"
+#include "../core/crypto/aes.hpp"
 #ifndef ESP32
 #include "../checksum/crc.hpp"
 #else
@@ -16,16 +16,16 @@
 #endif
 
 //
-#include "../core/md5.hpp"
+#include "../core/crypto/md5.hpp"
 
 //
 //#include "../memory/f_string.hpp"
-#include "../drivers/persistent/nv_typed.hpp"
-#include "../drivers/persistent/nv_string.hpp"
-#include "../drivers/interface/current.hpp"
+#include "../core/persistent/nv_typed.hpp"
+#include "../core/persistent/nv_string.hpp"
+#include "../core/interface/current.hpp"
 
 //
-#include "../time/timed.hpp"
+#include "../core/time/timed.hpp"
 #include "./net_com.hpp"
 
 //#include <ArduinoWebsockets.h>

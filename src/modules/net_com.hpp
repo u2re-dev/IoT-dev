@@ -1,10 +1,10 @@
 #pragma once
 
 //
-#include "../drivers/memory/static_memory.hpp"
-#include "../drivers/memory/utils.hpp"
-#include "../drivers/network/wifi.hpp"
-#include "../drivers/interface/current.hpp"
+#include "../core/memory/static_memory.hpp"
+#include "../core/memory/utils.hpp"
+#include "../core/network/wifi.hpp"
+#include "../core/interface/current.hpp"
 //#include "../graphics/debug_info.hpp"
 
 // debug utils

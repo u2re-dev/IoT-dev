@@ -17,17 +17,12 @@ static bool DS1307_INITIALIZED = false;
 //
 #include <Wire.h>
 #include <NTPClient.h>
-//#include <Time.h>
 
 //
 #include "../network/wifi.hpp"
-//#include "../time/timed.hpp"
+#include "./timed.hpp"
 
 //
-#include "../../time/timed.hpp"
-
-//
-//WiFiUDP client;
 static WiFiUDP ntpUDP;
 static NTPClient timeClient(ntpUDP, "pool.ntp.org");
 static const uint64_t unix_shift = 946684800;

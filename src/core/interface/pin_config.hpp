@@ -29,3 +29,16 @@
 
 #define PIN_TOUCH_INT                16
 #define PIN_TOUCH_RES                21
+
+//
+#define I2C_SDA 44
+#define I2C_SCL 43
+
+//
+#define SD_CS         10
+#define SPI_MOSI      11 
+#define SPI_SCK       12
+#define SPI_MISO      13
+
+//
+#define IR_REMOTE_PIN 3
