@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../crypto/aes.hpp"
+#include "../core/aes.hpp"
 #ifndef ESP32
 #include "../checksum/crc.hpp"
 #else
@@ -15,23 +15,22 @@
 #include "sha256.hpp"
 #endif
 
-#include "../checksum/md5.hpp"
+//
+#include "../core/md5.hpp"
 
 //
-#include "../utils/f_string.hpp"
-#include "../storage/nv_typed.hpp"
-#include "../storage/nv_string.hpp"
+//#include "../memory/f_string.hpp"
+#include "../drivers/persistent/nv_typed.hpp"
+#include "../drivers/persistent/nv_string.hpp"
 
 //
-#include "../graphics/screen.hpp"
+#include "../interface/current.hpp"
 
 //
 #include "../time/timed.hpp"
-#include "../time/rtc.hpp"
 
 //
 #include "../network/net_com.hpp"
-#include "../network/wifi.hpp"
 
 //#include <ArduinoWebsockets.h>
 #include <Arduino_JSON.h>
@@ -51,11 +50,8 @@ static const _String_<16> _local_nonce_ = "0123456789abcdef";
 //
 class TuyaDevice3 {
 public: 
-    TuyaDevice3(SCREEN* _screen_) : _screen_(_screen_) {
 
-    }
-
-    TuyaDevice3(SCREEN* _screen_, char const* prefix) : _screen_(_screen_) {
+    TuyaDevice3(char const* prefix) {
         _real_local_key_.setKey(_concat_(prefix, "_lock"));
         _device_id_.setKey(_concat_(prefix, "_id"));
         _IP_ADDRESS_.setKey(_concat_(prefix, "_ip"));
@@ -66,15 +62,7 @@ public:
 protected: 
     
     //
-    //unsigned long lastProgram = millis();
-    //unsigned autoProgramInterval = 2000;
-    //std::function<void(TuyaDevice3&)> autoProgram;
-
-    //
     WiFiClient client;
-    SCREEN* _screen_;
-
-    //
     PKCS7_Padding* _padding_ = 0u;
     PKCS7_unPadding* _unpad_ = 0u;
 
@@ -297,7 +285,7 @@ public:
                 if (client.connected()) {
 
                     //Serial.println("Connection to Tuya device...");
-                    _screen_->_LINE_1_= "Connection to Tuya device...";
+                    _LOG_(0, "Connection to Tuya device...");
                     
                     //
                     SEQ_NO = 0;
@@ -326,16 +314,16 @@ public:
                     connected = false;
                     attemp++;
                     lastAttemp = millis();
-                    _screen_->_LINE_1_ = "Tuya connection failed!";
+                    _LOG_(0, "Tuya connection failed!");
                 }
             } else {
                 connected = false;
                 attemp++;
                 lastAttemp = millis();
-                _screen_->_LINE_1_ = "Tuya connection failed!";
+                _LOG_(0, "Tuya connection failed!");
             }
         } else {
-            _screen_->_LINE_1_ = "WiFI disconnected!";
+            _LOG_(0, "WiFI disconnected!");
         }
     }
 
@@ -365,7 +353,7 @@ public:
         //
         if (!client.connected() && attemp <= 3) {
             //Serial.println("Tuya: Connection Probably Died!");
-            _screen_->_LINE_1_ = "Tuya connection died!";
+            _LOG_(0, "Tuya connection died!");
             connected = false;
             attemp++;
             lastAttemp = millis();
@@ -470,7 +458,7 @@ public:
                     if (cmdId == 0xa && protocol33) {
                         if (!connected) {
                             Serial.println("Connected to Tuya device!");
-                            _screen_->_LINE_1_= "Connected to Tuya device!";
+                            debug_info._LINE_[0]= "Connected to Tuya device!";
                             connected = true;
                         }
                         connected = true;
@@ -525,7 +513,7 @@ public:
                         //
                         if (!connected) {
                             Serial.println("Connected to Tuya device!");
-                            _screen_->_LINE_1_= "Connected to Tuya device!";
+                            _LOG_(0, "Connected to Tuya device!");
                             connected = true;
 
                             JSONVar _tmp_;
@@ -558,7 +546,7 @@ public:
             }
         } else {
             //Serial.println("Tuya: Connection Probably Died!");
-            _screen_->_LINE_1_ = "Tuya connection died!";
+            _LOG_(0, "Tuya connection died!");
             connected = false;
             //attemp++;
             //lastAttemp = millis();

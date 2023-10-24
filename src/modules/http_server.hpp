@@ -2,7 +2,9 @@
 
 //
 #include <ESPAsyncWebServer.h>
-#include "../tuya/tuya.hpp"
+
+//
+#include "./tuya.hpp"
 
 //
 static AsyncWebServer server(80);

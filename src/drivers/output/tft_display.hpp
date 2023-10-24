@@ -1,16 +1,12 @@
 #pragma once
 
 //
-#define BG_COLOR TFT_RED
-
-//
 #ifdef ESP32
 #include <thread>
-//#include <SimplyAtomic.h>
 #endif
 
 //
-#include "pin_config.hpp"
+#include "../config/pin_config.hpp"
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 
 //
@@ -19,8 +15,8 @@
 #endif
 
 //
-#include "./screen.hpp"
 #include "../time/rtc.hpp"
+#include "../../interface/current.hpp"
 
 //
 TFT_eSPI tft = TFT_eSPI();
@@ -48,13 +44,13 @@ void _drawScreen_(TFT_eSPI *display, int16_t x, int16_t y, uint SCREEN_ID) {
     display->setTextColor(TFT_WHITE, BG_COLOR, true);
 
     display->fillRect(10, 10 + 20, 320 - 20, 20, BG_COLOR);
-    display->drawString(_screen_[SCREEN_ID]._LINE_1_.toString(), 10 + x, 10 + 20 + y, 2);
+    display->drawString(debug_info._LINE_[0].toString(), 10 + x, 10 + 20 + y, 2);
 
     display->fillRect(10, 10 + 40, 320 - 20, 20, BG_COLOR);
-    display->drawString(_screen_[SCREEN_ID]._LINE_2_.toString(), 10 + x, 10 + 40 + y, 2);
+    display->drawString(debug_info._LINE_[1].toString(), 10 + x, 10 + 40 + y, 2);
 
     display->fillRect(10, 10 + 60, 320 - 20, 20, BG_COLOR);
-    display->drawString(_screen_[SCREEN_ID]._LINE_3_.toString(), 10 + x, 10 + 60 + y, 2);
+    display->drawString(debug_info._LINE_[2].toString(), 10 + x, 10 + 60 + y, 2);
 }
 
 //
@@ -66,6 +62,7 @@ std::thread displayTask;
 void displayThread() {
     while(true) {
         if ((millis() - lT) >= 100) {
+            tft.fillScreen(BG_COLOR);
             _drawScreen_(&tft, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
             msOverlay(&tft);
             lT = millis();

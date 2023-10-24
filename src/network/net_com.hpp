@@ -1,21 +1,14 @@
 #pragma once
 
 //
-#include "wifi.hpp"
-#include "../utils/utils.hpp"
-#include "../graphics/screen.hpp"
+#include "../drivers/memory/static_memory.hpp"
+#include "../drivers/memory/utils.hpp"
+#include "../drivers/network/wifi.hpp"
+#include "../interface/current.hpp"
+//#include "../graphics/debug_info.hpp"
 
-//
-static const size_t LIMIT = 1024;
-thread_local char* _debug_ = 0;
+// debug utils
 
-//
-thread_local size_t _r_length_ = 0;
-thread_local size_t _s_length_ = 0;
-
-//
-thread_local uint8_t* _received_ = 0;//[LIMIT];
-thread_local uint8_t* _sending_ = 0;//[LIMIT];
 
 // TODO: async version, progressive
 std::pair<size_t, uint8_t*> receive(WiFiClient client, size_t MINLEN = 1) {
@@ -59,13 +52,13 @@ size_t waitToReceiveShort(WiFiClient client, size_t& readLen) {
         while (client.connected() && (readLen = client.available()) <= 0) {
             unsigned long time = millis();
             if ((time - beginTime) >= 15000) {
-                _screen_[0]._LINE_3_ = "";
+                _LOG_(2, "");
                 return readLen;
             }
-            _screen_[0]._LINE_3_ = "Trying to recieve package...";
+            _LOG_(2, "Trying to recieve package...");
             delay(1);
         }
-        _screen_[0]._LINE_3_ = "";
+        _LOG_(2, "");
     }
     return readLen;
 }

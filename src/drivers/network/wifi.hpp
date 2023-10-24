@@ -12,8 +12,7 @@
 #include <IPAddress.h>
 
 //
-#include "../storage/nv_string.hpp"
-#include "../graphics/screen.hpp"
+#include "../persistent/nv_string.hpp"
 
 //
 static _NvString_<15> ssid("ssid");
@@ -41,10 +40,6 @@ void onWifiConnect(WiFiEvent_t event, WiFiEventInfo_t info)
     Serial.println(WiFi.localIP());
 
     //
-    _screen_[0]._LINE_1_= "Connected to WiFi!";
-    _screen_[0]._LINE_2_= WiFi.localIP().toString();
-
-    //
     Serial.print("RRSI: ");
     Serial.println(WiFi.RSSI());
 
@@ -60,7 +55,6 @@ void onWifiDisconnect(WiFiEvent_t event, WiFiEventInfo_t info)
 #endif
 {   //
     CONNECTED = false;
-    _screen_[0]._LINE_2_= "Disconnected...";
     Serial.println("Disconnected from Wi-Fi, trying to connect...");
 
     //

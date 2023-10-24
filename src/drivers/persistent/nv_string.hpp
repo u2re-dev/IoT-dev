@@ -2,7 +2,7 @@
 
 //
 #include "./nv_typed.hpp"
-#include "../utils/f_string.hpp"
+#include "../memory/f_string.hpp"
 
 //
 template<size_t MAX_STRING_LENGTH=16>

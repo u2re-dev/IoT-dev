@@ -1,6 +1,9 @@
 #pragma once
 
 //
+#include "../interface/current.hpp"
+
+//
 #ifdef ESP32
 #include <thread>
 //#include <SimplyAtomic.h>
@@ -19,13 +22,8 @@
 #include <SSD1306Wire.h>
 
 //
-#include "./screen.hpp"
 #include "../time/rtc.hpp"
-
-//
-void switchScreen(bool dbg, uint dvID);
-
-
+#include "../../interface/current.hpp"
 
 // Initialize the OLED display using Wire library
 static SSD1306Wire display(0x3c, 15, 16/*SDA, SCL*/);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
@@ -64,9 +62,9 @@ void _drawScreen_(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, in
     display->setTextAlignment(TEXT_ALIGN_LEFT);
 
     //
-    display->drawString(0 + x, 11 + y, _screen_[SCREEN_ID]._LINE_1_.toString());
-    display->drawString(0 + x, 22 + y, _screen_[SCREEN_ID]._LINE_2_.toString());
-    display->drawString(0 + x, 33 + y, _screen_[SCREEN_ID]._LINE_3_.toString());
+    display->drawString(0 + x, 11 + y, debug_info._LINE_[0].toString());
+    display->drawString(0 + x, 22 + y, debug_info._LINE_[1].toString());
+    display->drawString(0 + x, 33 + y, debug_info._LINE_[2].toString());
 }
 
 //

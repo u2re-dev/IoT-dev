@@ -14,10 +14,9 @@
 
 //
 #include "../network/wifi.hpp"
-#include "../tuya/tuya.hpp"
 
 //
-#include "../graphics/screen.hpp"
+#include "../../interface/current.hpp"
 
 //#include <FS.h>
 
@@ -28,7 +27,7 @@ static nv_bool LOADING_SD;
 SPIClass SPI0(HSPI);
 
 //
-bool reloadConfig(TuyaDevice3* device) {
+bool reloadConfig(std::function<void(JSONVar&)> handler) {
     //
     LOADING_SD = false;
     bool LOADED = false;
@@ -43,8 +42,8 @@ bool reloadConfig(TuyaDevice3* device) {
 
     //
     Serial.println("Reading from SD...");
-    _screen_[0]._LINE_1_ = "Please, insert SD card with...";
-    _screen_[0]._LINE_2_ = filename;
+    _LOG_(0, "Please, insert SD card with...");
+    _LOG_(1, filename);
 
     //
     SPI0.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SD_CS);
@@ -55,7 +54,8 @@ bool reloadConfig(TuyaDevice3* device) {
         File file = SD.open(filename, FILE_READ);
         if (!file) {
           Serial.println("Failed to read file, HALTED!");
-          _screen_[0]._LINE_1_ = "Failed to read file, HALTED!";
+          _LOG_(0, "Failed to read file, HALTED!");
+          _STOP_EXCEPTION_();
           return (LOADING_SD = false);
         }
 
@@ -63,7 +63,8 @@ bool reloadConfig(TuyaDevice3* device) {
         JSONVar doc = JSON.parse(file.readString());
         if (JSON.typeof(doc) == "undefined") {
           Serial.println(F("Failed to read file, using default configuration"));
-          _screen_[0]._LINE_1_ = "Wrong file, HALTED!";
+          _LOG_(0, "Wrong file, HALTED!");
+          _STOP_EXCEPTION_();
           return (LOADING_SD = false);
         }
         
@@ -73,8 +74,8 @@ bool reloadConfig(TuyaDevice3* device) {
 
         //
         Serial.println("Success to read JSON file...");
-        _screen_[0]._LINE_1_ = "Success to read JSON file...";
-        _screen_[0]._LINE_2_ = "";
+        _LOG_(0, "Success to read JSON file...");
+        _LOG_(1, "");
         delay(10);
 
         //
@@ -89,18 +90,17 @@ bool reloadConfig(TuyaDevice3* device) {
 
         //
         Serial.println("Configuring devices...");
-        _screen_[0]._LINE_1_ = "Configuring devices...";
+        _LOG_(0, "Configuring devices...");
 
         //
-        device[0].loadConfig(doc["devices"][0]);
-        device[1].loadConfig(doc["devices"][1]);
+        handler(doc);
 
         //
         delay(10);
 
         //
         Serial.println("Configured...");
-        _screen_[0]._LINE_1_ = "Configured...";
+        _LOG_(0, "Configured...");
 
         //
         LOADING_SD = false;

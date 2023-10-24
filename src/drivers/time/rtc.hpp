@@ -21,7 +21,10 @@ static bool DS1307_INITIALIZED = false;
 
 //
 #include "../network/wifi.hpp"
-#include "./timed.hpp"
+//#include "../time/timed.hpp"
+
+//
+#include "../../time/timed.hpp"
 
 //
 //WiFiUDP client;

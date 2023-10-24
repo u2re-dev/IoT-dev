@@ -8,6 +8,9 @@
 //
 #include <IPAddress.h>
 
+//
+#include "./f_string.hpp"
+
 // mapping of ASCII characters to hex values
 static const uint8_t hashmap[] =
 {
@@ -117,19 +120,11 @@ bool compareIP(IPAddress const& a, IPAddress const& b) {
 }
 
 
-//
-void _reset_() {
-    #ifdef ESP32
-ESP.restart();
-    #else
-ESP.reset();
-    #endif
-}
 
 //
 void RGBtoHSV(float& fR, float& fG, float fB, float& fH, float& fS, float& fV) {
-  float fCMax = max(max(fR, fG), fB);
-  float fCMin = min(min(fR, fG), fB);
+  float fCMax = std::max(std::max(fR, fG), fB);
+  float fCMin = std::min(std::min(fR, fG), fB);
   float fDelta = fCMax - fCMin;
   
   if(fDelta > 0) {
