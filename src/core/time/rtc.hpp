@@ -1,6 +1,10 @@
 #pragma once
 
 //
+#include <Wire.h>
+#include <NTPClient.h>
+
+//
 #ifdef ESP32
 #include <ESP32Time.h>
 #endif
@@ -13,10 +17,6 @@
 #include <RTCx.h>
 static bool DS1307_INITIALIZED = false;
 #endif
-
-//
-#include <Wire.h>
-#include <NTPClient.h>
 
 //
 #include "../network/wifi.hpp"

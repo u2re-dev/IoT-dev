@@ -4,7 +4,6 @@
 #include <functional>
 #include <utility>
 #include <atomic>
-#include <String.h>
 
 //
 #include <stdio.h>

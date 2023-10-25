@@ -1,15 +1,15 @@
 #pragma once
 
 //
+#include <WiFiUdp.h>
+#include <IPAddress.h>
+
+//
 #ifdef ESP32
 #include <WiFi.h>
 #else
 #include <ESP8266WiFi.h>
 #endif
-
-//
-#include <WiFiUdp.h>
-#include <IPAddress.h>
 
 //
 #include "../persistent/nv_string.hpp"

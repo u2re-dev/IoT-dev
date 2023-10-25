@@ -1,7 +1,6 @@
 #pragma once
 
 //
-#include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>

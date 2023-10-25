@@ -1,12 +1,7 @@
-/*
-    This sketch establishes a TCP connection to a "quote of the day" service.
-    It sends a "hello" message, and then prints received data.
-*/
-
-#define VERY_LARGE_STRING_LENGTH 8000
+#include <Arduino.h>
 
 //
-//#include <Arduino.h>
+#define VERY_LARGE_STRING_LENGTH 8000
 
 //
 #include "./core/output/tft_display.hpp"
@@ -15,11 +10,8 @@
 #include "./handler/fs.hpp"
 
 //
-void loop() {};
-void setup() {};
-
-//
-int app_main() {
+void loopTask(void *pvParameters)
+{
     setCpuFrequencyMhz(80);
 
     //
@@ -95,6 +87,67 @@ int app_main() {
 #else
     ESP.reset();
 #endif
-
-    return -1;
 }
+
+//
+#if CONFIG_FREERTOS_UNICORE
+void yieldIfNecessary(void){
+    static uint64_t lastYield = 0;
+    uint64_t now = millis();
+    if((now - lastYield) > 2000) {
+        lastYield = now;
+        vTaskDelay(5); //delay 1 RTOS tick
+    }
+}
+#endif
+
+//
+#if !CONFIG_AUTOSTART_ARDUINO
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_task_wdt.h>
+
+//
+#ifndef ARDUINO_LOOP_STACK_SIZE
+#ifndef CONFIG_ARDUINO_LOOP_STACK_SIZE
+#define ARDUINO_LOOP_STACK_SIZE 8192
+#else
+#define ARDUINO_LOOP_STACK_SIZE CONFIG_ARDUINO_LOOP_STACK_SIZE
+#endif
+#endif
+
+//
+TaskHandle_t loopTaskHandle = NULL;
+bool loopTaskWDTEnabled;
+
+//
+__attribute__((weak)) size_t getArduinoLoopTaskStackSize(void) { return ARDUINO_LOOP_STACK_SIZE; }
+__attribute__((weak)) bool shouldPrintChipDebugReport(void) { return false; }
+
+//
+extern "C" void app_main()
+{
+#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE
+    Serial.begin();
+#endif
+#if ARDUINO_USB_MSC_ON_BOOT && !ARDUINO_USB_MODE
+    MSC_Update.begin();
+#endif
+#if ARDUINO_USB_DFU_ON_BOOT && !ARDUINO_USB_MODE
+    USB.enableDFU();
+#endif
+#if ARDUINO_USB_ON_BOOT && !ARDUINO_USB_MODE
+    USB.begin();
+#endif
+    loopTaskWDTEnabled = false;
+    initArduino();
+    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
+}
+
+#else
+
+// unsupported...
+void setup() {};
+void loop() {};
+
+#endif

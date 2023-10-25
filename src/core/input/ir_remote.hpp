@@ -1,6 +1,9 @@
 #pragma once
 
 //
+#ifdef EMABLE_IR_CONTROL
+
+//
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
@@ -40,3 +43,5 @@ namespace ir {
     }
 
 }
+
+#endif
