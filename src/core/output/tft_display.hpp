@@ -56,7 +56,7 @@ namespace tft {
     #ifdef ESP32
     std::thread displayTask;
     void displayThread() {
-        while(true) {
+        while(!INTERRUPTED.load()) {
             if (SHOW_CHANGED.load() && !POWER_SAVING.load() && (millis() - lT) >= 20) {
                 display.fillScreen(BG_COLOR);
                 _drawScreen_(&display, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
@@ -71,6 +71,14 @@ namespace tft {
             }
 
             delay(POWER_SAVING.load() ? 100 : 1);
+        }
+
+        // do RSOD crash screen
+        if (!POWER_SAVING.load()) {
+            display.fillScreen(BG_COLOR = 0xF800);
+            display.drawString("Our system run into problem, ", 10, 10);
+            display.drawString("Needs to be a restart...", 10, 30);
+            display.drawString("EXCEPTION CODE: " + String(EXCEPTION.load(), HEX), 10, 50);
         }
     }
     #endif

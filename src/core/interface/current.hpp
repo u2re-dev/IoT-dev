@@ -16,6 +16,7 @@
 std::function<void(uint32_t)> COM_HANDLER;
 
 //
+static std::atomic<uint32_t> EXCEPTION;
 static std::atomic<bool> LOADING_SD;
 static std::atomic<uint> CURRENT_DEVICE;
 static std::atomic<bool> DEBUG_SCREEN;
@@ -54,6 +55,7 @@ void powerSave() {
 
 //
 void initState() {
+    EXCEPTION = -1;
     OVERLAY_CHANGED = false;
     POWER_SAVING = true;
     SHOW_CHANGED = false;

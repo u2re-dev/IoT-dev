@@ -6,13 +6,20 @@
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
+//#include <Arduino.h>
+
+//
 #include "./core/output/tft_display.hpp"
 #include "./handler/device.hpp"
 #include "./handler/command.hpp"
 #include "./handler/fs.hpp"
 
 //
-void setup() {
+void loop() {};
+void setup() {};
+
+//
+int app_main() {
     setCpuFrequencyMhz(80);
 
     //
@@ -31,9 +38,6 @@ void setup() {
     keypad::initInput(COMHandler);
 
     //
-    switchScreen(true, CURRENT_DEVICE);
-
-    //
     if (!fs::sd::loadConfig(FSHandler)) {
         if (!fs::internal::loadConfig(FSHandler)) {
             _STOP_EXCEPTION_();
@@ -47,48 +51,50 @@ void setup() {
 
     //
     http::initServer(device);
-    switchScreen(false, CURRENT_DEVICE);
 
     //
     Serial.println("Setup is done...");
     wakeUp();
-}
-
-//
-void loop() {
 
     //
-    if ((millis() - LAST_ACTIVE_TIME) > 10000) {
-        powerSave();
-    }
-
-    //
-    if (INTERRUPTED.load()) {
-        // show RSOD error
-        if (POWER_SAVING.load() || (millis() - LAST_TIME.load()) >= STOP_TIMEOUT) {
-#ifdef ESP32
-            ESP.restart();
-#else
-            ESP.reset();
-#endif
+    while (!INTERRUPTED.load()) {
+        //
+        if ((millis() - LAST_ACTIVE_TIME) > 10000) {
+            powerSave();
         }
-    } else {
-        switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
 
         //
-        keypad::handleInput();
-        wifi::handleWiFi();
+        {
+            switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
 
-        //
-        if (wifi::WiFiConnected()) { rtc::timeClient.update(); }
+            //
+            keypad::handleInput();
+            wifi::handleWiFi();
 
-        //
-        rtc::_syncTimeFn_();
+            // 
+            if (wifi::WiFiConnected()) { rtc::timeClient.update(); }
+            rtc::_syncTimeFn_();
 
-        //
-        handleDevices();
+            //
+            handleDevices();
+        }
 
         //
         delay(POWER_SAVING.load() ? 100 : 1);
     }
+
+    //
+    _STOP_EXCEPTION_();
+    while (!(POWER_SAVING.load() || (millis() - LAST_TIME.load()) >= STOP_TIMEOUT)) {
+        delay(POWER_SAVING.load() ? 100 : 1);
+    }
+
+    //
+#ifdef ESP32
+    ESP.restart();
+#else
+    ESP.reset();
+#endif
+
+    return -1;
 }
