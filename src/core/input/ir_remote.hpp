@@ -13,11 +13,14 @@ namespace ir {
     //
     static IRrecv irrecv(IR_REMOTE_PIN);
     static decode_results irresults;
-
+    
     //
     void handleInput() {
+        
+        //
         if (irrecv.decode(&irresults)) {
             if (irresults.value != -1LL && irresults.command != 0) {
+                wakeUp();
                 _LOG_(2, "Last IR: " + String(irresults.command, HEX));
                 COM_HANDLER(irresults.command);
             }

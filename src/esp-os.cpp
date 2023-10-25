@@ -54,6 +54,11 @@ void setup() {
 void loop() {
 
     //
+    if ((millis() - LAST_ACTIVE_TIME) > 10000) {
+        powerSave();
+    }
+
+    //
     if (INTERRUPTED.load()) {
         // show RSOD error
         if ((millis() - LAST_TIME.load()) >= STOP_TIMEOUT) {
@@ -75,6 +80,8 @@ void loop() {
 
         //
         rtc::_syncTimeFn_();
+
+        //
         handleDevices();
         delay(1);
     }

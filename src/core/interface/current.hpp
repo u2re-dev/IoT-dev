@@ -1,6 +1,9 @@
 #pragma once
 
 //
+#include <SPI.h>
+
+//
 #include "../memory/f_string.hpp"
 #include "./pin_config.hpp"
 
@@ -20,8 +23,26 @@ static std::atomic<uint32_t> BG_COLOR;
 static const uintptr_t STOP_TIMEOUT = 1000;
 
 //
+static uintptr_t LAST_ACTIVE_TIME = millis();
+
+//
 std::atomic<bool> INTERRUPTED;
 std::atomic<uintptr_t> LAST_TIME; //= millis();
+
+//
+void wakeUp() {
+    digitalWrite(PIN_POWER_ON, HIGH);
+    digitalWrite(PIN_LCD_BL, HIGH);
+    setCpuFrequencyMhz(240);
+    LAST_ACTIVE_TIME = millis();
+}
+
+//
+void powerSave() {
+    digitalWrite(PIN_POWER_ON, LOW);
+    digitalWrite(PIN_LCD_BL, LOW);
+    setCpuFrequencyMhz(80);
+}
 
 //
 void initState() {

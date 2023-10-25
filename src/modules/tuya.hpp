@@ -277,10 +277,10 @@ namespace tuya {
             //
             if (wifi::WiFiConnected() && !client.connected()) 
             {
+                
                 //md5String(_udp_key, _udp_key_md5_);
                 if (client.connect(IP_ADDRESS, 6668)) {
                     delay(1);
-
                     if (client.connected()) {
 
                         //Serial.println("Connection to Tuya device...");
@@ -321,6 +321,7 @@ namespace tuya {
                     lastAttemp = millis();
                     _LOG_(0, "Tuya connection failed!");
                 }
+
             } else {
                 _LOG_(0, "WiFI disconnected!");
             }
