@@ -28,7 +28,7 @@ namespace keypad {
         //
         uint8_t command = received_data[0];
         if (command) {
-            _LOG_(2, "Last Key: " + command);
+            _LOG_(2, "Last Key: " + String(command, HEX));
             COM_HANDLER(command);
             memset(received_data, 0, MAX_B);
         }
