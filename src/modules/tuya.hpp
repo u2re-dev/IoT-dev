@@ -346,18 +346,20 @@ namespace tuya {
 
         //
         void reconnect() {
-            if ((millis() - lastAttemp) >= 15000 || connected) {
-                attemp = 0;
-            }
+            if (wifi::WiFiConnected()) {
+                if ((millis() - lastAttemp) >= 15000 || connected) {
+                    attemp = 0;
+                }
 
-            //
-            if (!client.connected() && attemp <= 3) {
-                //Serial.println("Tuya: Connection Probably Died!");
-                _LOG_(0, "Tuya connection died!");
-                connected = false;
-                attemp++;
-                lastAttemp = millis();
-                tuyaInit();
+                //
+                if (!client.connected() && attemp <= 3) {
+                    //Serial.println("Tuya: Connection Probably Died!");
+                    _LOG_(0, "Tuya connection died!");
+                    connected = false;
+                    attemp++;
+                    lastAttemp = millis();
+                    tuyaInit();
+                }
             }
         }
 

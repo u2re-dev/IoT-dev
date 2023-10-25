@@ -43,7 +43,7 @@ void setup() {
     //
     wifi::initWiFi();
     while (!wifi::WiFiConnected())
-    { keypad::handleInput(); delay(1); }
+    { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
 
     //
     http::initServer(device);
@@ -65,12 +65,12 @@ void loop() {
     //
     if (INTERRUPTED.load()) {
         // show RSOD error
-        if ((millis() - LAST_TIME.load()) >= STOP_TIMEOUT) {
-            #ifdef ESP32
-        ESP.restart();
-            #else
-        ESP.reset();
-            #endif
+        if (POWER_SAVING.load() || (millis() - LAST_TIME.load()) >= STOP_TIMEOUT) {
+#ifdef ESP32
+            ESP.restart();
+#else
+            ESP.reset();
+#endif
         }
     } else {
         switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
@@ -87,6 +87,8 @@ void loop() {
 
         //
         handleDevices();
-        delay(1);
+
+        //
+        delay(POWER_SAVING.load() ? 100 : 1);
     }
 }

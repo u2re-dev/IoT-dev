@@ -65,12 +65,12 @@ namespace tft {
                 lT = millis();
             }
 
-            if ((millis() - oT) >= 1000) {
+            if (!POWER_SAVING.load() && (millis() - oT) >= 1000) {
                 msOverlay(&display);
                 oT = millis();
             }
 
-            delay(1);
+            delay(POWER_SAVING.load() ? 100 : 1);
         }
     }
     #endif
