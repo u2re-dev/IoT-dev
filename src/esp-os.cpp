@@ -13,6 +13,9 @@
 
 //
 void setup() {
+    setCpuFrequencyMhz(80);
+
+    //
     initState();
     tft::initDisplay();
 
@@ -45,9 +48,10 @@ void setup() {
     //
     http::initServer(device);
     switchScreen(false, CURRENT_DEVICE);
-    
+
     //
     Serial.println("Setup is done...");
+    wakeUp();
 }
 
 //

@@ -30,11 +30,18 @@ std::atomic<bool> INTERRUPTED;
 std::atomic<uintptr_t> LAST_TIME; //= millis();
 
 //
+std::atomic<bool> SHOW_CHANGED;
+std::atomic<bool> POWER_SAVING;
+std::atomic<bool> OVERLAY_CHANGED;
+
+//
 void wakeUp() {
     digitalWrite(PIN_POWER_ON, HIGH);
     digitalWrite(PIN_LCD_BL, HIGH);
     setCpuFrequencyMhz(240);
     LAST_ACTIVE_TIME = millis();
+    POWER_SAVING = false;
+    SHOW_CHANGED = true;
 }
 
 //
@@ -42,16 +49,21 @@ void powerSave() {
     digitalWrite(PIN_POWER_ON, LOW);
     digitalWrite(PIN_LCD_BL, LOW);
     setCpuFrequencyMhz(80);
+    POWER_SAVING = true;
 }
 
 //
 void initState() {
+    OVERLAY_CHANGED = false;
+    POWER_SAVING = true;
+    SHOW_CHANGED = false;
     BG_COLOR = 0x0000;
     CURRENT_DEVICE = 0;
     DEBUG_SCREEN = true;
     LAST_TIME = millis();
     INTERRUPTED = false;
     LOADING_SD = false;
+    setCpuFrequencyMhz(80);
 }
 
 //
@@ -59,6 +71,7 @@ void _STOP_EXCEPTION_() {
     LAST_TIME = millis();
     BG_COLOR = 0xF800;
     INTERRUPTED = true;
+    SHOW_CHANGED = true;
 }
 
 //
@@ -72,8 +85,11 @@ struct OVERLAY {
     _String_<> _RIGHT_;
 } overlay;
 
+
+
 //
 void _LOG_(const uint8_t L, String const& string) {
+    SHOW_CHANGED = true;
     debug_info._LINE_[L] = string;
     delay(10);
 }
@@ -83,6 +99,7 @@ void switchScreen(bool dbg, uint dvID) {
     if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
         DEBUG_SCREEN = dbg;
         CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
+        SHOW_CHANGED = true;
     }
 }
 

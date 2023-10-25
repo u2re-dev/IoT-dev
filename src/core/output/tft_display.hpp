@@ -50,18 +50,26 @@ namespace tft {
 
     //
     static thread_local size_t lT = millis();
+    static thread_local size_t oT = millis();
 
     //
     #ifdef ESP32
     std::thread displayTask;
     void displayThread() {
         while(true) {
-            if ((millis() - lT) >= 100) {
+            if (SHOW_CHANGED.load() && !POWER_SAVING.load() && (millis() - lT) >= 20) {
                 display.fillScreen(BG_COLOR);
                 _drawScreen_(&display, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
                 msOverlay(&display);
+                SHOW_CHANGED = false;
                 lT = millis();
             }
+
+            if ((millis() - oT) >= 1000) {
+                msOverlay(&display);
+                oT = millis();
+            }
+
             delay(1);
         }
     }
@@ -79,8 +87,8 @@ namespace tft {
         delay(100);
 
         //
-        digitalWrite(PIN_POWER_ON, HIGH);
-        digitalWrite(PIN_LCD_BL, HIGH);
+        digitalWrite(PIN_POWER_ON, LOW);
+        digitalWrite(PIN_LCD_BL, LOW);
         delay(100);
         
         //
