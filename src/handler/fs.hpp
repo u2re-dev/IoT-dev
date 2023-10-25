@@ -9,8 +9,8 @@
 //
 const auto FSHandler = [](JSONVar& doc){
     //
-    Serial.println("SSID: " + (ssid = (char const*)doc["ssid"]).toString());
-    Serial.println("Password: " + (password = (char const*)doc["password"]).toString());
+    Serial.println("SSID: " + (wifi::ssid = (char const*)doc["ssid"]).toString());
+    Serial.println("Password: " + (wifi::password = (char const*)doc["password"]).toString());
 
     //
     _LOG_(0, "Configuring devices...");

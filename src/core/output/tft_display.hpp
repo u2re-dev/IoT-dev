@@ -19,75 +19,80 @@
 #include "../interface/current.hpp"
 
 //
-TFT_eSPI tft = TFT_eSPI();
+namespace tft {
 
-//
-void msOverlay(TFT_eSPI *display) {
-    display->setTextColor(TFT_WHITE, BG_COLOR, true);
-    time_t _time_ = getTime();
+    //
+    TFT_eSPI display = TFT_eSPI();
 
-    display->fillRect(10, 10, 320 - 20, 20, BG_COLOR);
-    display->drawRightString(String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60), 310, 10, 2);
-    display->drawString(DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)), 10, 10, 2);
-}
+    //
+    void msOverlay(TFT_eSPI *display) {
+        display->setTextColor(TFT_WHITE, BG_COLOR, true);
+        time_t _time_ = rtc::getTime();
 
-//
-void _drawScreen_(TFT_eSPI *display, int16_t x, int16_t y, uint SCREEN_ID) {
-    display->setTextColor(TFT_WHITE, BG_COLOR, true);
-
-    display->fillRect(10, 10 + 20, 320 - 20, 20, BG_COLOR);
-    display->drawString(debug_info._LINE_[0].toString(), 10 + x, 10 + 20 + y, 2);
-
-    display->fillRect(10, 10 + 40, 320 - 20, 20, BG_COLOR);
-    display->drawString(debug_info._LINE_[1].toString(), 10 + x, 10 + 40 + y, 2);
-
-    display->fillRect(10, 10 + 60, 320 - 20, 20, BG_COLOR);
-    display->drawString(debug_info._LINE_[2].toString(), 10 + x, 10 + 60 + y, 2);
-}
-
-//
-static thread_local size_t lT = millis();
-
-//
-#ifdef ESP32
-std::thread displayTask;
-void displayThread() {
-    while(true) {
-        if ((millis() - lT) >= 100) {
-            tft.fillScreen(BG_COLOR);
-            _drawScreen_(&tft, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
-            msOverlay(&tft);
-            lT = millis();
-        }
-        delay(1);
+        display->fillRect(10, 10, 320 - 20, 20, BG_COLOR);
+        display->drawRightString(String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60), 310, 10, 2);
+        display->drawString(DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)), 10, 10, 2);
     }
-}
-#endif
-
-//
-void initDisplay(void)
-{
-    Serial.begin(115200);
-    Serial.println("Init Display...");
 
     //
-    pinMode(PIN_POWER_ON, OUTPUT);
-    pinMode(PIN_LCD_BL, OUTPUT);
-    delay(100);
+    void _drawScreen_(TFT_eSPI *display, int16_t x, int16_t y, uint SCREEN_ID) {
+        display->setTextColor(TFT_WHITE, BG_COLOR, true);
+
+        display->fillRect(10, 10 + 20, 320 - 20, 20, BG_COLOR);
+        display->drawString(debug_info._LINE_[0].toString(), 10 + x, 10 + 20 + y, 2);
+
+        display->fillRect(10, 10 + 40, 320 - 20, 20, BG_COLOR);
+        display->drawString(debug_info._LINE_[1].toString(), 10 + x, 10 + 40 + y, 2);
+
+        display->fillRect(10, 10 + 60, 320 - 20, 20, BG_COLOR);
+        display->drawString(debug_info._LINE_[2].toString(), 10 + x, 10 + 60 + y, 2);
+    }
 
     //
-    digitalWrite(PIN_POWER_ON, HIGH);
-    digitalWrite(PIN_LCD_BL, HIGH);
-    delay(100);
-    
-    //
-    tft.init();
-    tft.setRotation(3);
-    tft.fillScreen(BG_COLOR);
+    static thread_local size_t lT = millis();
 
     //
-#ifdef ESP32
-    Serial.println("Pinning to Core...");
-    displayTask = std::thread(displayThread);
-#endif
+    #ifdef ESP32
+    std::thread displayTask;
+    void displayThread() {
+        while(true) {
+            if ((millis() - lT) >= 100) {
+                display.fillScreen(BG_COLOR);
+                _drawScreen_(&display, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
+                msOverlay(&display);
+                lT = millis();
+            }
+            delay(1);
+        }
+    }
+    #endif
+
+    //
+    void initDisplay(void)
+    {
+        Serial.begin(115200);
+        Serial.println("Init Display...");
+
+        //
+        pinMode(PIN_POWER_ON, OUTPUT);
+        pinMode(PIN_LCD_BL, OUTPUT);
+        delay(100);
+
+        //
+        digitalWrite(PIN_POWER_ON, HIGH);
+        digitalWrite(PIN_LCD_BL, HIGH);
+        delay(100);
+        
+        //
+        display.init();
+        display.setRotation(3);
+        display.fillScreen(BG_COLOR);
+
+        //
+    #ifdef ESP32
+        Serial.println("Pinning to Core...");
+        displayTask = std::thread(displayThread);
+    #endif
+    }
+
 }

@@ -14,36 +14,36 @@
 //
 void setup() {
     initState();
-    initDisplay();
+    tft::initDisplay();
 
     //
     Serial.setDebugOutput(true);
     Serial.begin(115200);
 
     //
-    nvs.begin("nvs", false);
+    nv::storage.begin("nvs", false);
 
     //
-    initRTC();
-    initInput(COMHandler);
+    rtc::initRTC();
+    keypad::initInput(COMHandler);
 
     //
     switchScreen(true, CURRENT_DEVICE);
 
     //
-    if (!loadConfigSD(FSHandler)) {
-        if (!loadConfigInternal(FSHandler)) {
+    if (!fs::sd::loadConfig(FSHandler)) {
+        if (!fs::internal::loadConfig(FSHandler)) {
             _STOP_EXCEPTION_();
         }
     }
 
     //
-    initWiFi();
-    while (!WiFiConnected())
-    { handleInput(); delay(1); }
+    wifi::initWiFi();
+    while (!wifi::WiFiConnected())
+    { keypad::handleInput(); delay(1); }
 
     //
-    initServer(device);
+    http::initServer(device);
     switchScreen(false, CURRENT_DEVICE);
     
     //
@@ -64,16 +64,17 @@ void loop() {
             #endif
         }
     } else {
-        switchScreen((!CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
+        switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
 
         //
-        handleInput();
-        handleWiFi();
+        keypad::handleInput();
+        wifi::handleWiFi();
 
         //
-        if (WiFiConnected()) { timeClient.update(); }
+        if (wifi::WiFiConnected()) { rtc::timeClient.update(); }
 
-        _syncTimeFn_();
+        //
+        rtc::_syncTimeFn_();
         handleDevices();
         delay(1);
     }

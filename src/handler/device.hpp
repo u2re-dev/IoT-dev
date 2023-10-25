@@ -5,8 +5,8 @@
 
 //
 thread_local static JSONVar testProgramTemplate[3];
-std::function<void(TuyaDevice3&)> testPrograms[] = {
-    [](TuyaDevice3& device){
+std::function<void(tuya::TuyaDevice3&)> testPrograms[] = {
+    [](tuya::TuyaDevice3& device){
         JSONVar& _temp_ = testProgramTemplate[0];
         //device.merge(_temp_, device.cState);
 
@@ -21,11 +21,11 @@ std::function<void(TuyaDevice3&)> testPrograms[] = {
 };
 
 //
-static TuyaDevice3 device[2] = { TuyaDevice3("dev0"), TuyaDevice3("dev1") };
+static tuya::TuyaDevice3 device[2] = { tuya::TuyaDevice3("dev0"), tuya::TuyaDevice3("dev1") };
 
 //
 void handleDevices() {
-    if (WiFiConnected()) {
+    if (wifi::WiFiConnected()) {
         for (uint8_t I=0;I<2;I++) {
             device[I].reconnect();
         }

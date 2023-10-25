@@ -122,6 +122,11 @@
     "xstring": "cpp",
     "xtree": "cpp",
     "xutility": "cpp",
-    "*.tpp": "cpp"
-  }
+    "*.tpp": "cpp",
+    "condition_variable": "cpp",
+    "csignal": "cpp",
+    "mutex": "cpp"
+  },
+  "C_Cpp.default.cppStandard": "gnu++23",
+  "C_Cpp.default.cStandard": "gnu23"
 }

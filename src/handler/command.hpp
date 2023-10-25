@@ -24,8 +24,8 @@ const auto COMHandler = [](uint32_t command){
         switchScreen(true, CURRENT_DEVICE);
 
         //
-        if (!loadConfigSD(FSHandler)) {
-            if (!loadConfigInternal(FSHandler)) {
+        if (!fs::sd::loadConfig(FSHandler)) {
+            if (!fs::internal::loadConfig(FSHandler)) {
                 _STOP_EXCEPTION_();
             }
         }
@@ -44,7 +44,7 @@ const auto COMHandler = [](uint32_t command){
 
             //
             WiFi.disconnect(true);
-            WiFi.begin(ssid, password);
+            WiFi.begin(wifi::ssid, wifi::password);
 
             //
         #ifndef ESP32

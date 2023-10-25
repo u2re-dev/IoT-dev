@@ -2,7 +2,6 @@
 
 //
 #include <Arduino.h>
-#include <FS.h>
 #include <SPIFFS.h>
 
 //
@@ -10,52 +9,60 @@
 #include "../persistent/nv_typed.hpp"
 
 //
-bool loadConfigInternal(std::function<void(JSONVar&)> handler) {
-    //
-    LOADING_SD = false;
-    bool LOADED = false;
+namespace fs {
 
     //
-    static const char *filename = "/keys.json";
+    namespace internal {
 
-    //
-    _LOG_(0, "Reading from Internal Storage...");
-    _LOG_(1, filename);
+        //
+        bool loadConfig(std::function<void(JSONVar&)> handler) {
+            //
+            LOADING_SD = false;
+            bool LOADED = false;
 
-    //
-    if (SPIFFS.begin()) {
-        LOADING_SD = true;
-        // Open file for writing
-        Serial.println("SD connected...");
-        File file = SPIFFS.open(filename, FILE_READ);
-        if (!file) {
-          _LOG_(0, "Failed to read file...");
-          return (LOADING_SD = false);
+            //
+            static const char *filename = "/keys.json";
+
+            //
+            _LOG_(0, "Reading from Internal Storage...");
+            _LOG_(1, filename);
+
+            //
+            if (SPIFFS.begin()) {
+                LOADING_SD = true;
+                // Open file for writing
+                Serial.println("SD connected...");
+                File file = SPIFFS.open(filename, FILE_READ);
+                if (!file) {
+                  _LOG_(0, "Failed to read file...");
+                  return (LOADING_SD = false);
+                }
+
+                //
+                JSONVar doc = JSON.parse(file.readString());
+                if (JSON.typeof(doc) == "undefined") {
+                  _LOG_(0, "Failed to read file...");
+                  return (LOADING_SD = false);
+                }
+                
+                //
+                file.close();
+
+                //
+                Serial.println("Success to read JSON file...");
+                _LOG_(0, "Success to read JSON file...");
+                _LOG_(1, "");
+
+                //
+                handler(doc);
+
+                //
+                LOADING_SD = false;
+                LOADED = true;
+            }
+
+            //
+            return LOADED;
         }
-
-        //
-        JSONVar doc = JSON.parse(file.readString());
-        if (JSON.typeof(doc) == "undefined") {
-          _LOG_(0, "Failed to read file...");
-          return (LOADING_SD = false);
-        }
-        
-        //
-        file.close();
-
-        //
-        Serial.println("Success to read JSON file...");
-        _LOG_(0, "Success to read JSON file...");
-        _LOG_(1, "");
-
-        //
-        handler(doc);
-
-        //
-        LOADING_SD = false;
-        LOADED = true;
     }
-
-    //
-    return LOADED;
 }

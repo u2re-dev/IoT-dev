@@ -10,7 +10,7 @@
 #include <atomic>
 
 //
-std::function<void(uint32_t)> handler;
+std::function<void(uint32_t)> COM_HANDLER;
 
 //
 static std::atomic<bool> LOADING_SD;
