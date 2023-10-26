@@ -15,14 +15,22 @@ void loopTask(void *pvParameters)
     setCpuFrequencyMhz(80);
 
     //
+    pinMode(PIN_POWER_ON, OUTPUT);
+    pinMode(PIN_LCD_BL, OUTPUT);
+
+    //
+    digitalWrite(PIN_POWER_ON, LOW);
+    digitalWrite(PIN_LCD_BL, LOW);
+
+    //
     initState();
-    tft::initDisplay();
 
     //
     Serial.setDebugOutput(true);
     Serial.begin(115200);
 
     //
+    tft::initDisplay();
     nv::storage.begin("nvs", false);
 
     //
@@ -34,20 +42,26 @@ void loopTask(void *pvParameters)
 
     //
     if (!INTERRUPTED.load()) {
-        //
         rtc::initRTC();
         keypad::initInput(COMHandler);
 
         //
         wifi::initWiFi();
+
+        //
         while (!wifi::WiFiConnected())
         { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
+        rtc::initRTC();
 
         //
         //http::initServer(device);
 
         //
         Serial.println("Setup is done...");
+    }
+
+    //
+    if (!INTERRUPTED.load()) {
         wakeUp();
     }
 

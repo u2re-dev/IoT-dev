@@ -1,9 +1,6 @@
 #pragma once
 
 //
-#include <SPI.h>
-
-//
 #include "../memory/f_string.hpp"
 #include "./pin_config.hpp"
 
@@ -58,13 +55,13 @@ void initState() {
     EXCEPTION = -1;
     OVERLAY_CHANGED = false;
     POWER_SAVING = true;
-    SHOW_CHANGED = false;
     BG_COLOR = 0x0000;
     CURRENT_DEVICE = 0;
     DEBUG_SCREEN = true;
     LAST_TIME = millis();
     INTERRUPTED = false;
     LOADING_SD = false;
+    SHOW_CHANGED = true;
     setCpuFrequencyMhz(80);
 }
 
@@ -91,9 +88,8 @@ struct OVERLAY {
 
 //
 void _LOG_(const uint8_t L, String const& string) {
-    SHOW_CHANGED = true;
     debug_info._LINE_[L] = string;
-    delay(10);
+    SHOW_CHANGED = true;
 }
 
 //

@@ -26,14 +26,7 @@ static tuya::TuyaDevice3 device[2] = { tuya::TuyaDevice3("dev0"), tuya::TuyaDevi
 //
 void handleDevices() {
     if (wifi::WiFiConnected()) {
-        for (uint8_t I=0;I<2;I++) {
-            device[I].reconnect();
-        }
-        for (uint8_t I=0;I<2;I++) {
-            device[I].handleReceive();
-        }
-        //for (uint8_t I=0;I<2;I++) {
-            //device[I].handleAutoProgram();
-        //}
+        device[CURRENT_DEVICE].reconnect();
+        device[CURRENT_DEVICE].handleReceive();
     }
 }
