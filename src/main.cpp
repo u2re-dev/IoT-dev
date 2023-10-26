@@ -10,6 +10,19 @@
 #include "./handler/fs.hpp"
 
 //
+#ifdef ESP32
+std::thread displayTask;
+void IOTask() {
+    while(!INTERRUPTED.load()) {
+        keypad::handleInput();
+        tft::drawFrame();
+        delay(POWER_SAVING.load() ? 100 : 1);
+    }
+    tft::_RSOD_();
+}
+#endif
+
+//
 void loopTask(void *pvParameters)
 {
     setCpuFrequencyMhz(80);
@@ -30,8 +43,15 @@ void loopTask(void *pvParameters)
     Serial.begin(115200);
 
     //
+    keypad::initInput(COMHandler);
     tft::initDisplay();
     nv::storage.begin("nvs", false);
+
+    //
+#ifdef ESP32
+    Serial.println("Making IO threads...");
+    displayTask = std::thread(IOTask);
+#endif
 
     //
     if (!fs::sd::loadConfig(FSHandler)) {
@@ -43,7 +63,6 @@ void loopTask(void *pvParameters)
     //
     if (!INTERRUPTED.load()) {
         rtc::initRTC();
-        keypad::initInput(COMHandler);
 
         //
         wifi::initWiFi();
@@ -77,7 +96,6 @@ void loopTask(void *pvParameters)
             switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
 
             //
-            keypad::handleInput();
             wifi::handleWiFi();
 
             // 

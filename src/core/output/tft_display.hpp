@@ -23,6 +23,17 @@
         TFT_eSPI display = TFT_eSPI();
 
         //
+        void _RSOD_() {
+            // do RSOD crash screen
+            if (!POWER_SAVING.load()) {
+                display.fillScreen(BG_COLOR = 0xF800);
+                display.drawString("Our system run into problem, ", 10, 10);
+                display.drawString("Needs to be a restart...", 10, 30);
+                display.drawString("EXCEPTION CODE: " + String(EXCEPTION.load(), HEX), 10, 50);
+            }
+        }
+
+        //
         void msOverlay(TFT_eSPI *display) {
             display->setTextColor(TFT_WHITE, BG_COLOR, true);
             time_t _time_ = rtc::getTime();
@@ -47,59 +58,38 @@
         }
 
         //
-        static thread_local size_t lT = millis();
-        static thread_local size_t oT = millis();
-
-        //
-        #ifdef ESP32
-        std::thread displayTask;
-        void displayThread() {
-            while(!INTERRUPTED.load()) {
-                if (!POWER_SAVING.load()) {
-                    
-                    //
-                    if (SHOW_CHANGED.load() && (millis() - lT) >= 10) {
-                        display.fillScreen(BG_COLOR);
-                        _drawScreen_(&display, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
-                        msOverlay(&display);
-                        SHOW_CHANGED = false;
-                        lT = millis();
-                    }
-
-                    //
-                    if ((millis() - oT) >= 1000) {
-                        msOverlay(&display);
-                        oT = millis();
-                    }
-                }
-
-                //
-                delay(POWER_SAVING.load() ? 100 : 1);
-            }
-
-            // do RSOD crash screen
-            if (!POWER_SAVING.load()) {
-                display.fillScreen(BG_COLOR = 0xF800);
-                display.drawString("Our system run into problem, ", 10, 10);
-                display.drawString("Needs to be a restart...", 10, 30);
-                display.drawString("EXCEPTION CODE: " + String(EXCEPTION.load(), HEX), 10, 50);
-            }
-        }
-        #endif
-
-        //
         void initDisplay(void)
         {
             Serial.println("Init Display...");
             display.init();
             display.setRotation(1);
             display.fillScreen(BG_COLOR);
+        }
+
+        //
+        void drawFrame() {
+            //
+            static thread_local size_t lT = millis();
+            static thread_local size_t oT = millis();
 
             //
-        #ifdef ESP32
-            Serial.println("Pinning to Core...");
-            displayTask = std::thread(displayThread);
-        #endif
+            if (!POWER_SAVING.load()) {
+                
+                //
+                if (SHOW_CHANGED.load() && (millis() - lT) >= 10) {
+                    display.fillScreen(BG_COLOR);
+                    _drawScreen_(&display, 0, 0, DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
+                    msOverlay(&display);
+                    SHOW_CHANGED = false;
+                    lT = millis();
+                }
+
+                //
+                if ((millis() - oT) >= 1000) {
+                    msOverlay(&display);
+                    oT = millis();
+                }
+            }
         }
 
     }
