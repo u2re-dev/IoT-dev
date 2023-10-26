@@ -42,7 +42,7 @@ void loopTask(void *pvParameters)
     { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
 
     //
-    http::initServer(device);
+    //http::initServer(device);
 
     //
     Serial.println("Setup is done...");

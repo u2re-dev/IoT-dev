@@ -125,7 +125,14 @@
     "*.tpp": "cpp",
     "condition_variable": "cpp",
     "csignal": "cpp",
-    "mutex": "cpp"
+    "mutex": "cpp",
+    "tft_espi_stm32.c": "cpp",
+    "tft_espi_esp8266.c": "cpp",
+    "tft_espi_esp32_s3.c": "cpp",
+    "tft_espi_generic.c": "cpp",
+    "tft_espi_esp32_c3.c": "cpp",
+    "tft_espi_esp32.c": "cpp",
+    "tft_espi_rp2040.c": "cpp"
   },
   "C_Cpp.default.cppStandard": "gnu++23",
   "C_Cpp.default.cStandard": "gnu23"
