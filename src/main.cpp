@@ -14,7 +14,9 @@
 std::thread displayTask;
 void IOTask() {
     while(!INTERRUPTED.load()) {
-        keypad::pollingInput();
+        if (keypad::pollingInput()) {
+            wakeUp();
+        }
         tft::drawFrame();
         delay(POWER_SAVING.load() ? 100 : 1);
     }

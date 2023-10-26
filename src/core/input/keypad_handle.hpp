@@ -25,7 +25,7 @@ namespace keypad {
     static uint8_t received_data[MAX_B] = {0};
 
     //
-    void pollingInput() {
+    bool pollingInput() {
         if (!available.load()) {
             Wire.requestFrom(I2C_KEYPAD_ADDR, MAX_B);
             for (int i = 0; i < MAX_B && Wire.available(); i++)
@@ -35,6 +35,7 @@ namespace keypad {
         //
         uint8_t command = received_data[0];
         if (command) { available = true; };
+        return available.load();
     }
 
     //
