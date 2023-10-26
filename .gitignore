@@ -12,3 +12,5 @@ version.txt
 dependencies.lock
 managed_components/
 target/
+.pio
+.pio/
