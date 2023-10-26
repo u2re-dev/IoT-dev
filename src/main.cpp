@@ -26,10 +26,6 @@ void loopTask(void *pvParameters)
     nv::storage.begin("nvs", false);
 
     //
-    rtc::initRTC();
-    keypad::initInput(COMHandler);
-
-    //
     if (!fs::sd::loadConfig(FSHandler)) {
         if (!fs::internal::loadConfig(FSHandler)) {
             _STOP_EXCEPTION_();
@@ -37,16 +33,23 @@ void loopTask(void *pvParameters)
     }
 
     //
-    wifi::initWiFi();
-    while (!wifi::WiFiConnected())
-    { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
+    if (!INTERRUPTED.load()) {
+        //
+        rtc::initRTC();
+        keypad::initInput(COMHandler);
 
-    //
-    //http::initServer(device);
+        //
+        wifi::initWiFi();
+        while (!wifi::WiFiConnected())
+        { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
 
-    //
-    Serial.println("Setup is done...");
-    wakeUp();
+        //
+        //http::initServer(device);
+
+        //
+        Serial.println("Setup is done...");
+        wakeUp();
+    }
 
     //
     while (!INTERRUPTED.load()) {
