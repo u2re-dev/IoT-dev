@@ -92,7 +92,7 @@
         {
             Serial.println("Init Display...");
             display.init();
-            display.setRotation(3);
+            display.setRotation(1);
             display.fillScreen(BG_COLOR);
 
             //
