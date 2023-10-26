@@ -14,7 +14,7 @@
 std::thread displayTask;
 void IOTask() {
     while(!INTERRUPTED.load()) {
-        keypad::handleInput();
+        keypad::pollingInput();
         tft::drawFrame();
         delay(POWER_SAVING.load() ? 100 : 1);
     }
@@ -96,6 +96,7 @@ void loopTask(void *pvParameters)
             switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
 
             //
+            keypad::handleInput();
             wifi::handleWiFi();
 
             // 
