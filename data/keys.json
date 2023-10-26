@@ -1,0 +1,43 @@
+{
+    "ssid": "mozg",
+    "password": "n3v3rm1nd",
+    "devices": [{
+        "protocol": "3.3",
+        "device_id": "bf6c002c88040c4be1uhrj",
+        "device_name": "E27-10W",
+        "product_id": "n1nlguubkqwvpa5y",
+        "product_name": "E27-10W",
+        "category": "dj",
+        "uuid": "bf6c002c88040c4be1uhrj",
+        "local_key": "fC[Z4cCZVXxR<_qS",
+        "mac_address": "1c:90:ff:07:d1:5d",
+        "local_ip": "192.168.31.132",
+        "ir_map": {
+            "5": {"20": true, "21": "white", "22": 1000, "23": 1000},
+            "6": {"20": true, "21": "white", "22": 10, "23": 0},
+            "7": {"20": true, "21": "white", "22": 1000, "23": 0},
+            "8": {"20": false, "21": "white", "22": 10, "23": 0},
+            "9": {"20": true, "30": "0001007f04010a00000000001419010c00000000006464011200000000005032011600000000000500"}
+        }
+    }, {
+        "device_id": "bfb55ccafc386ce59c1j1o",
+        "gwId": "bfb55ccafc386ce59c1j1o",
+        "device_name": "HIPER IoT A61 RGB",
+        "product_id": "4f6a6fg1jn7vo0c3",
+        "product_name": "HIPER IoT A61 RGB",
+        "category": "dj",
+        "uuid": "ad261df5e6880b1b",
+        "local_key": "Vt+X7-%j38H*-u4(",
+        "mac_address": "d8:1f:12:cc:b3:a5",
+        "local_ip": "192.168.31.210",
+        "protocol": "3.4",
+        "apiDeviceID": "bfb55ccafc386ce59c1j1o",
+        "ir_map": {
+            "5": {"20": true, "21": "white", "22": 1000, "23": 1000},
+            "6": {"20": true, "21": "white", "22": 10, "23": 0},
+            "7": {"20": true, "21": "white", "22": 1000, "23": 0},
+            "8": {"20": false, "21": "white", "22": 10, "23": 0},
+            "9": {"20": true, "30": "0001007f04010a00000000001419010c00000000006464011200000000005032011600000000000500"}
+        }
+    }]
+}

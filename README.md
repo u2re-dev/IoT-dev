@@ -1,16 +1,14 @@
-# 💡 Local Tuya through ESP32 (S3) 💡
+# ESP32 Arduino Lib Builder [![ESP32 Arduino Libs CI](https://github.com/espressif/esp32-arduino-lib-builder/actions/workflows/push.yml/badge.svg)](https://github.com/espressif/esp32-arduino-lib-builder/actions/workflows/push.yml)
 
-I trying to manipulate tuya smart bulb by ESP32 (S3) micro-controller. Written in C++ (early for older ESP, due limitations). Current or future task - make better, smarter and faster implementation.
+This repository contains the scripts that produce the libraries included with esp32-arduino.
 
-### Why?
+Tested on Ubuntu (32 and 64 bit), Raspberry Pi and MacOS.
 
-I would to make almost network or internet independent smart home. Currently, our Wi-Fi connection not so stable. 
-
-### 🍊 Tuya-protocol? 🍊
-
-Supported only...
-
-- [x] 3.3 
-- [x] 3.4 
-- [ ] 3.5 (not implemented yet, may available only from ESP32-S3)
-- [ ] 3.6 (not implemented yet, may available only from ESP32-S3)
+### Build on Ubuntu and Raspberry Pi
+```bash
+sudo apt-get install git wget curl libssl-dev libncurses-dev flex bison gperf python python-pip python-setuptools python-serial python-click python-cryptography python-future python-pyparsing python-pyelftools cmake ninja-build ccache jq
+sudo pip install --upgrade pip
+git clone https://github.com/espressif/esp32-arduino-lib-builder
+cd esp32-arduino-lib-builder
+./build.sh
+```

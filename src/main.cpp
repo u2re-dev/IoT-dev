@@ -1,4 +1,4 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 
 //
 #define VERY_LARGE_STRING_LENGTH 8000

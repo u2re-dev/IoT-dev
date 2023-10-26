@@ -163,7 +163,7 @@ namespace rtc {
 
     //
     static std::atomic<unsigned long> _current_time_;
-    static timer::IntervalFn<15000> _syncTimeFn_([&](){
+    static timer::IntervalFn<15000> _syncTimeFn_([](){
         _current_time_ = _getTime_();
     });
 

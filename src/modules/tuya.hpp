@@ -169,7 +169,7 @@ namespace tuya {
         uint8_t* decodeMessage(uint32_t& cmdId, uint8_t* mem, size_t& mlen, bool hmac) {
             //SEQ_NO = bswap32(*(uint32_t*)(mem + 4));
             cmdId = bswap32(*(uint32_t*)(mem + 8));
-            mlen = min((mlen - ((hmac ? 32 : 4) + 4 + 20)), bswap32(*(uint32_t*)(mem + 12)) - 4 - 4 - (hmac ? 32 : 4));
+            mlen = std::min(size_t(mlen - ((hmac ? 32 : 4) + 4 + 20)), size_t(bswap32(*(uint32_t*)(mem + 12)) - 4 - 4 - (hmac ? 32 : 4)));
             //mlen = bswap32(*(uint32_t*)(mem + 12)) - 4 - 4 - (hmac ? 32 : 4);
             //Serial.println("Length: " + String(mlen));
             return (mem + 20);
@@ -219,7 +219,7 @@ namespace tuya {
         }
 
         //
-        uint8_t* decryptRaw(uint8_t* _key_, uint8_t* data, uint32_t& blk) {
+        uint8_t* decryptRaw(uint8_t* _key_, uint8_t* data, size_t& blk) {
             AES_ctx cipher;
             AES_init_ctx(&cipher, _key_);
 
@@ -239,7 +239,7 @@ namespace tuya {
         }
 
         //
-        uint8_t* decryptJson(uint8_t* _key_, uint8_t* data, uint32_t& blk) {
+        uint8_t* decryptJson(uint8_t* _key_, uint8_t* data, size_t& blk) {
             AES_ctx cipher;
             AES_init_ctx(&cipher, _key_);
 
