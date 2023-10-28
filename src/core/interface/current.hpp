@@ -34,6 +34,7 @@ std::atomic<bool> OVERLAY_CHANGED;
 
 //
 void wakeUp() {
+    SHOW_CHANGED = false;
     digitalWrite(PIN_POWER_ON, HIGH);
     digitalWrite(PIN_LCD_BL, HIGH);
     setCpuFrequencyMhz(240);
@@ -44,6 +45,7 @@ void wakeUp() {
 
 //
 void powerSave() {
+    SHOW_CHANGED = false;
     digitalWrite(PIN_POWER_ON, LOW);
     digitalWrite(PIN_LCD_BL, LOW);
     setCpuFrequencyMhz(80);
@@ -52,6 +54,7 @@ void powerSave() {
 
 //
 void initState() {
+    SHOW_CHANGED = false;
     EXCEPTION = -1;
     OVERLAY_CHANGED = false;
     POWER_SAVING = true;
@@ -67,6 +70,7 @@ void initState() {
 
 //
 void _STOP_EXCEPTION_() {
+    SHOW_CHANGED = false;
     LAST_TIME = millis();
     BG_COLOR = 0xF800;
     INTERRUPTED = true;
@@ -88,6 +92,7 @@ struct OVERLAY {
 
 //
 void _LOG_(const uint8_t L, String const& string) {
+    SHOW_CHANGED = false;
     debug_info._LINE_[L] = string;
     SHOW_CHANGED = true;
 }
@@ -95,6 +100,7 @@ void _LOG_(const uint8_t L, String const& string) {
 //
 void switchScreen(bool dbg, uint dvID) {
     if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
+        SHOW_CHANGED = false;
         DEBUG_SCREEN = dbg;
         CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
         SHOW_CHANGED = true;
