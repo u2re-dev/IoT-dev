@@ -67,14 +67,6 @@ namespace http {
 
         //
         server.on("/post", HTTP_POST, [device](AsyncWebServerRequest *request) {
-            /*String message;
-            if (request->hasParam("message", true)) {
-                message = request->getParam("message", true)->value();
-            } else {
-                message = "No message sent";
-            }
-            Serial.println(message);
-            request->send(200, "text/plain", "Hello, POST: " + message);*/
             request->send(200, "text/plain", "Hello, POST: TODO");
         });
 

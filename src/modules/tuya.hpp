@@ -2,24 +2,11 @@
 
 //
 #include "../core/crypto/aes.hpp"
-#ifndef ESP32
-#include "../checksum/crc.hpp"
-#else
 #include <esp32/rom/crc.h>
-#endif
-
-//
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include <Arduino_JSON.h>
 #include "mbedtls/md.h"
-#else
-#include "sha256.hpp"
-#endif
 
 //
-#include "../core/crypto/md5.hpp"
-
-//
-//#include "../memory/f_string.hpp"
 #include "../core/persistent/nv_typed.hpp"
 #include "../core/persistent/nv_string.hpp"
 #include "../core/interface/current.hpp"
@@ -27,9 +14,6 @@
 //
 #include "../core/time/timer.hpp"
 #include "./net_com.hpp"
-
-//#include <ArduinoWebsockets.h>
-#include <Arduino_JSON.h>
 
 //
 namespace tuya {
@@ -40,7 +24,6 @@ namespace tuya {
 
     //
     static const uint8_t wret = 16;
-    static uint8_t _udp_key_md5_[16];
 
     //
     static const _String_<16> _udp_key = "yGAdlopoPVldABfn";
@@ -119,10 +102,6 @@ namespace tuya {
             uint8_t* mem,   
             uint32_t cmdId, uint8_t const* buf, size_t& length, uint8_t* hmac
         ) {
-            //
-            //Serial.println("Encoding Message!");
-            //Serial.println("Length: " + String(length));
-
             //
             memcpy(mem, prefix, 4);
             *(uint32_t*)(mem + 4) = bswap32(++SEQ_NO); // TODO: sequence ID support
@@ -277,8 +256,6 @@ namespace tuya {
             //
             if (wifi::WiFiConnected() && !client.connected()) 
             {
-                
-                //md5String(_udp_key, _udp_key_md5_);
                 if (client.connect(IP_ADDRESS, 6668)) {
                     delay(1);
                     if (client.connected()) {

@@ -3,20 +3,7 @@
 //
 #include <Wire.h>
 #include <NTPClient.h>
-
-//
-#ifdef ESP32
 #include <ESP32Time.h>
-#endif
-
-//
-//#define ENABLE_DS1307
-
-//
-#ifdef ENABLE_DS1307
-#include <RTCx.h>
-static bool DS1307_INITIALIZED = false;
-#endif
 
 //
 #include "../network/wifi.hpp"
@@ -42,46 +29,7 @@ namespace rtc {
         return sec + 60 * (min + 60 * (hour + 24 * days_since_1970) );
     }
 
-    //
-    #ifdef ENABLE_DS1307
-    static RTCx ds1307;
-
-    //
-    time_t ds1307_getEpoch() {
-        tm _tm_ = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    //#ifdef ESP32
-        //uint32_t volatile register ilevel = XTOS_DISABLE_ALL_INTERRUPTS;
-    //#endif
-        if (DS1307_INITIALIZED) {
-            ds1307.readClock((tm*)&_tm_);
-        }
-    //#ifdef ESP32
-        //XTOS_RESTORE_INTLEVEL(ilevel);
-    //#endif
-        return RTCx::mktime((tm*)&_tm_);
-    }
-
-    void ds1307_setEpoch(time_t epoch) {
-        tm _tm_ = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        gmtime_r(&epoch, (tm*)&_tm_);
-    //#ifdef ESP32
-        //uint32_t volatile register ilevel = XTOS_DISABLE_ALL_INTERRUPTS;
-    //#endif
-        if (DS1307_INITIALIZED) {
-            ds1307.setClock((tm*)&_tm_);
-        }
-    //#ifdef ESP32
-        //XTOS_RESTORE_INTLEVEL(ilevel);
-    //#endif
-    }
-    #endif
-
-    //
-    #ifdef ESP32
     static ESP32Time rtc;
-    #endif
-
-    //std::atomic<unsigned long> _last_sync_time_;
 
     //
     void _syncTime_() {
@@ -97,52 +45,23 @@ namespace rtc {
         //
         if (wifi::WiFiConnected() && (timeClient.isTimeSet() || timeClient.update())) {
             Serial.println("Through NTP...");
-    #ifdef ENABLE_DS1307
-            ds1307_setEpoch(timeClient.getEpochTime());
-    #endif
-    #ifdef ESP32
-    //#ifdef ENABLE_DS1307
-            // FOR TEST AND DEBUG RTC ONLY!
-            //rtc.setTime(ds1307_getEpoch() ? ds1307_getEpoch() : timeClient.getEpochTime());
-    //#else
-            // Real Perduino!
             rtc.setTime(timeClient.getEpochTime());
-    //#endif
-    #endif
         }
-    #ifdef defined(ENABLE_DS1307) && defined(ESP32)
-        else if (ds1307_getEpoch()) {
-            Serial.println("Through RTC...");
-            rtc.setTime(ds1307_getEpoch());
-        }
-    #endif
     }
 
 
     //
     time_t _getTime_() {
-
-
         Serial.println("Getting time...");
-    #ifdef ESP32
         {
             Serial.println("Through Internal...");
             return time_t(rtc.getEpoch());
         }
-    #else
 
         if (WiFiConnected() && (timeClient.update() || timeClient.isTimeSet())) {
             Serial.println("Through NTP...");
             return time_t(timeClient.getEpochTime());
         } 
-    #ifdef ENABLE_DS1307
-        else if (ds1307_getEpoch()) {
-            Serial.println("Through DS1307...");
-            return ds1307_getEpoch();
-        }
-    #endif
-
-    #endif
     }
 
     // Convert compile time to system time 
@@ -172,54 +91,20 @@ namespace rtc {
         return _current_time_ + (_syncTimeFn_.millisSince()/1000);
     }
 
+    //
     void initRTC() {
-        
-        // Initialize I2C
-        //Wire.setPins(43, 44);
-        //Wire.setClock(3400 * 1000);
-        //Wire.begin();
-
-        //
         time_t compiled = cvt_date(__DATE__, __TIME__);
         Serial.println("Compiled Epoch: " + String(compiled));
 
         //
-    #ifdef ENABLE_DS1307
-        if (ds1307.autoprobe()) {
-            ds1307.init();
-
-            //
-            DS1307_INITIALIZED = true;
-
-            //
-            time_t now = ds1307_getEpoch();
-            Serial.println("RTC Epoch: " + String(now));
-
-            //
-            if (compiled > now) {
-                Serial.println("RTC DS1307 has wrong time, reset...");
-                ds1307_setEpoch(compiled);
-            }
-        } else {
-            DS1307_INITIALIZED = false;
-        }
-    #endif
-
-        //
-    #ifdef ESP32
         time_t inow = rtc.getEpoch();
-    #ifdef ENABLE_DS1307
-        time_t icom = max(compiled, ds1307_getEpoch());
-    #else
-        time_t icom = compiled;
-    #endif
         Serial.println("ESP32 RTC Epoch: " + String(inow));
         if (icom > inow) {
             Serial.println("Internal RTC has wrong time, reset...");
             rtc.setTime(icom);
         }
-    #endif
 
+        //
         _syncTimeFn_();
     }
 }
