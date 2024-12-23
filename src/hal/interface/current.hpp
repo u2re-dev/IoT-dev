@@ -1,11 +1,11 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../hal/core/interface.hpp"
+#include <library/std.hpp>
+#include <core/memory/f_string.hpp>
 
 //
-#include "../memory/f_string.hpp"
+#include <hal/core/interface.hpp>
 
 //
 std::function<void(uint32_t)> COM_HANDLER;
@@ -26,9 +26,9 @@ std::atomic<bool> INTERRUPTED;
 std::atomic<uintptr_t> LAST_TIME; //= millis();
 
 //
-std::atomic<bool> SHOW_CHANGED;
 std::atomic<bool> POWER_SAVING;
 std::atomic<bool> OVERLAY_CHANGED;
+std::atomic<bool> SHOW_CHANGED;
 
 //
 void wakeUp() {
@@ -67,33 +67,10 @@ void initState() {
 }
 
 //
-void _STOP_EXCEPTION_() {
-    SHOW_CHANGED = false;
-    LAST_TIME = millis();
-    BG_COLOR = 0xF800;
-    INTERRUPTED = true;
-    SHOW_CHANGED = true;
-}
-
-//
-struct DEBUG_INFO {
-    _String_<> _LINE_[3];
-} debug_info;
-
-//
 struct OVERLAY {
     _String_<> _LEFT_;
     _String_<> _RIGHT_;
 } overlay;
-
-
-
-//
-void _LOG_(const uint8_t L, String const& string) {
-    SHOW_CHANGED = false;
-    debug_info._LINE_[L] = string;
-    SHOW_CHANGED = true;
-}
 
 //
 void switchScreen(bool dbg, uint dvID) {
@@ -104,4 +81,3 @@ void switchScreen(bool dbg, uint dvID) {
         SHOW_CHANGED = true;
     }
 }
-

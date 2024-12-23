@@ -13,8 +13,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 // arduino / esp32
 #include <Preferences.h>

@@ -2,7 +2,9 @@
 
 //
 #include "./nv_typed.hpp"
-#include "../memory/f_string.hpp"
+
+//
+#include <core/memory/f_string.hpp>
 
 //
 namespace nv {

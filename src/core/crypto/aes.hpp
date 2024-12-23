@@ -1,7 +1,8 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
+#include <hal/core/soc.hpp>
 
 //
 #define AES128 1

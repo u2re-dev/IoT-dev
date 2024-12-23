@@ -1,11 +1,9 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../hal/interface/current.hpp"
-
-//
-#include "../persistent/nv_typed.hpp"
+#include <hal/core/io.hpp>
+#include <hal/interface/current.hpp>
+#include <core/persistent/nv_typed.hpp>
 
 //
 namespace fs {

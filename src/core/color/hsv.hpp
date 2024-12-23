@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
 
 //
 void RGBtoHSV(float& fR, float& fG, float fB, float& fH, float& fS, float& fV) {

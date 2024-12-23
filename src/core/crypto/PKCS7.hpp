@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
 
 //
 typedef enum {

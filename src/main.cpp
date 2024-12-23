@@ -1,16 +1,16 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp";
-
-//
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
-#include "./core/output/tft_display.hpp"
-#include "./handler/device.hpp"
-#include "./handler/command.hpp"
-#include "./handler/fs.hpp"
+#include <library/std.hpp>
+
+//
+#include <hal/output/tft_display.hpp>
+#include <handler/device.hpp>
+#include <handler/command.hpp>
+#include <handler/fs.hpp>
 
 //
 std::thread displayTask;

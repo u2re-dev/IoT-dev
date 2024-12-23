@@ -1,11 +1,11 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../drivers/network.hpp"
+#include <library/std.hpp>
+#include <core/persistent/nv_string.hpp>
 
 //
-#include "../persistent/nv_string.hpp"
+#include <hal/core/network.hpp>
 
 //
 namespace wifi {

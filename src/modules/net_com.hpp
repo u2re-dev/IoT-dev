@@ -1,13 +1,13 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
+#include <core/memory/channel.hpp>
+#include <core/memory/utils.hpp>
+#include <hal/interface/current.hpp>
 
 //
-#include "../core/memory/channel.hpp"
-#include "../core/memory/utils.hpp"
-#include "../core/network/wifi.hpp"
-#include "../core/interface/current.hpp"
+#include <hal/network/wifi.hpp>
 
 //
 namespace com {

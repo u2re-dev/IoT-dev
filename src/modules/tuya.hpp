@@ -1,14 +1,16 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
+#include <core/crypto/aes.hpp>
 
 //
-#include "../core/crypto/aes.hpp"
-#include "../core/persistent/nv_typed.hpp"
-#include "../core/persistent/nv_string.hpp"
-#include "../core/interface/current.hpp"
-#include "../core/time/timer.hpp"
+#include <core/memory/timer.hpp>
+#include <core/persistent/nv_typed.hpp>
+#include <core/persistent/nv_string.hpp>
+
+//
+#include <hal/interface/current.hpp>
 
 //
 #include "./net_com.hpp"

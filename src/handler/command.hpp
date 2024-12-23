@@ -1,17 +1,14 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../core/input/keypad_handle.hpp"
-#include "../core/interface/current.hpp"
+#include <library/std.hpp>
+#include <hal/interface/current.hpp>
 
 //
 #include "./fs.hpp"
 
 //
 const auto COMHandler = [](uint32_t command){
-    
-    //
     if (command == 0x4) { device[CURRENT_DEVICE].tuyaInit(); } else
     if (command == 0x1) { switchScreen(DEBUG_SCREEN, (CURRENT_DEVICE+1)%2); } else
     if (command == 0x2) { switchScreen(DEBUG_SCREEN, CURRENT_DEVICE <= 0 ? 1 : (CURRENT_DEVICE-1)); } else

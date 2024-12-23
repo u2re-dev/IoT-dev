@@ -1,10 +1,7 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-
-//
-#include "../core/memory/timer.hpp"
+#include <core/memory/timer.hpp>
 
 //
 #include "./wifi.hpp"

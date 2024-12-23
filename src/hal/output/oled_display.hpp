@@ -1,12 +1,10 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../hal/core/display.hpp"
-#include "../interface/current.hpp"
-
-//
-#include "../time/rtc.hpp"
+#include <library/std.hpp>
+#include <hal/core/display.hpp>
+#include <hal/network/rtc.hpp>
+#include <hal/interface/current.hpp>
 
 //
 namespace oled {

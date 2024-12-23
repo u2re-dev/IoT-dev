@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
 
 //
 namespace timer {
@@ -116,4 +116,4 @@ namespace timer {
             return _fn_;
         }
     };
-}
+};

@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
+#include <library/std.hpp>
 
 //
 static const unsigned int crc32_table[] = {
@@ -73,10 +73,9 @@ static const unsigned int crc32_table[] = {
 
 uint32_t _crc32_(uint8_t const *buf, size_t len, uint32_t init = 0xFFFFFFFF)
 {
-  uint32_t crc = init;
-  for (uint32_t I=0;I<len;I++) {
-      crc = crc32_table[(crc ^ buf[I]) & 0xff] ^ ((crc) >> 8);//(crc << 8) ^ crc32_table[((crc >> 24) ^ *buf) & 255];
-  }
-  return (crc ^ 0xFFFFFFFF);
+    uint32_t crc = init;
+    for (uint32_t I=0;I<len;I++) {
+        crc = crc32_table[(crc ^ buf[I]) & 0xff] ^ ((crc) >> 8);//(crc << 8) ^ crc32_table[((crc >> 24) ^ *buf) & 255];
+    }
+    return (crc ^ 0xFFFFFFFF);
 }
-

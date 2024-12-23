@@ -1,11 +1,15 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../core/fs/sd_card.hpp"
-#include "../core/fs/internal.hpp"
-#include "../core/network/wifi.hpp"
-#include "../handler/device.hpp"
+#include <library/std.hpp>
+
+//
+#include <hal/fs/sd_card.hpp>
+#include <hal/fs/internal.hpp>
+#include <hal/network/wifi.hpp>
+
+//
+#include "./device.hpp"
 
 //
 const auto FSHandler = [](JSONVar& doc){

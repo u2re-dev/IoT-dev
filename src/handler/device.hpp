@@ -1,8 +1,8 @@
 #pragma once
 
 //
-#include "../imports/imports.hpp"
-#include "../modules/tuya.hpp"
+#include <library/std.hpp>
+#include <modules/tuya.hpp>
 
 //
 thread_local static JSONVar testProgramTemplate[3];
