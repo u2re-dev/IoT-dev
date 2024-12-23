@@ -4,7 +4,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_task_wdt.h>
-//#include "Arduino.h"
 
 //
 #ifndef ARDUINO_LOOP_STACK_SIZE
@@ -39,7 +38,9 @@ extern "C" void app_main(void)
     USB.begin();
 #endif
     loopTaskWDTEnabled = false;
-    //initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
-}
 
+#ifdef ENABLE_ARDUINO
+    initArduino();
+    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, CONFIG_ARDUINO_RUNNING_CORE);
+#endif
+}
