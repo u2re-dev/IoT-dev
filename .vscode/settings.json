@@ -175,5 +175,7 @@
     "C:/Users/AdminX/.espressif/esp-idf/components/mbedtls/port/include/",
     "${workspaceFolder}/src/",
     "${workspaceFolder}/include/"
-  ]
+  ],
+  "idf.espIdfPathWin": "C:\\Users\\AdminX\\espressif\\esp-idf",
+  "idf.toolsPathWin": "C:\\Users\\AdminX\\.espressif\\"
 }

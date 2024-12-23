@@ -1,19 +1,13 @@
-description: "Arduino core for ESP32, ESP32-S and ESP32-C series of SoCs"
-url: "https://github.com/espressif/arduino-esp32"
+description: Cardputer Tuya Controller
 targets:
-  - esp32s3
-tags:
-  - arduino
+- esp32s3
 files:
   include:
-    - "cores/**/*"
-    - "variants/esp32s3/**/*"
-    - "libraries/**/*"
-    - "CMakeLists.txt"
-    - "Kconfig.projbuild"
-  exclude:
-    - "**/*"
+  - components/arduino/cores/**/*
+  - components/arduino/variants/esp32s3/**/*
+  - components/arduino/libraries/**/*
+  - CMakeLists.txt
+  - Kconfig.projbuild
 dependencies:
-  idf: ">=5.1"
-  mdns: "^1.1.0"
-  chmorgan/esp-libhelix-mp3: "1.0.3"
+  idf: '>=5.3'
+  espressif/arduino-esp32: '>=3.1.0'
