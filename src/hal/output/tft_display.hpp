@@ -1,15 +1,11 @@
 #pragma once
 
 //
-#include "../time/rtc.hpp"
-#include "../interface/pin_config.hpp"
-#include "../interface/current.hpp"
+#include "../imports/imports.hpp"
 
 //
-#include <hal/gpio_ll.h>
-#include <soc/gpio_struct.h>
-#include <TFT_eSPI.h>
-#include <thread>
+#include "../time/rtc.hpp"
+#include "../interface/current.hpp"
 
 //
 namespace tft {

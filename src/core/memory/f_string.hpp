@@ -1,17 +1,7 @@
 #pragma once
 
 //
-#include <functional>
-#include <utility>
-#include <atomic>
-
-//
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-
-//
-#include <WString.h>
+#include "../imports/imports.hpp"
 
 //
 inline String cString(char const* data, size_t length) {

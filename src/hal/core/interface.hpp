@@ -1,5 +1,8 @@
 #pragma once
 
+//
+#include <soc/gpio_struct.h>
+#include <Wire.h>
 
 /*ESP32S3*/
 #define PIN_LCD_BL                   38
@@ -42,3 +45,7 @@
 
 //
 #define IR_REMOTE_PIN 3
+
+// Arduino
+#define I2C_KEYPAD_ADDR 0x32
+#define I2C_OLED_ADDR 0x3c

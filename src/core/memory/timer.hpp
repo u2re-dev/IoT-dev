@@ -1,9 +1,7 @@
 #pragma once
 
 //
-#include <functional>
-#include <utility>
-#include <atomic>
+#include "../imports/imports.hpp"
 
 //
 namespace timer {

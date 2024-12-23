@@ -1,13 +1,13 @@
 #pragma once
 
 //
-#include <Wire.h>
-#include <NTPClient.h>
-#include <ESP32Time.h>
+#include "../imports/imports.hpp"
 
 //
-#include "../network/wifi.hpp"
-#include "./timer.hpp"
+#include "../core/memory/timer.hpp"
+
+//
+#include "./wifi.hpp"
 
 //
 namespace rtc {

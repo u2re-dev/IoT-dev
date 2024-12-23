@@ -1,7 +1,9 @@
+#pragma once
 
-#include <stdint.h>
+//
+#include "../imports/imports.hpp"
 
-
+//
 typedef enum {
     BLOCK_SIZE_128_BIT      = 128 / 8,  /* 16 bytes block */
     BLOCK_SIZE_256_BIT      = 256 / 8,  /* 32 bytes block */

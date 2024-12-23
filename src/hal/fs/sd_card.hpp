@@ -1,40 +1,44 @@
 #pragma once
 
 //
-#include <Arduino.h>
-#include <SPIFFS.h>
+#include "../imports/imports.hpp"
+#include "../hal/interface/current.hpp"
 
 //
-#include "../interface/current.hpp"
 #include "../persistent/nv_typed.hpp"
 
 //
 namespace fs {
 
-    //
-    namespace internal {
-
+    namespace sd {
         //
         bool loadConfig(std::function<void(JSONVar&)> handler) {
             //
             LOADING_SD = false;
             bool LOADED = false;
 
+            // Initialize SPI bus for microSD Card
+            pinMode(SD_CS, OUTPUT);
+            digitalWrite(SD_CS, HIGH);
+            digitalRead(SD_CS);
+
             //
             static const char *filename = "/keys.json";
 
             //
-            _LOG_(0, "Reading from Internal Storage...");
+            _LOG_(0, "Reading from SD card...");
             _LOG_(1, filename);
 
             //
-            if (SPIFFS.begin()) {
+            SPIClass SPI0(HSPI);
+            SPI0.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SD_CS);
+            if (SD.begin(SD_CS)) {
                 LOADING_SD = true;
                 // Open file for writing
                 Serial.println("SD connected...");
-                File file = SPIFFS.open(filename, FILE_READ);
+                File file = SD.open(filename, FILE_READ);
                 if (!file) {
-                  _LOG_(0, "Failed to read file...");
+                  _LOG_(0, "Failed to read file...!");
                   return (LOADING_SD = false);
                 }
 
@@ -49,7 +53,6 @@ namespace fs {
                 file.close();
 
                 //
-                Serial.println("Success to read JSON file...");
                 _LOG_(0, "Success to read JSON file...");
                 _LOG_(1, "");
 
@@ -65,4 +68,6 @@ namespace fs {
             return LOADED;
         }
     }
-}
+
+};
+

@@ -1,13 +1,11 @@
 #pragma once
 
 //
-#include "../memory/f_string.hpp"
-#include "./pin_config.hpp"
+#include "../imports/imports.hpp"
+#include "../hal/core/interface.hpp"
 
 //
-#include <functional>
-#include <utility>
-#include <atomic>
+#include "../memory/f_string.hpp"
 
 //
 std::function<void(uint32_t)> COM_HANDLER;

@@ -1,9 +1,8 @@
 #pragma once
 
 //
-#include <WiFiUdp.h>
-#include <IPAddress.h>
-#include <WiFi.h>
+#include "../imports/imports.hpp"
+#include "../drivers/network.hpp"
 
 //
 #include "../persistent/nv_string.hpp"

@@ -1,6 +1,7 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
+
+//
+#include "../imports/imports.hpp"
 
 //
 static const unsigned int crc32_table[] = {

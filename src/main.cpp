@@ -1,4 +1,7 @@
-//#include <Arduino.h>
+#pragma once
+
+//
+#include "../imports/imports.hpp";
 
 //
 #define VERY_LARGE_STRING_LENGTH 8000

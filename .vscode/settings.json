@@ -132,7 +132,14 @@
     "tft_espi_generic.c": "cpp",
     "tft_espi_esp32_c3.c": "cpp",
     "tft_espi_esp32.c": "cpp",
-    "tft_espi_rp2040.c": "cpp"
+    "tft_espi_rp2040.c": "cpp",
+    "bit": "cpp",
+    "compare": "cpp",
+    "concepts": "cpp",
+    "stop_token": "cpp",
+    "xmemory": "cpp",
+    "xstddef": "cpp",
+    "xtr1common": "cpp"
   },
   "C_Cpp.default.cppStandard": "gnu++23",
   "C_Cpp.default.cStandard": "gnu23"

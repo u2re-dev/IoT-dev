@@ -1,18 +1,16 @@
 #pragma once
 
 //
-#include "../core/crypto/aes.hpp"
-#include <esp32/rom/crc.h>
-#include <Arduino_JSON.h>
-#include "mbedtls/md.h"
+#include "../imports/imports.hpp"
 
 //
+#include "../core/crypto/aes.hpp"
 #include "../core/persistent/nv_typed.hpp"
 #include "../core/persistent/nv_string.hpp"
 #include "../core/interface/current.hpp"
+#include "../core/time/timer.hpp"
 
 //
-#include "../core/time/timer.hpp"
 #include "./net_com.hpp"
 
 //

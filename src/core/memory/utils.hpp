@@ -1,12 +1,7 @@
 #pragma once
 
 //
-#include <functional>
-#include <utility>
-#include <atomic>
-
-//
-#include <IPAddress.h>
+#include "../imports/imports.hpp"
 
 //
 #include "./f_string.hpp"
