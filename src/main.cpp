@@ -10,7 +10,6 @@
 #include "./handler/fs.hpp"
 
 //
-#ifdef ESP32
 std::thread displayTask;
 void IOTask() {
     while(!INTERRUPTED.load()) {
@@ -22,7 +21,6 @@ void IOTask() {
     }
     tft::_RSOD_();
 }
-#endif
 
 //
 void loopTask(void *pvParameters)
@@ -50,10 +48,8 @@ void loopTask(void *pvParameters)
     nv::storage.begin("nvs", false);
 
     //
-#ifdef ESP32
     Serial.println("Making IO threads...");
     displayTask = std::thread(IOTask);
-#endif
 
     //
     if (!fs::sd::loadConfig(FSHandler)) {
@@ -65,17 +61,12 @@ void loopTask(void *pvParameters)
     //
     if (!INTERRUPTED.load()) {
         rtc::initRTC();
-
-        //
         wifi::initWiFi();
 
         //
         while (!wifi::WiFiConnected())
         { keypad::handleInput(); delay(POWER_SAVING.load() ? 100 : 1); }
         rtc::initRTC();
-
-        //
-        //http::initServer(device);
 
         //
         Serial.println("Setup is done...");
@@ -120,11 +111,7 @@ void loopTask(void *pvParameters)
     }
 
     //
-#ifdef ESP32
     ESP.restart();
-#else
-    ESP.reset();
-#endif
 }
 
 //

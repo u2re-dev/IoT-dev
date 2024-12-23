@@ -3,7 +3,6 @@
 //
 #ifdef ESP32
 #include <thread>
-//#include <SimplyAtomic.h>
 #endif
 
 //
@@ -43,7 +42,6 @@ namespace oled {
     }
 
     //
-    #ifdef ESP32
     std::thread displayTask;
     void displayThread() {
         while(true) {
@@ -53,8 +51,6 @@ namespace oled {
             delay(1);
         }
     }
-    #endif
-
 
     //
     void _drawScreen_(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, uint SCREEN_ID) {
@@ -103,12 +99,8 @@ namespace oled {
         //
         Serial.println("Init Display...");
 
-        // The ESP is capable of rendering 60fps in 80Mhz mode
-        // but that won't give you much time for anything else
-        // run it in 160Mhz mode or just set it to 30 fps
+        //
         ui.setTargetFPS(60);
-        //ui.setActiveSymbol(activeSymbol);
-        //ui.setInactiveSymbol(inactiveSymbol);
         ui.setIndicatorPosition(BOTTOM);
         ui.setIndicatorDirection(LEFT_RIGHT);
         ui.setFrameAnimation(SLIDE_LEFT);
@@ -121,15 +113,10 @@ namespace oled {
         display.flipScreenVertically();
         display.setFont(ArialMT_Plain_10);
         display.setTextAlignment(TEXT_ALIGN_LEFT);
-    #ifndef ESP32
-        ui.update();
-    #endif
 
         //
-    #ifdef ESP32
         Serial.println("Pinning to Core...");
         displayTask = std::thread(displayThread);
-    #endif
     }
 
 }

@@ -60,7 +60,6 @@ namespace tuya {
         //
         public: 
         nv::nv_bool ENABLED;
-        //nv_t<bool> ENABLED;
         bool received = true;
         bool connected = false;
         
@@ -114,7 +113,6 @@ namespace tuya {
             //
             if (_padding_) { freePaddingResult(_padding_); }; _padding_ = 0;
             if (hmac) {
-    //#ifndef ESP32
     #ifdef CONFIG_IDF_TARGET_ESP32S3
                 mbedtls_md_context_t ctx;
                 mbedtls_md_init(&ctx);
@@ -126,15 +124,8 @@ namespace tuya {
     #else
                 sf_hmac_sha256(hmac, 16, mem, length + wret, mem + length + wret, 32);
     #endif
-    //#else
-                //
-    //#endif
             } else {
-    #ifdef ESP32
                 *(uint32_t*)(mem + length + wret) = crc32_be(0, mem, length + wret);
-    #else
-                store32(mem + length + wret, bswap32(_crc32_(mem, length + wret)));
-    #endif
             }
             memcpy(mem + wret + length+(hmac ? 32 : 4), suffix, 4);
 
@@ -239,8 +230,6 @@ namespace tuya {
 
         //
         bool isConnected() { return connected && client.connected(); };
-
-        //
         void tuyaInit() {
             Serial.println("Initializing Tuya...");
 
@@ -458,7 +447,7 @@ namespace tuya {
                             //       
                             size_t hlen = 48;
 
-    #ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifdef CONFIG_IDF_TARGET_ESP32S3
                             mbedtls_md_context_t ctx;
                             mbedtls_md_init(&ctx);
                             mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
@@ -466,9 +455,9 @@ namespace tuya {
                             mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.c_str(), 16);
                             mbedtls_md_hmac_finish(&ctx, _remote_hmac_);
                             mbedtls_md_free(&ctx);
-    #else
+#else
                             sf_hmac_sha256(_local_key_.c_str(), 16, _remote_nonce_.c_str(), 16, _remote_hmac_, hlen);
-    #endif
+#endif
 
                             AES_ECB_encrypt(&cipher, _remote_hmac_);
                             AES_ECB_encrypt(&cipher, _remote_hmac_ + 16);
@@ -476,16 +465,11 @@ namespace tuya {
                             if (!channel::_sending_) { channel::_sending_ = (uint8_t*)calloc(1, channel::LIMIT); };
                             encodeMessage((uint8_t*)channel::_sending_, 5, _remote_hmac_, hlen, _hmac_key_);
                             com::send(client, (uint8_t const*)channel::_sending_, calculateSizeOfRequest(hlen, _hmac_key_));
-                            //lastTime = millis();
 
                             //
-        #ifndef ESP32
-                            for (uint8_t I=0;I<16;I++) { _local_key_[I] = _local_nonce_[I]^_remote_nonce_[I]; };
-        #else
                             for (uint8_t I=0;I<16;I+=4) { // using 32-bit mad math
                                 *((uint32_t*)(_local_key_.c_str()+I)) = (*((uint32_t*)(_local_nonce_.c_str()+I)))^(*((uint32_t*)(_remote_nonce_+I)));
                             }
-        #endif
                             AES_ECB_encrypt(&cipher, (uint8_t*)_local_key_.c_str());
                             memcpy(_hmac_key_, _local_key_.c_str(), 16);
 
@@ -524,11 +508,8 @@ namespace tuya {
                     }
                 }
             } else {
-                //Serial.println("Tuya: Connection Probably Died!");
                 _LOG_(0, "Tuya connection died!");
                 connected = false;
-                //attemp++;
-                //lastAttemp = millis();
             }
 
             return cmdId;

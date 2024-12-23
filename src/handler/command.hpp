@@ -14,12 +14,6 @@ const auto COMHandler = [](uint32_t command){
     if (command == 0x1) { switchScreen(DEBUG_SCREEN, (CURRENT_DEVICE+1)%2); } else
     if (command == 0x2) { switchScreen(DEBUG_SCREEN, CURRENT_DEVICE <= 0 ? 1 : (CURRENT_DEVICE-1)); } else
     if (command == 0x3) 
-
-    //
-    //if (command == 0x43) { device[CURRENT_DEVICE].tuyaInit(); } else
-    //if (command == 0x47) { switchScreen(DEBUG_SCREEN, (CURRENT_DEVICE+1)%2); } else
-    //if (command == 0x45) { switchScreen(DEBUG_SCREEN, CURRENT_DEVICE <= 0 ? 1 : (CURRENT_DEVICE-1)); } else
-    //if (command == 0x9) 
     {
         switchScreen(true, CURRENT_DEVICE);
 
@@ -32,9 +26,6 @@ const auto COMHandler = [](uint32_t command){
 
         //
         while (LOADING_SD) {
-        #ifndef ESP32
-            ui.update();
-        #endif
             delay(1);
         }
 
@@ -47,15 +38,8 @@ const auto COMHandler = [](uint32_t command){
             WiFi.begin(wifi::ssid, wifi::password);
 
             //
-        #ifndef ESP32
-            while (!(WiFi.localIP().isSet() || WiFi.status() == WL_CONNECTED))
-        #else
-            while (WiFi.status() != WL_CONNECTED) 
-        #endif
+            while (WiFi.status() != WL_CONNECTED)
             {
-        #ifndef ESP32
-                ui.update();
-        #endif
                 delay(1);
             }
         }
