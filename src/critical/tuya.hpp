@@ -15,6 +15,7 @@
 #ifdef ENABLE_ARDUINO
 #include <core/persistent/nv_typed.hpp>
 #include <core/persistent/nv_string.hpp>
+#endif
 
 //
 namespace tuya {
@@ -35,17 +36,23 @@ namespace tuya {
     public: 
 
         TuyaDevice3(char const* prefix) {
+#ifdef ENABLE_ARDUINO
             _real_local_key_.setKey(nv::_concat_(prefix, "_lock"));
             _device_id_.setKey(nv::_concat_(prefix, "_id"));
             _IP_ADDRESS_.setKey(nv::_concat_(prefix, "_ip"));
             protocol33.setKey(nv::_concat_(prefix, "_pro3"));
             ENABLED.setKey(nv::_concat_(prefix, "_en"));
+#endif
         }
 
     protected: 
         
         //
+#ifdef ENABLE_NETWORK
         WiFiClient client;
+        IPAddress IP_ADDRESS;
+#endif
+
         PKCS7_Padding* _padding_ = 0u;
         PKCS7_unPadding* _unpad_ = 0u;
 
@@ -60,26 +67,32 @@ namespace tuya {
 
         //
         public: 
-        nv::nv_bool ENABLED;
         bool received = true;
         bool connected = false;
         
         //
+#ifdef ENABLE_ARDUINO
         JSONVar irMap;
         JSONVar cState;
+#endif
 
         //
+#ifdef ENABLE_ARDUINO
+        nv::nv_bool ENABLED;
         nv::_NvString_<22> _device_id_;
         nv::_NvString_<16> _real_local_key_;
         nv::nv_uint32_t _IP_ADDRESS_; // in reality, is packed 8x4 bits
         nv::nv_bool protocol33;
+#endif
 
         //
-        protected: 
-        IPAddress IP_ADDRESS;
+        protected:
         
+        //
         uint8_t _remote_hmac_[48];
         uint8_t* _hmac_key_ = 0;
+
+        //
         _String_<16> _remote_nonce_;
         _String_<16> _local_key_;
         _String_<1024> _store_;
@@ -220,7 +233,11 @@ namespace tuya {
     public: 
 
         //
+#ifdef ENABLE_NETWORK
         bool isConnected() { return connected && client.connected(); };
+#endif
+
+#ifdef ENABLE_ARDUINO
         void tuyaInit() {
             Serial.println("Initializing Tuya...");
 
@@ -342,7 +359,9 @@ namespace tuya {
                 }
             }
         }
-        
+#endif
+
+#ifdef ENABLE_NETWORK
         //
         void sendMessage(uint cmdId, _StringView_ _string_) {
             if (client.connected() && (received || (millis() - lastTime) >= 1000)) {
@@ -370,7 +389,9 @@ namespace tuya {
                 received = false;
             }
         }
+#endif
 
+#ifdef ENABLE_ARDUINO
         // Perduino
         JSONVar& merge(JSONVar& dst, JSONVar src) {
             JSONVar _keys_ = src.keys();
@@ -395,112 +416,96 @@ namespace tuya {
             }
             return dst;
         }
+#endif
 
         //
         uint32_t handleReceive() {
             uint32_t cmdId = 0;
 
             //
-            if (client.connected()) {
-                auto [_len_, _received_] = com::receive(client, (20 + 4 + (_hmac_key_ ? 32 : 4)));
-                
+            auto [_len_, _received_] = com::receive(client, (20 + 4 + (_hmac_key_ ? 32 : 4)));
+            if (_len_ > 0) {
+                received = true;
+                lastReceive = millis();
+
+                //
+                uint8_t* encoded = decodeMessage(cmdId, _received_, _len_, _hmac_key_);
+
+                //
                 if (_len_ > 0) {
-                    received = true;
-                    lastReceive = millis();
+                    if (cmdId == 0xa && protocol33) {
+                        connected = true;
+                        received = true;
+                        attemp = 0;
 
-                    //
-                    uint8_t* encoded = decodeMessage(cmdId, _received_, _len_, _hmac_key_);
-                    Serial.println("RCommand: " + String(cmdId, HEX) + ", CmdLen: " + String(_len_));
+                        //
+                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        cState = merge(cState, JSON.parse(_code_)["dps"]);
+                    } else
+                    if (cmdId == 0x4) {
+                        AES_ctx cipher;
+                        AES_init_ctx(&cipher, (uint8_t*)_local_key_.c_str());
+                        _remote_nonce_ = (char const*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_);
 
-                    //
-                    if (_len_ > 0) {
-                        if (cmdId == 0xa && protocol33) {
-                            if (!connected) {
-                                Serial.println("Connected to Tuya device!");
-                                debug_info._LINE_[0]= "Connected to Tuya device!";
-                                connected = true;
-                            }
-                            connected = true;
-                            received = true;
-                            attemp = 0;
-
-                            //
-                            _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
-                            Serial.println(_code_);
-                            cState = merge(cState, JSON.parse(_code_)["dps"]);
-                        } else
-                        if (cmdId == 0x4) {
-                            AES_ctx cipher;
-                            AES_init_ctx(&cipher, (uint8_t*)_local_key_.c_str());
-                            _remote_nonce_ = (char const*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_);
-                            Serial.println("Remote Nonce: " + cString(_remote_nonce_, 16));
-
-                            //       
-                            size_t hlen = 48;
+                        //       
+                        size_t hlen = 48;
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-                            mbedtls_md_context_t ctx;
-                            mbedtls_md_init(&ctx);
-                            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-                            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) _local_key_.c_str(), 16);
-                            mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.c_str(), 16);
-                            mbedtls_md_hmac_finish(&ctx, _remote_hmac_);
-                            mbedtls_md_free(&ctx);
+                        mbedtls_md_context_t ctx;
+                        mbedtls_md_init(&ctx);
+                        mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+                        mbedtls_md_hmac_starts(&ctx, (const unsigned char *) _local_key_.c_str(), 16);
+                        mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.c_str(), 16);
+                        mbedtls_md_hmac_finish(&ctx, _remote_hmac_);
+                        mbedtls_md_free(&ctx);
 #else
-                            sf_hmac_sha256(_local_key_.c_str(), 16, _remote_nonce_.c_str(), 16, _remote_hmac_, hlen);
+                        sf_hmac_sha256(_local_key_.c_str(), 16, _remote_nonce_.c_str(), 16, _remote_hmac_, hlen);
 #endif
 
-                            AES_ECB_encrypt(&cipher, _remote_hmac_);
-                            AES_ECB_encrypt(&cipher, _remote_hmac_ + 16);
-                            AES_ECB_encrypt(&cipher, _remote_hmac_ + 32);
-                            if (!channel::_sending_) { channel::_sending_ = (uint8_t*)calloc(1, channel::LIMIT); };
-                            encodeMessage((uint8_t*)channel::_sending_, 5, _remote_hmac_, hlen, _hmac_key_);
-                            com::send(client, (uint8_t const*)channel::_sending_, calculateSizeOfRequest(hlen, _hmac_key_));
+                        AES_ECB_encrypt(&cipher, _remote_hmac_);
+                        AES_ECB_encrypt(&cipher, _remote_hmac_ + 16);
+                        AES_ECB_encrypt(&cipher, _remote_hmac_ + 32);
+                        if (!channel::_sending_) { channel::_sending_ = (uint8_t*)calloc(1, channel::LIMIT); };
+                        encodeMessage((uint8_t*)channel::_sending_, 5, _remote_hmac_, hlen, _hmac_key_);
+                        com::send(client, (uint8_t const*)channel::_sending_, calculateSizeOfRequest(hlen, _hmac_key_));
 
-                            //
-                            for (uint8_t I=0;I<16;I+=4) { // using 32-bit mad math
-                                *((uint32_t*)(_local_key_.c_str()+I)) = (*((uint32_t*)(_local_nonce_.c_str()+I)))^(*((uint32_t*)(_remote_nonce_+I)));
-                            }
-                            AES_ECB_encrypt(&cipher, (uint8_t*)_local_key_.c_str());
-                            memcpy(_hmac_key_, _local_key_.c_str(), 16);
-
-                            //
-                            if (!connected) {
-                                Serial.println("Connected to Tuya device!");
-                                _LOG_(0, "Connected to Tuya device!");
-                                connected = true;
-
-                                JSONVar _tmp_;
-                                _tmp_["20"] = (bool)ENABLED;
-                                sendControl(_tmp_);
-                            }
-                            connected = true;
-                            received = true;
-                            attemp = 0;
-                            sendMessage(0x10, _store_ = "{}");
-                            received = true;
-                        } else 
-                        if (cmdId == 0x10 && !protocol33) {
-                            _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
-                            Serial.println(_code_);
-                            cState = merge(cState, JSON.parse(_code_)["dps"]);
-                        } else 
-                        if (cmdId == 0x8) {
-                            _StringView_ _code_((char*)decryptJson((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
-                            Serial.println(_code_);
-                            cState = merge(cState, JSON.parse(_code_)["dps"]);
+                        //
+                        for (uint8_t I=0;I<16;I+=4) { // using 32-bit mad math
+                            *((uint32_t*)(_local_key_.c_str()+I)) = (*((uint32_t*)(_local_nonce_.c_str()+I)))^(*((uint32_t*)(_remote_nonce_+I)));
                         }
-                    }
-                } else
-                {
-                    unsigned long _ctime_ = millis();
-                    if ((_ctime_ - max(lastReceive, lastTime)) >= 120000 && client.connected()) {
-                        client.stop();
+                        AES_ECB_encrypt(&cipher, (uint8_t*)_local_key_.c_str());
+                        memcpy(_hmac_key_, _local_key_.c_str(), 16);
+
+                        //
+                        if (!connected) {
+                            connected = true;
+                            JSONVar _tmp_;
+                            _tmp_["20"] = (bool)ENABLED;
+                            sendControl(_tmp_);
+                        }
+
+                        //
+                        connected = true;
+                        received = true;
+                        attemp = 0;
+                        sendMessage(0x10, _store_ = "{}");
+                        received = true;
+                    } else 
+                    if (cmdId == 0x10 && !protocol33) {
+                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        cState = merge(cState, JSON.parse(_code_)["dps"]);
+                    } else 
+                    if (cmdId == 0x8) {
+                        _StringView_ _code_((char*)decryptJson((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        cState = merge(cState, JSON.parse(_code_)["dps"]);
                     }
                 }
-            } else {
-                _LOG_(0, "Tuya connection died!");
-                connected = false;
+            } else
+            {
+                unsigned long _ctime_ = millis();
+                if ((_ctime_ - max(lastReceive, lastTime)) >= 120000 && client.connected()) {
+                    client.stop();
+                }
             }
 
             return cmdId;
@@ -509,4 +514,3 @@ namespace tuya {
     };
 
 };
-#endif

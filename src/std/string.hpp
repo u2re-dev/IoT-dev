@@ -1,10 +1,10 @@
 #pragma once
 
 //
-#ifdef ENABLE_ARDUINO
 #include <library/std.hpp>
 
 //
+#ifdef ENABLE_ARDUINO
 inline String cString(char const* data, size_t length) {
     String _str_(data);
     _str_.reserve(std::min(_str_.length(), length));
@@ -17,7 +17,7 @@ inline String cString(uint8_t const* data, size_t length) {
     _str_.reserve(std::min(_str_.length(), length));
     return _str_.substring(0, std::min(_str_.length(), length));
 }
-
+#endif
 
 //
 class _StringWrite_ {
@@ -54,19 +54,8 @@ public:
         return *this;
     }
 
-    _StringWrite_& operator =(String const& _str_) {
-        memcpy(_chars_.load(), _str_.c_str(), _length_ = _str_.length());
-        return *this;
-    }
 
-    _StringWrite_& atEnd(String const& _str_) {
-        memcpy(_chars_.load()+(_length_-_str_.length()), _str_.c_str(), _str_.length());
-        return *this;
-    }
 
-    String toString() const {
-        return cString((char const*)_chars_, _length_);
-    }
 
     char const& operator[] (int index) const {
         return ((char const*)_chars_)[index];
@@ -74,10 +63,6 @@ public:
 
     operator char const*() const {
         return _chars_;
-    }
-
-    explicit operator String() const {
-        return cString(_chars_, _length_);
     }
 
     /*char volatile* c_str() volatile {
@@ -95,6 +80,27 @@ public:
     size_t length() const {
         return _length_;
     }
+
+
+#ifdef ENABLE_ARDUINO
+    explicit operator String() const {
+        return cString(_chars_, _length_);
+    }
+
+    _StringWrite_& operator =(String const& _str_) {
+        memcpy(_chars_.load(), _str_.c_str(), _length_ = _str_.length());
+        return *this;
+    }
+
+    _StringWrite_& atEnd(String const& _str_) {
+        memcpy(_chars_.load()+(_length_-_str_.length()), _str_.c_str(), _str_.length());
+        return *this;
+    }
+
+    String toString() const {
+        return cString((char const*)_chars_, _length_);
+    }
+#endif
 };
 
 
@@ -136,6 +142,24 @@ public:
         return *this;
     }
 
+    char const& operator[] (int index) const {
+        return ((char const*)_chars_)[index];
+    }
+
+    operator char const*() const {
+        return _chars_;
+    }
+
+    char const* c_str() const {
+        return _chars_;
+    }
+
+    size_t length() const {
+        return _length_;
+    }
+
+//
+#ifdef ENABLE_ARDUINO
     _StringView_& operator =(String const& _str_) {
         _chars_ = _str_.c_str();
         _length_ = _str_.length();
@@ -146,29 +170,10 @@ public:
         return cString((char const*)_chars_, _length_);
     }
 
-    char const& operator[] (int index) const {
-        return ((char const*)_chars_)[index];
-    }
-
-    operator char const*() const {
-        return _chars_;
-    }
-
     explicit operator String() const {
         return cString(_chars_, _length_);
     }
-
-    /*char volatile* c_str() volatile {
-        return _chars_;
-    }*/
-
-    char const* c_str() const {
-        return _chars_;
-    }
-
-    size_t length() const {
-        return _length_;
-    }
+#endif
 };
 
 //
@@ -215,20 +220,10 @@ public:
         return *this;
     }
 
-    _String_& operator =(String const& _str_) {
-        bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
-        return *this;
-    }
-
     _String_& operator =(char const* _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         memcpy((void*)_chars_, _str_, _length_ = std::min(strlen(_str_), MAX_STRING_LENGTH));
         return *this;
-    }
-
-    String toString() const {
-        return cString((char const*)_chars_, _length_);
     }
 
     char const& operator[] (int index) const {
@@ -247,14 +242,6 @@ public:
         return (char const*)_chars_;
     }
 
-    explicit operator String() const {
-        return cString((char const*)_chars_, _length_);
-    }
-
-    /*char volatile* c_str() volatile {
-        return _chars_;
-    }*/
-
     char const* c_str() const {
         return (char const*)_chars_;
     }
@@ -266,5 +253,20 @@ public:
     size_t length() const {
         return _length_;
     }
-};
+
+#ifdef ENABLE_ARDUINO
+    _String_& operator =(String const& _str_) {
+        bzero((void*)_chars_, MAX_STRING_LENGTH);
+        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        return *this;
+    }
+
+    String toString() const {
+        return cString((char const*)_chars_, _length_);
+    }
+
+    explicit operator String() const {
+        return cString((char const*)_chars_, _length_);
+    }
 #endif
+};
