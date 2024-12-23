@@ -43,7 +43,14 @@
   "C_Cpp_Runner.warningsAsError": false,
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
-  "C_Cpp_Runner.includePaths": [],
+  "C_Cpp_Runner.includePaths": [
+    "C:/Users/AdminX/.espressif/esp-idf/components/soc/esp32s3/include",
+    "C:/Users/AdminX/.espressif/esp-idf/components/esp_rom/esp32s3/include/",
+    "C:/Users/AdminX/.espressif/esp-idf/components/esp_rom/include/",
+    "C:/Users/AdminX/.espressif/esp-idf/components/mbedtls/port/include/",
+    "${workspaceFolder}/include/",
+    "${workspaceFolder}/src/"
+  ],
   "C_Cpp_Runner.includeSearch": [
     "*",
     "**/*"
@@ -139,8 +146,34 @@
     "stop_token": "cpp",
     "xmemory": "cpp",
     "xstddef": "cpp",
-    "xtr1common": "cpp"
+    "xtr1common": "cpp",
+    "charconv": "cpp",
+    "iomanip": "cpp",
+    "ios": "cpp",
+    "locale": "cpp",
+    "numbers": "cpp",
+    "queue": "cpp",
+    "semaphore": "cpp",
+    "stack": "cpp",
+    "unordered_set": "cpp",
+    "xfacet": "cpp",
+    "xiosbase": "cpp",
+    "xlocale": "cpp",
+    "xlocbuf": "cpp",
+    "xlocinfo": "cpp",
+    "xlocmes": "cpp",
+    "xlocmon": "cpp",
+    "xlocnum": "cpp",
+    "xloctime": "cpp"
   },
   "C_Cpp.default.cppStandard": "gnu++23",
-  "C_Cpp.default.cStandard": "gnu23"
+  "C_Cpp.default.cStandard": "gnu23",
+  "C_Cpp.default.includePath": [
+    "C:/Users/AdminX/.espressif/esp-idf/components/soc/esp32s3/include",
+    "C:/Users/AdminX/.espressif/esp-idf/components/esp_rom/esp32s3/include/",
+    "C:/Users/AdminX/.espressif/esp-idf/components/esp_rom/include/",
+    "C:/Users/AdminX/.espressif/esp-idf/components/mbedtls/port/include/",
+    "${workspaceFolder}/src/",
+    "${workspaceFolder}/include/"
+  ]
 }

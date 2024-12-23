@@ -22,3 +22,4 @@ void handleDevices() {
         device[CURRENT_DEVICE].handleReceive();
     }
 }
+

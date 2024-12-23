@@ -6,8 +6,6 @@
 
 //
 namespace fs {
-
-    //
     namespace internal {
 
         //

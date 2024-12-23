@@ -101,19 +101,16 @@ namespace tuya {
             uint8_t* mem,   
             uint32_t cmdId, uint8_t const* buf, size_t& length, uint8_t* hmac
         ) {
-            //
             memcpy(mem, prefix, 4);
             *(uint32_t*)(mem + 4) = bswap32(++SEQ_NO); // TODO: sequence ID support
             *(uint32_t*)(mem + 8) = bswap32(cmdId);
-
-            //
             *(uint32_t*)(mem + 12) = bswap32(length+(hmac ? 32 : 4)+4);
             memcpy(mem + wret, buf, length);
 
             //
             if (_padding_) { freePaddingResult(_padding_); }; _padding_ = 0;
             if (hmac) {
-    #ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifdef CONFIG_IDF_TARGET_ESP32S3
                 mbedtls_md_context_t ctx;
                 mbedtls_md_init(&ctx);
                 mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
@@ -121,27 +118,20 @@ namespace tuya {
                 mbedtls_md_hmac_update(&ctx, (const unsigned char *) mem, length + wret);
                 mbedtls_md_hmac_finish(&ctx, mem + length + wret);
                 mbedtls_md_free(&ctx);
-    #else
+#else
                 sf_hmac_sha256(hmac, 16, mem, length + wret, mem + length + wret, 32);
-    #endif
+#endif
             } else {
                 *(uint32_t*)(mem + length + wret) = crc32_be(0, mem, length + wret);
             }
             memcpy(mem + wret + length+(hmac ? 32 : 4), suffix, 4);
-
-            //
-            //Serial.println("Encoded Message!");
-
             return mem;
         }
 
         //
         uint8_t* decodeMessage(uint32_t& cmdId, uint8_t* mem, size_t& mlen, bool hmac) {
-            //SEQ_NO = bswap32(*(uint32_t*)(mem + 4));
             cmdId = bswap32(*(uint32_t*)(mem + 8));
             mlen = std::min(size_t(mlen - ((hmac ? 32 : 4) + 4 + 20)), size_t(bswap32(*(uint32_t*)(mem + 12)) - 4 - 4 - (hmac ? 32 : 4)));
-            //mlen = bswap32(*(uint32_t*)(mem + 12)) - 4 - 4 - (hmac ? 32 : 4);
-            //Serial.println("Length: " + String(mlen));
             return (mem + 20);
         }
 

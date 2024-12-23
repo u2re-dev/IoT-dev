@@ -1,6 +1,10 @@
 #pragma once
 
 //
+#include <hal/core/network.hpp>
+#include <hal/network/wifi.hpp>
+
+//
 #include "./tuya.hpp"
 
 //

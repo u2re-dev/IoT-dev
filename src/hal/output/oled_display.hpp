@@ -30,9 +30,7 @@ namespace oled {
     std::thread displayTask;
     void displayThread() {
         while(true) {
-            //ATOMIC() {
-                ui.update();
-            //}
+            ui.update();
             delay(1);
         }
     }
@@ -41,8 +39,6 @@ namespace oled {
     void _drawScreen_(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, uint SCREEN_ID) {
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_LEFT);
-
-        //
         display->drawString(0 + x, 11 + y, debug_info._LINE_[0].toString());
         display->drawString(0 + x, 22 + y, debug_info._LINE_[1].toString());
         display->drawString(0 + x, 33 + y, debug_info._LINE_[2].toString());
@@ -65,11 +61,10 @@ namespace oled {
 
     //
     void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
+        time_t _time_ = rtc::getTime();
         display->setTextAlignment(TEXT_ALIGN_RIGHT);
         display->setFont(ArialMT_Plain_10);
-        time_t _time_ = rtc::getTime();
         display->drawString(128, 0, String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60));
-
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         display->setFont(ArialMT_Plain_10);
         display->drawString(0, 0, DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)));

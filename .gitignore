@@ -1,6 +1,5 @@
 .DS_Store
 .vscode
-managed_components/
 esp-idf/
 out/
 build/
@@ -10,7 +9,9 @@ sdkconfig
 sdkconfig.old
 version.txt
 dependencies.lock
-managed_components/
 target/
 .pio
 .pio/
+components/
+components/arduino/
+managed_components/
