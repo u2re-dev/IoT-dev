@@ -1,6 +1,9 @@
 #pragma once
 
 //
+#define ENABLE_ARDUINO_STRING
+
+//
 #include <std/std.hpp>
 #include <std/string.hpp>
 #include <crypto/soc.hpp>
@@ -129,7 +132,7 @@ namespace tuya {
 
             //
             if (_padding_) { freePaddingResult(_padding_); }; _padding_ = 0;
-            _padding_ = addPadding(data.c_str(), data.length(), 16);
+            _padding_ = addPadding(data.bytes(), data.length(), 16);
 
             for (unsigned I=0;I<_padding_->dataLengthWithPadding;I+=16) {
             AES_ECB_encrypt(&cipher, (uint8_t*)_padding_->dataWithPadding + I);
@@ -149,7 +152,7 @@ namespace tuya {
 
             //
             memcpy(data_, protocol33 ? "3.3" : "3.4", 3);
-            memcpy(data_ + 15, data.c_str(), data.length());
+            memcpy(data_ + 15, data.bytes(), data.length());
 
             //
             if (_padding_) { freePaddingResult(_padding_); }; _padding_ = 0;
@@ -225,27 +228,22 @@ namespace tuya {
                 if (client.connect(IP_ADDRESS, 6668)) {
                     delay(1);
                     if (client.connected()) {
-                        //
                         SEQ_NO = 0;
-                        _local_key_ = _real_local_key_;
+                        memcpy(_local_key_.bytes(), _real_local_key_.bytes(), 16);
 
                         //
                         if (!protocol33) {
-                            if (!_hmac_key_) {
-                            _hmac_key_ = (uint8_t*)calloc(1, 16);
-                            }
-                            memcpy(_hmac_key_, _local_key_.c_str(), 16);
-                            
-                            //
-                            sendMessageRaw(0x3, _local_nonce_);
+                            if (!_hmac_key_) { _hmac_key_ = (uint8_t*)calloc(1, 16); }
+                            //memcpy(_hmac_key_, _local_key_.bytes(), 16);
+                            //sendMessageRaw(0x3, _local_nonce_);
                             received = true;
                         } else {
-                            JSONVar _head_;
-                            _head_["gwId"] = _device_id_.toString();
-                            _head_["devId"] = _device_id_.toString();
-                            _head_["uid"] = _device_id_.toString();
-                            _head_["t"] = String(rtc::getTime());
-                            sendMessageRaw(0xa, _store_ = JSON.stringify(_head_));
+                            //JSONVar _head_;
+                            //_head_["gwId"] = _device_id_.toString();
+                            //_head_["devId"] = _device_id_.toString();
+                            //_head_["uid"] = _device_id_.toString();
+                            //_head_["t"] = String(rtc::getTime());
+                            //sendMessageRaw(0xa, _store_ = JSON.stringify(_head_));
                             received = true;
                         }
                     } else {
@@ -263,6 +261,7 @@ namespace tuya {
         }
 
         //
+        /*
         void loadConfig(JSONVar doc) {
             _device_id_ = (char const*)doc["device_id"];
             _real_local_key_ = (char const*)doc["local_key"];
@@ -271,7 +270,7 @@ namespace tuya {
             //for (uint8_t I=0;I<4;I++) { _IP_ADDRESS_[I] = IP_ADDRESS[I]; };
             _IP_ADDRESS_ = (uint32_t)IP_ADDRESS;
             client.stop();
-        }
+        }*/
 
         //
         void reconnect() {
@@ -290,34 +289,11 @@ namespace tuya {
             }
         }
 
-        //
-        void sendControl(JSONVar _dps_) {
-            if (client.connected() && connected) {
-                JSONVar _var_;
-                if (!protocol33) {
-                    _var_["protocol"] = 5;
-                    _var_["t"] = rtc::getTime();
-                    _var_["data"]["dps"] = _dps_;
-                    cState = merge(cState, _dps_);
-                    sendMessage(0xd, _store_ = JSON.stringify(_var_));
-                    //Serial.println(_store_.toString());
-                } else {
-                    _var_["dps"] = _dps_;
-                    _var_["t"] = String(rtc::getTime());
-                    _var_["devId"] = _device_id_.toString();
-                    _var_["uid"] = _device_id_.toString();
-                    cState = merge(cState, _dps_);
-                    sendMessage(0x7, _store_ = JSON.stringify(_var_));
-                    //Serial.println(_store_.toString());
-                }
-            }
-        }
-
         // Perduino
         JSONVar& merge(JSONVar& dst, JSONVar src) {
             JSONVar _keys_ = src.keys();
             for (uint x = 0; x < _keys_.length(); x++) {
-                //_StringView_ _key_((_keys_[x]).c_str() + 1, _keys_[x].length()-1);
+                //_StringView_ _key_((_keys_[x]).bytes() + 1, _keys_[x].length()-1);
                 String _key_ = (char const*)_keys_[x];
                 if (JSON.typeof(src[_key_]).startsWith("object")) {
                     JSONVar _dst_ = dst[_key_];
@@ -342,7 +318,7 @@ namespace tuya {
         void sendMessage(uint cmdId, _StringView_ _string_) {
             if (client.connected() && (received || (millis() - lastTime) >= 1000)) {
                 size_t _s_length_ = _string_.length();
-                uint8_t* _data_ = encryptJson((uint8_t*)_local_key_.c_str(), _string_, _s_length_);
+                uint8_t* _data_ = encryptJson((uint8_t*)_local_key_.bytes(), _string_, _s_length_);
                 if (!channel::_sending_) { channel::_sending_ = (uint8_t*)calloc(1, channel::LIMIT); };
                 if (!channel::_debug_) { channel::_debug_ = (char*)calloc(1, channel::LIMIT<<1); };
                 encodeMessage((uint8_t*)channel::_sending_, /*0x0d*/cmdId, _data_, _s_length_, _hmac_key_);
@@ -356,7 +332,7 @@ namespace tuya {
         void sendMessageRaw(uint cmdId, _StringView_ _string_) {
             if (client.connected() && (received || (millis() - lastTime) >= 1000)) {
                 size_t _s_length_ = _string_.length();
-                uint8_t* _data_ = encryptRaw((uint8_t*)_local_key_.c_str(), _string_, _s_length_);
+                uint8_t* _data_ = encryptRaw((uint8_t*)_local_key_.bytes(), _string_, _s_length_);
                 if (!channel::_sending_) { channel::_sending_ = (uint8_t*)calloc(1, channel::LIMIT); };
                 if (!channel::_debug_) { channel::_debug_ = (char*)calloc(1, channel::LIMIT<<1); };
                 encodeMessage((uint8_t*)channel::_sending_, /*0x0d*/cmdId, _data_, _s_length_, _hmac_key_);
@@ -387,13 +363,13 @@ namespace tuya {
                         attemp = 0;
 
                         //
-                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.bytes(), encoded, _len_), _len_);
                         //cState = merge(cState, JSON.parse(_code_)["dps"]);
                     } else
                     if (cmdId == 0x4) {
                         AES_ctx cipher;
-                        AES_init_ctx(&cipher, (uint8_t*)_local_key_.c_str());
-                        _remote_nonce_ = (char const*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_);
+                        AES_init_ctx(&cipher, (uint8_t*)_local_key_.bytes());
+                        _remote_nonce_ = (char const*)decryptRaw((uint8_t*)_local_key_.bytes(), encoded, _len_);
 
                         //       
                         size_t hlen = 48;
@@ -402,12 +378,12 @@ namespace tuya {
                         mbedtls_md_context_t ctx;
                         mbedtls_md_init(&ctx);
                         mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-                        mbedtls_md_hmac_starts(&ctx, (const unsigned char *) _local_key_.c_str(), 16);
-                        mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.c_str(), 16);
+                        mbedtls_md_hmac_starts(&ctx, (const unsigned char *) _local_key_.bytes(), 16);
+                        mbedtls_md_hmac_update(&ctx, (const unsigned char *) _remote_nonce_.bytes(), 16);
                         mbedtls_md_hmac_finish(&ctx, _remote_hmac_);
                         mbedtls_md_free(&ctx);
 #else
-                        sf_hmac_sha256(_local_key_.c_str(), 16, _remote_nonce_.c_str(), 16, _remote_hmac_, hlen);
+                        sf_hmac_sha256(_local_key_.bytes(), 16, _remote_nonce_.bytes(), 16, _remote_hmac_, hlen);
 #endif
 
                         AES_ECB_encrypt(&cipher, _remote_hmac_);
@@ -419,24 +395,24 @@ namespace tuya {
 
                         //
                         for (uint8_t I=0;I<16;I+=4) { // using 32-bit mad math
-                            *((uint32_t*)(_local_key_.c_str()+I)) = (*((uint32_t*)(_local_nonce_.c_str()+I)))^(*((uint32_t*)(_remote_nonce_+I)));
+                            *((uint32_t*)(_local_key_.bytes()+I)) = (*((uint32_t*)(_local_nonce_.bytes()+I)))^(*((uint32_t*)(_remote_nonce_+I)));
                         }
-                        AES_ECB_encrypt(&cipher, (uint8_t*)_local_key_.c_str());
-                        memcpy(_hmac_key_, _local_key_.c_str(), 16);
+                        AES_ECB_encrypt(&cipher, (uint8_t*)_local_key_.bytes());
+                        memcpy(_hmac_key_, _local_key_.bytes(), 16);
 
                         //
                         connected = true;
                         received = true;
                         attemp = 0;
-                        sendMessage(0x10, _store_ = "{}");
+                        //sendMessage(0x10, _store_ = "{}");
                         received = true;
                     } else 
                     if (cmdId == 0x10 && !protocol33) {
-                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        _StringView_ _code_((char*)decryptRaw((uint8_t*)_local_key_.bytes(), encoded, _len_), _len_);
                         //cState = merge(cState, JSON.parse(_code_)["dps"]);
                     } else 
                     if (cmdId == 0x8) {
-                        _StringView_ _code_((char*)decryptJson((uint8_t*)_local_key_.c_str(), encoded, _len_), _len_);
+                        _StringView_ _code_((char*)decryptJson((uint8_t*)_local_key_.bytes(), encoded, _len_), _len_);
                         //cState = merge(cState, JSON.parse(_code_)["dps"]);
                     }
                 }

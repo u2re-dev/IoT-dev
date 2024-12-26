@@ -1,46 +1,77 @@
-#include "./loop.hpp"
+#define VERY_LARGE_STRING_LENGTH 8000
 
 //
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <esp_task_wdt.h>
+#include <std/std.hpp>
+#include <std/timer.hpp>
+#include <hal/current.hpp>
+#include <modules/network/wifi.hpp>
+#include <modules/network/rtc.hpp>
 
 //
-#ifndef ARDUINO_LOOP_STACK_SIZE
-#ifndef CONFIG_ARDUINO_LOOP_STACK_SIZE
-#define ARDUINO_LOOP_STACK_SIZE 8192
-#else
-#define ARDUINO_LOOP_STACK_SIZE CONFIG_ARDUINO_LOOP_STACK_SIZE
-#endif
-#endif
+std::thread displayTask;
+extern "C" void IOTask() {
+
+}
 
 //
-TaskHandle_t loopTaskHandle = NULL;
-bool loopTaskWDTEnabled;
-
-//
-__attribute__((weak)) size_t getArduinoLoopTaskStackSize(void) { return ARDUINO_LOOP_STACK_SIZE; }
-__attribute__((weak)) bool shouldPrintChipDebugReport(void) { return false; }
-
-//
-extern "C" void app_main(void)
+extern "C" void loopTask(void *pvParameters)
 {
-#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE
-    Serial.begin();
-#endif
-#if ARDUINO_USB_MSC_ON_BOOT && !ARDUINO_USB_MODE
-    MSC_Update.begin();
-#endif
-#if ARDUINO_USB_DFU_ON_BOOT && !ARDUINO_USB_MODE
-    USB.enableDFU();
-#endif
-#if ARDUINO_USB_ON_BOOT && !ARDUINO_USB_MODE
-    USB.begin();
-#endif
-    loopTaskWDTEnabled = false;
+    setCpuFrequencyMhz(80);
 
-#ifdef ENABLE_ARDUINO
-    initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, CONFIG_ARDUINO_RUNNING_CORE);
-#endif
+    //
+    pinMode(PIN_POWER_ON, OUTPUT);
+    pinMode(PIN_LCD_BL, OUTPUT);
+
+    //
+    digitalWrite(PIN_POWER_ON, LOW);
+    digitalWrite(PIN_LCD_BL, LOW);
+
+    //
+    initState();
+
+    //
+    Serial.setDebugOutput(true);
+    Serial.begin(115200);
+
+    //
+    nv::storage.begin("nvs", false);
+    displayTask = std::thread(IOTask);
+
+    //
+    if (!INTERRUPTED.load()) {
+        rtc::initRTC();
+        wifi::initWiFi();
+        rtc::initRTC();
+    }
+
+    //
+    if (!INTERRUPTED.load()) {
+        wakeUp();
+    }
+
+    //
+    while (!INTERRUPTED.load()) {
+        //
+        if ((millis() - LAST_ACTIVE_TIME) > 10000) {
+            powerSave();
+        }
+
+        //
+        {
+            switchScreen((!wifi::CONNECTED.load() || LOADING_SD), CURRENT_DEVICE);
+            wifi::handleWiFi();
+
+            // 
+            if (wifi::WiFiConnected()) { rtc::timeClient.update(); }
+            rtc::_syncTimeFn_();
+        }
+
+        //
+        delay(POWER_SAVING.load() ? 100 : 1);
+    }
+
+    //
+    while (!(POWER_SAVING.load() || (millis() - LAST_TIME.load()) >= STOP_TIMEOUT)) {
+        delay(POWER_SAVING.load() ? 100 : 1);
+    }
 }

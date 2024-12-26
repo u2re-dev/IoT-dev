@@ -83,9 +83,9 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) 
 #ifdef ENABLE_ARDUINO
 String HSV_TO_HEX_B(float H, float S, float V) {
     _String_<12> _HEX_ = "000000000000";
-    _StringWrite_ _H_(_HEX_.c_str() + 0, 4);
-    _StringWrite_ _S_(_HEX_.c_str() + 4, 4);
-    _StringWrite_ _V_(_HEX_.c_str() + 8, 4);
+    _StringWrite_ _H_(_HEX_.bytes() + 0, 4);
+    _StringWrite_ _S_(_HEX_.bytes() + 4, 4);
+    _StringWrite_ _V_(_HEX_.bytes() + 8, 4);
 
     //
     _H_.atEnd(String(int(H), HEX));

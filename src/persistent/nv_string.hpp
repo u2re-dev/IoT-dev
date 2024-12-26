@@ -38,12 +38,12 @@ namespace nv {
         }
 
         _NvString_& operator =(_StringView_ _str_) {
-            storage.putBytes(_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+            storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
             return *this;
         }
 
         _NvString_& operator =(String const& _str_) {
-            storage.putBytes(_chars_, _str_.c_str(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+            storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
             return *this;
         }
 
@@ -69,7 +69,7 @@ namespace nv {
             return cString(_code_, _length_);
         }
 
-        char const* c_str() const {
+        char const* bytes() const {
             storage.getBytes(_chars_, (char*)_code_, _length_); if (_length_ < MAX_STRING_LENGTH) { _code_[_length_] = 0u; };
             return (char*)_code_;
         }

@@ -3,19 +3,12 @@
 //
 #include <hal/network.hpp>
 #include <tuya/tuya.hpp>
-
-//
-#include "../network/wifi.hpp"
+#include <modules/network/wifi.hpp>
 
 //
 #ifdef ENABLE_HTTP_SERVER
 #include <ESPAsyncWebServer.h>
-#endif
-
-//
 namespace http {
-
-#ifdef ENABLE_HTTP_SERVER
     //
     void initServer(tuya::TuyaDevice3* device) {
         static AsyncWebServer server(80);
@@ -85,6 +78,5 @@ namespace http {
         //
         server.begin();
     }
-#endif
-
 };
+#endif

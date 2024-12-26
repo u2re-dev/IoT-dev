@@ -4,7 +4,7 @@
 #include <std/std.hpp>
 
 //
-#ifdef ENABLE_ARDUINO
+#ifdef ENABLE_ARDUINO_STRING
 inline String cString(char const* data, size_t length) {
     String _str_(data);
     _str_.reserve(std::min(_str_.length(), length));
@@ -28,7 +28,7 @@ public:
     _StringWrite_() = delete;
 
     explicit _StringWrite_(_StringWrite_ const& _str_) {
-        _chars_ = (char*)_str_.c_str();
+        _chars_ = (char*)_str_.bytes();
         _length_ = _str_.length();
     }
 
@@ -57,11 +57,11 @@ public:
         return _chars_;
     }
 
-    char const* c_str() const {
+    char const* bytes() const {
         return _chars_;
     }
 
-    char* c_str() {
+    char* bytes() {
         return _chars_;
     }
 
@@ -70,18 +70,18 @@ public:
     }
 
 
-#ifdef ENABLE_ARDUINO
+#ifdef ENABLE_ARDUINO_STRING
     explicit operator String() const {
         return cString(_chars_, _length_);
     }
 
     _StringWrite_& operator =(String const& _str_) {
-        memcpy(_chars_.load(), _str_.c_str(), _length_ = _str_.length());
+        memcpy(_chars_.load(), _str_.bytes(), _length_ = _str_.length());
         return *this;
     }
 
     _StringWrite_& atEnd(String const& _str_) {
-        memcpy(_chars_.load()+(_length_-_str_.length()), _str_.c_str(), _str_.length());
+        memcpy(_chars_.load()+(_length_-_str_.length()), _str_.bytes(), _str_.length());
         return *this;
     }
 
@@ -98,7 +98,7 @@ class _StringView_ {
 
 public: 
     _StringView_(_StringView_ const& _str_) {
-        _chars_ = _str_.c_str();
+        _chars_ = _str_.bytes();
         _length_ = _str_.length();
     }
 
@@ -113,7 +113,7 @@ public:
     }
 
     _StringView_& operator =(_StringView_ _str_) {
-        _chars_ = _str_.c_str();
+        _chars_ = _str_.bytes();
         _length_ = _str_.length();
         return *this;
     }
@@ -126,7 +126,7 @@ public:
         return _chars_;
     }
 
-    char const* c_str() const {
+    char const* bytes() const {
         return _chars_;
     }
 
@@ -135,14 +135,14 @@ public:
     }
 
 //
-#ifdef ENABLE_ARDUINO
+#ifdef ENABLE_ARDUINO_STRING
     _StringView_(String const& _str_) {
-        _chars_ = _str_.c_str();
+        _chars_ = _str_.bytes();
         _length_ = std::min(_str_.length(), strlen(_chars_));
     }
 
     _StringView_& operator =(String const& _str_) {
-        _chars_ = _str_.c_str();
+        _chars_ = _str_.bytes();
         _length_ = _str_.length();
         return *this;
     }
@@ -171,7 +171,7 @@ public:
 
     _String_(_String_ const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
     
     _String_(char const* _str_) {
@@ -186,17 +186,17 @@ public:
 
     _String_(_StringView_ _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 
     _String_(String const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 
     _String_& operator =(_StringView_ _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
         return *this;
     }
 
@@ -222,11 +222,11 @@ public:
         return (char const*)_chars_;
     }
 
-    char const* c_str() const {
+    char const* bytes() const {
         return (char const*)_chars_;
     }
 
-    char* c_str() {
+    char* bytes() {
         return (char*)_chars_;
     }
 
@@ -234,10 +234,10 @@ public:
         return _length_;
     }
 
-#ifdef ENABLE_ARDUINO
+#ifdef ENABLE_ARDUINO_STRING
     _String_& operator =(String const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.c_str(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
         return *this;
     }
 
