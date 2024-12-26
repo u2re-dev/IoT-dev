@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include <library/std.hpp>
+#include <std/std.hpp>
 
 //
 #ifdef ENABLE_ARDUINO
@@ -21,18 +21,11 @@ inline String cString(uint8_t const* data, size_t length) {
 
 //
 class _StringWrite_ {
-    //
     std::atomic<char *> _chars_;
     std::atomic<size_t> _length_;
 
 public: 
-    //_String_() {
-        //bzero((void*)_chars_, MAX_STRING_LENGTH);
-        //_length_ = 0u;
-    //}
-
     _StringWrite_() = delete;
-    //_StringWrite_(_StringWrite_ const&) = delete;
 
     explicit _StringWrite_(_StringWrite_ const& _str_) {
         _chars_ = (char*)_str_.c_str();
@@ -55,8 +48,7 @@ public:
     }
 
 
-
-
+    
     char const& operator[] (int index) const {
         return ((char const*)_chars_)[index];
     }
@@ -64,10 +56,6 @@ public:
     operator char const*() const {
         return _chars_;
     }
-
-    /*char volatile* c_str() volatile {
-        return _chars_;
-    }*/
 
     char const* c_str() const {
         return _chars_;
@@ -103,27 +91,15 @@ public:
 #endif
 };
 
-
 //
 class _StringView_ {
-    //
     std::atomic<char const*> _chars_;
     std::atomic<size_t> _length_;
 
 public: 
-    //_String_() {
-        //bzero((void*)_chars_, MAX_STRING_LENGTH);
-        //_length_ = 0u;
-    //}
-
     _StringView_(_StringView_ const& _str_) {
         _chars_ = _str_.c_str();
         _length_ = _str_.length();
-    }
-
-    _StringView_(String const& _str_) {
-        _chars_ = _str_.c_str();
-        _length_ = std::min(_str_.length(), strlen(_chars_));
     }
 
     _StringView_(char const* _str_) {
@@ -160,6 +136,11 @@ public:
 
 //
 #ifdef ENABLE_ARDUINO
+    _StringView_(String const& _str_) {
+        _chars_ = _str_.c_str();
+        _length_ = std::min(_str_.length(), strlen(_chars_));
+    }
+
     _StringView_& operator =(String const& _str_) {
         _chars_ = _str_.c_str();
         _length_ = _str_.length();
@@ -179,7 +160,6 @@ public:
 //
 template<size_t MAX_STRING_LENGTH=32>
 class _String_ {
-    //
     char _chars_[MAX_STRING_LENGTH];
     std::atomic<size_t> _length_;
 

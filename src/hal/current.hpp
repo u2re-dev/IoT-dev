@@ -1,8 +1,8 @@
 #pragma once
 
 //
-#include <library/std.hpp>
-#include <hal/core/interface.hpp>
+#include <std/std.hpp>
+#include "./interface.hpp"
 
 //
 std::function<void(uint32_t)> COM_HANDLER;

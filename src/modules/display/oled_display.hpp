@@ -1,0 +1,103 @@
+#pragma once
+
+//
+#ifdef ENABLE_DISPLAY
+#include <std/std.hpp>
+#include <hal/network/rtc.hpp>
+#include <hal/current.hpp>
+
+//
+namespace oled {
+
+    // Initialize the OLED display using Wire library
+    static SSD1306Wire display(I2C_OLED_ADDR, I2C_SDA, I2C_SCL/*SDA, SCL*/);  // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
+    static OLEDDisplayUi ui( &display );
+
+    //
+    void switchScreen(bool dbg, uint dvID) {
+        if (DEBUG_SCREEN != dbg || CURRENT_DEVICE != dvID) {
+            ui.switchToFrame(DEBUG_SCREEN ? 0 : max(min(CURRENT_DEVICE+1, 2u), 1u));
+            DEBUG_SCREEN = dbg;
+            CURRENT_DEVICE = std::max(std::min(dvID, 1u), 0u);
+            ui.setFrameAnimation(/*SLIDE_LEFT*/SLIDE_LEFT);
+            ui.setTimePerTransition(0);
+            ui.transitionToFrame(dbg ? 0 : std::max(std::min(dvID+1, 2u), 1u));
+            ui.setTimePerTransition(400);
+        }
+    }
+
+    //
+    std::thread displayTask;
+    void displayThread() {
+        while(true) {
+            ui.update();
+            delay(1);
+        }
+    }
+
+    //
+    void _drawScreen_(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, uint SCREEN_ID) {
+        display->setFont(ArialMT_Plain_10);
+        display->setTextAlignment(TEXT_ALIGN_LEFT);
+        display->drawString(0 + x, 11 + y, debug_info._LINE_[0].toString());
+        display->drawString(0 + x, 22 + y, debug_info._LINE_[1].toString());
+        display->drawString(0 + x, 33 + y, debug_info._LINE_[2].toString());
+    }
+
+    //
+    void drawS0(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+        _drawScreen_(display, state, x, y, 0);
+    }
+
+    //
+    void drawS1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+        _drawScreen_(display, state, x, y, 1);
+    }
+
+    //
+    void drawS2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+        _drawScreen_(display, state, x, y, 2);
+    }
+
+    //
+    void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
+        time_t _time_ = rtc::getTime();
+        display->setTextAlignment(TEXT_ALIGN_RIGHT);
+        display->setFont(ArialMT_Plain_10);
+        display->drawString(128, 0, String((_time_/3600)%24) + ":" + String((_time_/60)%60) + ":" + String(_time_%60));
+        display->setTextAlignment(TEXT_ALIGN_LEFT);
+        display->setFont(ArialMT_Plain_10);
+        display->drawString(0, 0, DEBUG_SCREEN ? "Debug" : ("Device: " + String(CURRENT_DEVICE)));
+    }
+
+    //
+    static FrameCallback frames[] = { drawS0, drawS1, drawS2 };
+    static OverlayCallback overlays[] = { msOverlay };
+
+    //
+    void initDisplay() {
+        //
+        Serial.println("Init Display...");
+
+        //
+        ui.setTargetFPS(60);
+        ui.setIndicatorPosition(BOTTOM);
+        ui.setIndicatorDirection(LEFT_RIGHT);
+        ui.setFrameAnimation(SLIDE_LEFT);
+        ui.setFrames(frames, 3);
+        ui.disableAutoTransition();
+        ui.setOverlays(overlays, 1);
+        ui.init();
+
+        //
+        display.flipScreenVertically();
+        display.setFont(ArialMT_Plain_10);
+        display.setTextAlignment(TEXT_ALIGN_LEFT);
+
+        //
+        Serial.println("Pinning to Core...");
+        displayTask = std::thread(displayThread);
+    }
+
+}
+#endif
