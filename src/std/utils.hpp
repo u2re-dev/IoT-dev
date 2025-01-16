@@ -103,3 +103,16 @@ void store32(uint8_t* ptr, uint32_t _a_) {
 bool compareIP(uint8_t const* a, uint8_t const* b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
 bool compareIP(IPAddress const& a, uint8_t const* b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
 bool compareIP(IPAddress const& a, IPAddress const& b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
+
+//
+static const uint64_t unix_shift = 946684800;
+int64_t getTimestamp(int year, int mon, int mday, int hour, int min, int sec)
+{
+    const uint16_t ytd[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}; /* Anzahl der Tage seit Jahresanfang ohne Tage des aktuellen Monats und ohne Schalttag */
+    int leapyears = ((year - 1) - 1968) / 4
+                    - ((year - 1) - 1900) / 100
+                    + ((year - 1) - 1600) / 400; /* Anzahl der Schaltjahre seit 1970 (ohne das evtl. laufende Schaltjahr) */
+    int64_t days_since_1970 = (year - 1970) * 365 + leapyears + ytd[mon - 1] + mday - 1;
+    if ( (mon > 2) && (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ) days_since_1970 += 1; /* +Schalttag, wenn Jahr Schaltjahr ist */
+    return sec + 60 * (min + 60 * (hour + 24 * days_since_1970) );
+}
