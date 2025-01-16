@@ -1,0 +1,14 @@
+Byte Ranges:
+
++4-byte: prefix ( 0x00, 0x00, 0x55, 0xAA )
+--- header
++4-byte: seq_nm
++4-byte: cmd_id
++4-byte: length ([payload-with-padding]+hmac)
+--- payload (encrypted)
++4-byte: padding (PKCS7)
++N-byte: payload (JSON)
+--- hmac
++hs-byte: hmac/crc32-size (16 byte for hmac, or 4 byte for crc32)
+---
++4-byte: 4 suffix ( 0x00, 0x00, 0xAA, 0x55 )
