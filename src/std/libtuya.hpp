@@ -70,7 +70,7 @@ namespace tc {
 
         // re-correction of length (if possible)
         const auto pad = data[length-1];
-        if (pad <= 16 && pad > 0) { length -= pad; };
+        if (pad <= 16 && pad > 0 && length > 16) { length -= pad; };
     }
 
     //
@@ -114,18 +114,19 @@ namespace tc {
         *(uint32_t*)(output+12) = bswap32(computePayloadSize(length, cmdDesc.HMAC ? true : false));
 
         //
-        const auto payload = output + 16;
+        const uint32_t header_len = 16; size_t key_len = 16;
+        const auto payload = output + header_len;
         memcpy(payload, encryptedData, length);
         if (cmdDesc.HMAC) {
             mbedtls_md_context_t ctx;
             mbedtls_md_init(&ctx);
             mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) cmdDesc.HMAC, 16);
-            mbedtls_md_hmac_update(&ctx, (const unsigned char *) output, length + 16); // header + payload
+            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) cmdDesc.HMAC, key_len);
+            mbedtls_md_hmac_update(&ctx, (const unsigned char *) output, length + header_len); // header + payload
             mbedtls_md_hmac_finish(&ctx, payload + length); // write after payload
             mbedtls_md_free(&ctx);
         } else {
-            *(uint32_t*)(payload + length) = crc32_be(0, output, length + 16);
+            *(uint32_t*)(payload + length) = crc32_be(0, output, length + header_len);
         }
 
         // write suffix
@@ -136,7 +137,7 @@ namespace tc {
     }
 
 
-    // for protocol 3.4
+    // for protocol 3.4, remote_nonce is encrypted
     uint8_t* encode_remote_hmac(uint8_t* original_key, uint8_t* remote_nonce, size_t length = 0,   uint8_t* remote_hmac = nullptr) {
         size_t key_len = 16;
         decryptDataECB(original_key, remote_nonce, key_len, remote_nonce);
@@ -155,7 +156,7 @@ namespace tc {
         mbedtls_md_hmac_finish(&ctx, remote_hmac);
         mbedtls_md_free(&ctx);
 #else
-        sf_hmac_sha256(original_key, 16, remote_nonce, 16, remote_hmac, hmac_length);
+        sf_hmac_sha256(original_key, key_len, remote_nonce, key_len, remote_hmac, hmac_length);
 #endif
 
         encryptDataECB(original_key, remote_hmac, hmac_length, remote_hmac);
@@ -173,13 +174,11 @@ namespace tc {
         uint32_t* loc = hmac_key ? (uint32_t*)hmac_key : (uint32_t*)calloc(1, key_len);
         const uint32_t* loc_n = (uint32_t*)local_nonce;
         const uint32_t* rem_n = (uint32_t*)remote_nonce;
+        for (uint8_t I=0;I<4;I++) { loc[I] = loc_n[I]^rem_n[I]; }
 
         //
         uint8_t* local_key = (uint8_t*)loc;
-        for (uint8_t I=0;I<4;I++) { loc[I] = loc_n[I]^rem_n[I]; }
         encryptDataECB(original_key, local_key, key_len, local_key);
-
-        //
         return local_key;
     }
 
