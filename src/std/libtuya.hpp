@@ -27,13 +27,6 @@ namespace tc {
     }
 
     //
-    struct TuyaCmd {
-        uint32_t SEQ_NO = 0;
-        uint32_t CMD_ID = 0; 
-        uint8_t* HMAC = nullptr;
-    };
-
-    //
     void encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output, const bool usePadding = true) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
@@ -105,40 +98,6 @@ namespace tc {
         return std::array<uint32_t, 2>{encOffset, encLen};
     }
 
-    // HMAC i.e. hmac_key
-    uint8_t* encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
-        // write header
-        *(uint32_t*)(output+0) = 0x000055AA;
-
-        // encode as big-endian
-        *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
-        *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
-        *(uint32_t*)(output+12) = bswap32(computePayloadSize(length, cmdDesc.HMAC ? true : false));
-
-        //
-        const uint32_t header_len = 16; size_t key_len = 16;
-        const auto payload = output + header_len;
-        memcpy(payload, encrypted_data, length);
-        if (cmdDesc.HMAC) {
-            mbedtls_md_context_t ctx;
-            mbedtls_md_init(&ctx);
-            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) cmdDesc.HMAC, key_len);
-            mbedtls_md_hmac_update(&ctx, (const unsigned char *) output, length + header_len); // header + payload
-            mbedtls_md_hmac_finish(&ctx, payload + length); // write after payload
-            mbedtls_md_free(&ctx);
-        } else {
-            *(uint32_t*)(payload + length) = crc32_be(0, output, length + header_len);
-        }
-
-        // write suffix
-        *(uint32_t*)(output+0) = 0x0000AA55;
-
-        //
-        return output;
-    }
-
-
     // for protocol 3.4, remote_nonce is encrypted
     uint8_t* encode_remote_hmac(uint8_t* original_key, uint8_t* remote_nonce, size_t length = 0,   uint8_t* remote_hmac = nullptr) {
         size_t key_len = 16;
@@ -182,6 +141,51 @@ namespace tc {
         uint8_t* local_key = (uint8_t*)loc; // encode without padding
         encryptDataECB(original_key, local_key, key_len, local_key, false);
         return local_key;
+    }
+
+
+
+
+
+
+    //
+    struct TuyaCmd {
+        uint32_t SEQ_NO = 0;
+        uint32_t CMD_ID = 0; 
+        uint8_t* HMAC = nullptr;
+    };
+
+    // HMAC i.e. hmac_key
+    uint8_t* encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
+        // write header
+        *(uint32_t*)(output+0) = 0x000055AA;
+
+        // encode as big-endian
+        *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
+        *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
+        *(uint32_t*)(output+12) = bswap32(computePayloadSize(length, cmdDesc.HMAC ? true : false));
+
+        //
+        const uint32_t header_len = 16; size_t key_len = 16;
+        const auto payload = output + header_len;
+        memcpy(payload, encrypted_data, length);
+        if (cmdDesc.HMAC) {
+            mbedtls_md_context_t ctx;
+            mbedtls_md_init(&ctx);
+            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) cmdDesc.HMAC, key_len);
+            mbedtls_md_hmac_update(&ctx, (const unsigned char *) output, length + header_len); // header + payload
+            mbedtls_md_hmac_finish(&ctx, payload + length); // write after payload
+            mbedtls_md_free(&ctx);
+        } else {
+            *(uint32_t*)(payload + length) = crc32_be(0, output, length + header_len);
+        }
+
+        // write suffix
+        *(uint32_t*)(output+0) = 0x0000AA55;
+
+        //
+        return output;
     }
 
 };
