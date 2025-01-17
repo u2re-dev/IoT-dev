@@ -4,6 +4,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_task_wdt.h>
+#include <esp32-hal.h>
+#include <Arduino.h>
 
 //
 #ifndef ARDUINO_LOOP_STACK_SIZE
