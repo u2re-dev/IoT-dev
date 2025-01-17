@@ -34,7 +34,7 @@ namespace tc {
     };
 
     //
-    void encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output) {
+    void encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output, const bool usePadding = true) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
@@ -44,8 +44,10 @@ namespace tc {
 
         // add post-padding
         const auto pad = ((length + 16 /*- 1*/) >> 4) << 4;
-        for (uint I=0;I<pad;I++) {
-            output[length+I] = pad;
+        if (usePadding) {
+            for (uint I=0;I<pad;I++) {
+                output[length+I] = pad;
+            }
         }
 
         //
@@ -53,8 +55,8 @@ namespace tc {
             esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, output+I, output+I);
         }
 
-        //
-        length += pad; // add padding value
+        // add padding value
+        if (usePadding) { length += pad; };
     }
 
     //
@@ -104,7 +106,7 @@ namespace tc {
     }
 
     // HMAC i.e. hmac_key
-    uint8_t* encodeTuyaCode(uint8_t* encryptedData, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
+    uint8_t* encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
         // write header
         *(uint32_t*)(output+0) = 0x000055AA;
 
@@ -116,7 +118,7 @@ namespace tc {
         //
         const uint32_t header_len = 16; size_t key_len = 16;
         const auto payload = output + header_len;
-        memcpy(payload, encryptedData, length);
+        memcpy(payload, encrypted_data, length);
         if (cmdDesc.HMAC) {
             mbedtls_md_context_t ctx;
             mbedtls_md_init(&ctx);
@@ -159,7 +161,7 @@ namespace tc {
         sf_hmac_sha256(original_key, key_len, remote_nonce, key_len, remote_hmac, hmac_length);
 #endif
 
-        encryptDataECB(original_key, remote_hmac, hmac_length, remote_hmac);
+        encryptDataECB(original_key, remote_hmac, hmac_length, remote_hmac, false);
 
         // needs to send these data
         return remote_hmac;
@@ -177,8 +179,8 @@ namespace tc {
         for (uint8_t I=0;I<4;I++) { loc[I] = loc_n[I]^rem_n[I]; }
 
         //
-        uint8_t* local_key = (uint8_t*)loc;
-        encryptDataECB(original_key, local_key, key_len, local_key);
+        uint8_t* local_key = (uint8_t*)loc; // encode without padding
+        encryptDataECB(original_key, local_key, key_len, local_key, false);
         return local_key;
     }
 
