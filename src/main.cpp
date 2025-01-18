@@ -8,6 +8,8 @@
 //
 #include <esp32-hal-gpio.h>
 #include <HardwareSerial.h>
+#include <M5Unified.hpp>
+#include "hal/network.hpp"
 
 //
 std::thread displayTask;
@@ -35,4 +37,15 @@ extern "C" void loopTask(void *pvParameters)
     //
     nv::storage.begin("nvs", false);
     displayTask = std::thread(IOTask);
+
+    // local network temp-data
+    wifi_ssid = "mozg";
+    wifi_pass = "n3v3rm1nd";
+
+    //
+    while (true) {
+        M5.delay(1);
+
+        
+    }
 }
