@@ -1,11 +1,7 @@
 #pragma once
 #include <M5Unified.hpp>
-
-//
-#define NTP_TIMEZONE  "JST-9"
-#define NTP_SERVER1   "0.pool.ntp.org"
-#define NTP_SERVER2   "1.pool.ntp.org"
-#define NTP_SERVER3   "2.pool.ntp.org"
+#include <WiFi.h>
+#include <std/debug.hpp>
 
 //
 #if __has_include (<esp_sntp.h>)
@@ -15,38 +11,48 @@
     #include <sntp.h>
     #define SNTP_ENABLED 1
 #endif
-#include <WiFi.h>
-#include <std/debug.hpp>
 
 //
-#ifndef SNTP_ENABLED
-#define SNTP_ENABLED 0
-#endif
+const long  gmtOffset_sec = 3600 * 7;
+const int   daylightOffset_sec = 0;
 
 //
 void initRTC() {
     M5.setLogDisplayIndex(0);
-    configTzTime(NTP_TIMEZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
+
+    //
+    sntp_set_sync_interval(60000);
+    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_setservername(1, "1.pool.ntp.org");
+    esp_sntp_setservername(2, "2.pool.ntp.org");
+    esp_sntp_init();
+
+    //
+    configTime(gmtOffset_sec, daylightOffset_sec, "1.pool.ntp.org", "2.pool.ntp.org");
+
+    //
+    const auto start = millis();
+    auto status = sntp_get_sync_status();
+    while (status != SNTP_SYNC_STATUS_COMPLETED) {
+        status = sntp_get_sync_status();
+        DebugLineWithInterval(".", 100);
+        if ((millis() - start) > 10000) break;
+    }
+
+    //
+    if (status != SNTP_SYNC_STATUS_COMPLETED) {
+        DebugLog("Sync with NTP was failed");
+    }
 
     //
     struct tm timeInfo;
-    const auto start = millis();
-    auto status = getLocalTime(&timeInfo, 1000);
-    while (!status) { 
-        DebugLine(".");
-        if ((millis() - start) > 1000 || WiFi.status() != WL_CONNECTED) break;
-        status = getLocalTime(&timeInfo, 1000);
-    };
-    DebugLog("");
-
-    //
-    if (status) {
-        time_t t = time(nullptr)+1;
-        while (t > time(nullptr));
+    if (getLocalTime(&timeInfo)) {
+        time_t t = time(nullptr);
+        DebugLog("Getting local time done");
         M5.Rtc.setDateTime(gmtime(&t));
-        DebugLog("Setting RTC done");
     } else {
-        DebugLog("Setting RTC failed");
+        DebugLog("Getting local time failed");
     }
 }
 

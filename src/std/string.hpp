@@ -189,11 +189,6 @@ public:
         memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 
-    _String_(String const& _str_) {
-        bzero((void*)_chars_, MAX_STRING_LENGTH);
-        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
-    }
-
     _String_& operator =(_StringView_ _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
@@ -247,6 +242,11 @@ public:
 
     explicit operator String() const {
         return cString((char const*)_chars_, _length_);
+    }
+
+    _String_(String const& _str_) {
+        bzero((void*)_chars_, MAX_STRING_LENGTH);
+        memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
 #endif
 };

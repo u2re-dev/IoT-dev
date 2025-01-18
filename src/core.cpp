@@ -1,11 +1,27 @@
 #include "./main.hpp"
 
+#if !defined ( ARDUINO ) && defined ( ESP_PLATFORM )
+
 //
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_task_wdt.h>
 #include <esp32-hal.h>
 #include <Arduino.h>
+
+//
+#if __has_include (<esp_sntp.h>)
+    #include <esp_sntp.h>
+    #define SNTP_ENABLED 1
+#elif __has_include (<sntp.h>)
+    #include <sntp.h>
+    #define SNTP_ENABLED 1
+#endif
+
+//
+#ifndef SNTP_ENABLED
+#define SNTP_ENABLED 0
+#endif
 
 //
 #ifndef ARDUINO_LOOP_STACK_SIZE
@@ -37,6 +53,13 @@ void yieldIfNecessary(void){
 #endif
 
 //
+extern "C" oid loopTask(void *pvParameters) {
+    setup();
+    for (;;) { loop(); };
+    vTaskDelete(NULL);
+};
+
+//
 extern "C" void app_main(void)
 {
 #if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE
@@ -57,3 +80,5 @@ extern "C" void app_main(void)
     initArduino();
     xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, CONFIG_ARDUINO_RUNNING_CORE);
 }
+
+#endif

@@ -1,6 +1,9 @@
 #define VERY_LARGE_STRING_LENGTH 8000
 
 //
+#define NTP_TIMEZONE  "UTC+7"
+
+//
 #include <std/std.hpp>
 #include "hal/interface.hpp"
 #include "persistent/nv_typed.hpp"
@@ -10,6 +13,8 @@
 #include <HardwareSerial.h>
 #include <M5Unified.hpp>
 #include "hal/network.hpp"
+#include <WiFi.h>
+#include "m5stack/rtc.hpp"
 
 //
 std::thread displayTask;
@@ -18,7 +23,8 @@ extern "C" void IOTask() {
 }
 
 //
-extern "C" void loopTask(void *pvParameters)
+void loop(void) {};
+void setup(void)
 {
     setCpuFrequencyMhz(240);
 
@@ -43,9 +49,18 @@ extern "C" void loopTask(void *pvParameters)
     wifi_pass = "n3v3rm1nd";
 
     //
+    WiFiClient client;
     while (true) {
-        M5.delay(1);
+        connectWifi();
+        connectToDevice(client, IPAddress(192, 168, 0, 133));
+        initRTC();
 
-        
+        //
+        while (WiFi.status() == WL_CONNECTED) {
+            M5.delay(1);
+
+            
+        }
+
     }
 }

@@ -10,8 +10,8 @@
 #include <std/debug.hpp>
 
 //
-static nv::_NvString_<16> wifi_ssid("wifi_ssid");
-static nv::_NvString_<16> wifi_pass("wifi_pass");
+static std::string wifi_ssid = "mozg";//nv::_NvString_<16> wifi_ssid("wifi_ssid");
+static std::string wifi_pass = "n3v3rm1nd";//nv::_NvString_<16> wifi_pass("wifi_pass");
 
 //
 //int status = WL_IDLE_STATUS;
@@ -21,11 +21,13 @@ static nv::_NvString_<16> wifi_pass("wifi_pass");
 //
 wl_status_t connectWifi() {
     const auto start = millis();
-          auto status = WiFi.begin(wifi_ssid, wifi_pass);
+    WiFi.mode(WIFI_STA);
+    //if (WiFi.status() != WL_DISCONNECTED) { WiFi.disconnect(); };
+    auto status = WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
     while (status != WL_CONNECTED) {
-        status = WiFi.begin(wifi_ssid, wifi_pass);
-        DebugLine(".");
-        if ((millis() - start) > 1000) break;
+        status = WiFi.status();
+        DebugLineWithInterval(".", 100);
+        if ((millis() - start) > 10000) break;
     }
     DebugLog("");
     DebugLog(status == WL_CONNECTED ? "Connection Success" : "Connection Failed");
@@ -33,7 +35,7 @@ wl_status_t connectWifi() {
 }
 
 //
-int connectToDevice(WiFiClient& client, IPAddress& local, uint16_t port = 6668) {
+int connectToDevice(WiFiClient& client, IPAddress const& local, uint16_t port = 6668) {
     return client.connect(local, port);
 }
 
@@ -43,7 +45,7 @@ void waitAndSend(WiFiClient& client, uint8_t* data, size_t length = 0) {
 
     // if not available, try to wait
     while (!client.availableForWrite()) {
-        DebugLine(".");
+        DebugLineWithInterval(".", 100);
         if ((millis() - start) > 1000 || WiFi.status() != WL_CONNECTED) break;
     }
     DebugLog("");
@@ -63,7 +65,7 @@ bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length) {
     // if not available, try to wait
     const auto start = millis();
     while (!client.available()) {
-        DebugLine(".");
+        DebugLineWithInterval(".");
         if ((millis() - start) > 1000 || WiFi.status() != WL_CONNECTED) break;
     }
     DebugLog("");

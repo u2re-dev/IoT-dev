@@ -42,11 +42,6 @@ namespace nv {
             return *this;
         }
 
-        _NvString_& operator =(String const& _str_) {
-            storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
-            return *this;
-        }
-
         _NvString_& operator =(char const* _str_) {
             storage.putBytes(_chars_, _str_, _length_ = min(strlen(_str_), MAX_STRING_LENGTH));
             return *this;
@@ -63,12 +58,6 @@ namespace nv {
             return (char*)_code_;
         }
 
-        explicit operator String() const {
-            uint8_t _code_[uint8_t(_length_)];
-            storage.getBytes(_chars_, _code_, _length_); if (_length_ < MAX_STRING_LENGTH) { _code_[_length_] = 0u; };
-            return cString(_code_, _length_);
-        }
-
         char const* bytes() const {
             storage.getBytes(_chars_, (char*)_code_, _length_); if (_length_ < MAX_STRING_LENGTH) { _code_[_length_] = 0u; };
             return (char*)_code_;
@@ -77,6 +66,20 @@ namespace nv {
         uint8_t length() const {
             return _length_;
         }
+
+
+#ifdef ENABLE_ARDUINO_STRING
+        _NvString_& operator =(String const& _str_) {
+            storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
+            return *this;
+        }
+
+        explicit operator String() const {
+            uint8_t _code_[uint8_t(_length_)];
+            storage.getBytes(_chars_, _code_, _length_); if (_length_ < MAX_STRING_LENGTH) { _code_[_length_] = 0u; };
+            return cString(_code_, _length_);
+        }
+#endif
     };
 
 };
