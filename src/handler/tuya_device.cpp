@@ -40,7 +40,7 @@ namespace th {
     //
     void TuyaDevice34::setDPS(ArduinoJson::JsonObject const& dps) {
         sending["protocol"] = 5;
-        sending["t"] = getUnixTime() * 1000;
+        sending["t"] = uint64_t(getUnixTime()) * 1000ull;
 
         //
         data["dps"] = dps;
