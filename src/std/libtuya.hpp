@@ -205,9 +205,11 @@ namespace tc {
         *(uint32_t*)(output+12) = bswap32(payloadSize);
 
         //
-        size_t key_len = 16;
         const auto payload = output + header_len;
-        
+        for (uint i=0;i<(length + (cmdDesc.HMAC ? 32 : 4));i++) {
+            *(payload + i) = 0;
+        }
+
         // write suffix
         *(uint32_t*)(payload + length + (cmdDesc.HMAC ? 32 : 4)) = bswap32(0x0000AA55);
 
@@ -221,6 +223,11 @@ namespace tc {
         const auto payloadSize = bswap32(*(uint32_t const*)(code+12));
         const auto payload = code + header_len;
         const auto length = payloadSize - ((HMAC ? 32 : 4) + 4);
+
+        //
+        for (uint i=0;i<(HMAC ? 32 : 4);i++) {
+            *(payload + length + i) = 0;
+        }
 
         //
         if (HMAC) {

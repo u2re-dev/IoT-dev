@@ -17,6 +17,9 @@ namespace th {
         WiFiClient client;
 
         //
+        ArduinoJson::JsonDocument blank;
+        ArduinoJson::JsonDocument data;
+        ArduinoJson::JsonDocument sending;
         ArduinoJson::JsonDocument current;
         std::string tuya_local_key = "";
         std::string tuya_local_ip = "";
@@ -32,6 +35,7 @@ namespace th {
         uint8_t* inBuffer = nullptr;
         uint8_t* outBuffer = nullptr;
         size_t inLen = 0, outLen = 0;
+        bool linked = false;
 
         //
         public:
@@ -42,7 +46,7 @@ namespace th {
             // TODO: auto extension when required
             inBuffer = (uint8_t*)calloc(1, 512);
             outBuffer = (uint8_t*)calloc(1, 512);
-            SEQ_NO = 1;
+            SEQ_NO = 1; linked = false;
         }
 
         //
@@ -56,7 +60,7 @@ namespace th {
             uint8_t ip[4] = {0,0,0,0}; ipv4_parse((uint8_t*)tuya_local_ip.c_str(), tuya_local_ip.size(), ip);
             connectToDevice(client, IPAddress(ip));
             memcpy(hmac_key, tuya_local_key.c_str(), 16);
-            SEQ_NO = 1;
+            SEQ_NO = 1; linked = false;
         }
 
         //
@@ -79,13 +83,33 @@ namespace th {
             }
         }
 
+        void getDPS() {
+            sendJSON(0x10, blank);
+        }
+
+        //
+        void setDPS(ArduinoJson::JsonObject const& dps) {
+            sending["protocol"] = 5;
+            sending["t"] = getUnixTime() * 1000;
+
+            //
+            data["dps"] = dps;
+            sending["data"] = data.as<ArduinoJson::JsonObject>();
+
+            // protocol 3.3
+            //sending["devId"] = device_id;
+            //sending["uid"] = device_uid;
+            //sending["dps"] = dps;
+            //sendJSON(0x7, sending);
+
+            // protocol 3.4
+            sendJSON(0xd, sending);
+        }
+
+
         // protocol 3.4 specific
         void sendJSON(uint cmd, ArduinoJson::JsonDocument& doc) {
             // write into json actual info
-            doc["t"] = getUnixTime();
-            doc["devId"] = device_id;
-            doc["uid"] = device_uid;
-            doc["gwId"] = device_id;
 
             // 
             const size_t HEADER_OFFSET = 16;
@@ -100,7 +124,13 @@ namespace th {
             //
             uint8_t* payload = outBuffer + HEADER_OFFSET;
             serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
+            for (uint i=0;i<15;i++) { payload[i] = 0; };
             memcpy(payload, "3.4", 3);
+
+            //
+            DebugLog("Sent Code");
+            DebugCode(outBuffer, outLen);
+            DebugLog((char*)(payload+15));
 
             // protocol 3.4 specific
             tc::encryptDataECB(hmac_key, payload, withHeadLen, payload);
@@ -120,6 +150,11 @@ namespace th {
             // protocol 3.3 specific
             //size_t withHeadLen = jsonLen + 15, encryptLen = (((jsonLen + 16) >> 4) << 4) + 15;
             //tc::encryptDataECB(hmac_key, payload + 15, jsonLen, payload);
+        }
+
+        //
+        bool available() {
+            return linked;
         }
 
         //
@@ -148,13 +183,16 @@ namespace th {
                 if (code == 0x4) {
                     // make linked with local remote hmac
                     size_t hmac_len = 48; hmac = (uint8_t*)calloc(1, hmac_len);
-                    tc::encode_remote_hmac((uint8_t*)(tuya_local_key.c_str()), payload, hmac);
+                    tc::encode_remote_hmac(hmac_key, payload, hmac);
 
                     // send computed hmac
                     sendMessage(0x5u, hmac, hmac_len);
 
                     //
                     tc::encode_hmac_key((uint8_t*)(tuya_local_key.c_str()), payload, hmac_key);
+
+                    // protocol 3.4 link status
+                    linked = true;
                 }
                 if (code == 0x8) {
                     const size_t data_offset = 15;

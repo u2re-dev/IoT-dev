@@ -50,6 +50,9 @@ void setup(void)
     std::thread IOTaskThread = std::thread(IOTask);
 
     //
+    bool once = false;
+
+    //
     initWiFi();
 
     //
@@ -63,11 +66,11 @@ void setup(void)
         DebugLog(std::to_string(getUnixTime()));
 
         //
-        /*ArduinoJson::JsonDocument doc;
-        doc["t"] = getUnixTime();
-        doc["devId"] = device_id;
-        doc["uid"] = device_uuid;
-        doc["gwId"] = device_id;*/
+        ArduinoJson::JsonDocument dps;
+
+        //
+        auto obj = dps.to<ArduinoJson::JsonObject>();
+        obj["20"] = false;
 
         //
         auto device = th::TuyaDevice34();
@@ -78,12 +81,15 @@ void setup(void)
             if (!device.connected()) {
                 device.connectDevice(tuya_local_ip, tuya_local_key, device_id, device_uuid);
                 device.sendLocalNonce();
-
-                // TODO: sending JSON
             }
 
             //
             device.handleSignal();
+
+            //
+            if (device.available() && !once) {
+                device.setDPS(obj); once = true;
+            }
         }
     }
 }
