@@ -11,7 +11,7 @@ namespace nv {
     static Preferences storage;
 
     //
-    char const* _concat_(char const * one, char const * two) {
+    inline char const* _concat_(char const * one, char const * two) {
         char* result = new char[strlen(one)+strlen(two)];
         strcpy(result, one);
         strcat(result, two);
