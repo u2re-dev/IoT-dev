@@ -1,3 +1,5 @@
+#pragma once
+
 //
 #include <std/std.hpp>
 
@@ -18,6 +20,7 @@ namespace tc {
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
         esp_aes_crypt_cbc(&ctx, ESP_AES_DECRYPT, length, iv, data, output = output ? output : data);
+        esp_aes_free(&ctx);
         return output;
     }
 
@@ -27,6 +30,7 @@ namespace tc {
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
         esp_aes_crypt_cbc(&ctx, ESP_AES_ENCRYPT, length, iv, data, output = output ? output : data);
+        esp_aes_free(&ctx);
         return output;
     }
 
@@ -55,6 +59,7 @@ namespace tc {
 
         // add padding value
         if (usePadding) { length = padded; };
+        esp_aes_free(&ctx);
 
         //
         return output;
@@ -75,6 +80,7 @@ namespace tc {
         // re-correction of length (if possible)
         const auto pad = data[length-1];
         if (pad <= 16 && pad > 0 && length > 16) { length -= pad; };
+        esp_aes_free(&ctx);
 
         //
         return output;
@@ -184,20 +190,72 @@ namespace tc {
     }
 
 
+
+
+    // HMAC i.e. hmac_key
+    size_t prepareTuyaCode(size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
+        // write header
+        *(uint32_t*)(output+0) = bswap32(0x000055AA);
+
+        // encode as big-endian
+        const uint32_t header_len = 16; 
+        const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
+        *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
+        *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
+        *(uint32_t*)(output+12) = bswap32(payloadSize);
+
+        //
+        size_t key_len = 16;
+        const auto payload = output + header_len;
+        
+        // write suffix
+        *(uint32_t*)(payload + length + (cmdDesc.HMAC ? 32 : 4)) = bswap32(0x0000AA55);
+
+        //
+        return payloadSize + header_len;
+    }
+
+    //
+    size_t checksumTuyaCode(uint8_t* code, uint8_t* HMAC) {
+        const uint32_t header_len = 16;
+        const auto payloadSize = bswap32(*(uint32_t const*)(code+12));
+        const auto payload = code + header_len;
+        const auto length = payloadSize - ((HMAC ? 32 : 4) + 4);
+
+        //
+        if (HMAC) {
+            mbedtls_md_context_t ctx;
+            mbedtls_md_init(&ctx);
+            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) HMAC, 16);
+            mbedtls_md_hmac_update(&ctx, (const unsigned char *) code, length + header_len); // header + payload
+            mbedtls_md_hmac_finish(&ctx, payload + length); // write after payload
+            mbedtls_md_free(&ctx);
+        } else {
+            *(uint32_t*)(payload + length) = crc32_be(0, code, length + header_len);
+        }
+
+        //
+        return payloadSize + header_len;
+    }
+
+
+
     // HMAC i.e. hmac_key
     size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
         // write header
         *(uint32_t*)(output+0) = bswap32(0x000055AA);
 
         // encode as big-endian
+        const uint32_t header_len = 16; 
         const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
         *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
         *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
         *(uint32_t*)(output+12) = bswap32(payloadSize);
-        const auto codeSize     = computeCodeSize(length, cmdDesc.HMAC ? true : false);
+        const auto codeSize     = payloadSize + header_len;
 
         //
-        const uint32_t header_len = 16; size_t key_len = 16;
+        size_t key_len = 16;
         const auto payload = output + header_len;
         memcpy(payload, encrypted_data, length);
         if (cmdDesc.HMAC) {

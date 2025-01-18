@@ -72,16 +72,16 @@ void waitAndSend(WiFiClient& client, uint8_t* data, size_t length = 0) {
 }
 
 //
-bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length) {
+bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length, size_t timeout = 8000) {
     bool done = false;
 
     // if not available, try to wait
     const auto start = millis();
     while (!client.available()) {
-        DebugLineWithInterval(".");
-        if ((millis() - start) > 8000 || WiFi.status() != WL_CONNECTED || !client.connected()) break;
+        //DebugLineWithInterval(".");
+        if ((millis() - start) > timeout || WiFi.status() != WL_CONNECTED || !client.connected()) break;
     }
-    DebugLog("");
+    //DebugLog("");
 
     //
     if (!client.connected()) DebugLog("Device Disconnected");
@@ -94,8 +94,6 @@ bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length) {
         length = client.available();
         client.readBytes(data, length);
         done = true;
-    } else {
-        DebugLog("None Of Any Data");
     }
 
     //
