@@ -6,7 +6,7 @@ firmware_path = os.path.join(env.subst("$BUILD_DIR"), "firmware.bin")
 
 def custom_upload(target, source, env):
     command = (
-        f'esptool.py --chip esp32s3 --port {env.subst("$UPLOAD_PORT")} --baud 115200 write_flash 0x10000 {firmware_path}'
+        f'esptool.py --chip esp32s3 --port {env.subst("$UPLOAD_PORT")} --baud 115200 write_flash 0x190000 {firmware_path}'
     )
     os.system(command)
 
