@@ -10,55 +10,64 @@
 //
 namespace tc {
 
+    const char* local_nonce = "0123456789abcdef";
+
     //
-    void decryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+    uint8_t* decryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output = nullptr) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
-        esp_aes_crypt_cbc(&ctx, ESP_AES_DECRYPT, length, iv, data, output);
+        esp_aes_crypt_cbc(&ctx, ESP_AES_DECRYPT, length, iv, data, output = output ? output : data);
+        return output;
     }
 
     //
-    void encryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+    uint8_t* encryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output = nullptr) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
-        esp_aes_crypt_cbc(&ctx, ESP_AES_ENCRYPT, length, iv, data, output);
+        esp_aes_crypt_cbc(&ctx, ESP_AES_ENCRYPT, length, iv, data, output = output ? output : data);
+        return output;
     }
 
     //
-    void encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output, const bool usePadding = true) {
+    uint8_t*  encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output = nullptr, const bool usePadding = true) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
 
         // prepare output to encrypt
-        memcpy(output, data, length);
+        if (output) memcpy(output, data, length);
+        output = output ? output : data;
 
         // add post-padding
-        const auto pad = ((length + 16 /*- 1*/) >> 4) << 4;
+        const auto padded = ((length + 16 /*- 1*/) >> 4) << 4;
         if (usePadding) {
-            for (uint I=0;I<pad;I++) {
-                output[length+I] = pad;
+            for (uint I=length;I<padded;I++) {
+                output[I] = (padded - length);
             }
         }
 
         //
-        for (uint I=0;I<length;I+=16) {
+        for (uint I=0;I<(usePadding ? padded : length);I+=16) {
             esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, output+I, output+I);
         }
 
         // add padding value
-        if (usePadding) { length += pad; };
+        if (usePadding) { length = padded; };
+
+        //
+        return output;
     }
 
     //
-    void decryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output) {
+    uint8_t* decryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output = nullptr) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
 
         //
+        output = output ? output : data;
         for (uint I=0;I<length;I+=16) {
             esp_aes_crypt_ecb(&ctx, ESP_AES_DECRYPT, data+I, output+I);
         }
@@ -66,6 +75,9 @@ namespace tc {
         // re-correction of length (if possible)
         const auto pad = data[length-1];
         if (pad <= 16 && pad > 0 && length > 16) { length -= pad; };
+
+        //
+        return output;
     }
 
     //
@@ -99,7 +111,7 @@ namespace tc {
     }
 
     // for protocol 3.4, remote_nonce is encrypted
-    uint8_t* encode_remote_hmac(uint8_t* original_key, uint8_t* remote_nonce, size_t length = 0,   uint8_t* remote_hmac = nullptr) {
+    uint8_t* encode_remote_hmac(uint8_t* original_key, uint8_t* remote_nonce,  uint8_t* remote_hmac = nullptr) {
         size_t key_len = 16;
         decryptDataECB(original_key, remote_nonce, key_len, remote_nonce);
 
@@ -129,7 +141,6 @@ namespace tc {
     //
     uint8_t* encode_hmac_key(uint8_t* original_key, uint8_t* remote_nonce,  uint8_t* hmac_key = nullptr) {
         size_t key_len = 16;
-        const uint8_t* local_nonce = "0123456789abcdef";
 
         //
         uint32_t* loc = hmac_key ? (uint32_t*)hmac_key : (uint32_t*)calloc(1, key_len);
@@ -150,20 +161,40 @@ namespace tc {
 
     //
     struct TuyaCmd {
-        uint32_t SEQ_NO = 0;
-        uint32_t CMD_ID = 0; 
-        uint8_t* HMAC = nullptr;
+        uint32_t SEQ_NO; //= 0;
+        uint32_t CMD_ID;// = 0; 
+        uint8_t* HMAC;// = nullptr;
     };
 
+
+    //
+    uint32_t getTuyaCmd(uint8_t* encrypted_code) {
+        return bswap32(*(uint32_t const*)(encrypted_code+8));
+    }
+
+    //
+    uint32_t getTuyaSeq(uint8_t* encrypted_code) {
+        return bswap32(*(uint32_t const*)(encrypted_code+4));
+    }
+
+    //
+    uint8_t* getTuyaPayload(uint8_t* encrypted_code, size_t& length) {
+        length = bswap32(*(uint32_t const*)(encrypted_code+12));
+        return (encrypted_code+20);
+    }
+
+
     // HMAC i.e. hmac_key
-    uint8_t* encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
+    size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr) {
         // write header
-        *(uint32_t*)(output+0) = 0x000055AA;
+        *(uint32_t*)(output+0) = bswap32(0x000055AA);
 
         // encode as big-endian
+        const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
         *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
         *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
-        *(uint32_t*)(output+12) = bswap32(computePayloadSize(length, cmdDesc.HMAC ? true : false));
+        *(uint32_t*)(output+12) = bswap32(payloadSize);
+        const auto codeSize     = computeCodeSize(length, cmdDesc.HMAC ? true : false);
 
         //
         const uint32_t header_len = 16; size_t key_len = 16;
@@ -182,10 +213,11 @@ namespace tc {
         }
 
         // write suffix
-        *(uint32_t*)(output+0) = 0x0000AA55;
+        *(uint32_t*)(payload + length + (cmdDesc.HMAC ? 32 : 4)) = bswap32(0x0000AA55);
 
         //
-        return output;
+        return codeSize;
+        //return output;
     }
 
 };

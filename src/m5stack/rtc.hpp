@@ -22,14 +22,20 @@ void initRTC() {
 
     //
     sntp_set_sync_interval(60000);
-    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
-    esp_sntp_setservername(1, "1.pool.ntp.org");
-    esp_sntp_setservername(2, "2.pool.ntp.org");
-    esp_sntp_init();
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_setservername(1, "1.pool.ntp.org");
+    sntp_setservername(2, "2.pool.ntp.org");
+    sntp_init();
 
-    //
-    configTime(gmtOffset_sec, daylightOffset_sec, "1.pool.ntp.org", "2.pool.ntp.org");
+    // restart sntp
+    if (sntp_enabled()) { sntp_stop(); }
+    sntp_init();
+
+    // set timezone
+    setenv("TZ", "UTC+7", 1);
+    tzset();
 
     //
     const auto start = millis();
@@ -39,6 +45,7 @@ void initRTC() {
         DebugLineWithInterval(".", 100);
         if ((millis() - start) > 10000) break;
     }
+    DebugLog("");
 
     //
     if (status != SNTP_SYNC_STATUS_COMPLETED) {

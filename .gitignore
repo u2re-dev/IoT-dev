@@ -16,3 +16,5 @@ components/
 components/arduino/
 managed_components/
 logs/
+private.hpp
+src/private.hpp
