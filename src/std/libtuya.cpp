@@ -6,7 +6,31 @@
 
 //
 namespace tc {
-    
+
+    // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
+    uint8_t* decryptDataGCM(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+        mbedtls_gcm_context aes;
+        mbedtls_gcm_init(&aes);
+        mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (const unsigned char*) key, 128);
+        mbedtls_gcm_starts(&aes, MBEDTLS_GCM_DECRYPT, (const unsigned char*)iv, 12, NULL, 0);
+        mbedtls_gcm_update(&aes, length, (unsigned char const*)data, (unsigned char*) output);
+        mbedtls_gcm_free(&aes);
+        return output;
+    }
+
+    // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
+    uint8_t* encryptDataGCM(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+        mbedtls_gcm_context aes;
+        mbedtls_gcm_init(&aes);
+        mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES , (const unsigned char*) key, 128);
+        mbedtls_gcm_starts(&aes, MBEDTLS_GCM_ENCRYPT, (const unsigned char*)iv, 12, NULL, 0);
+        mbedtls_gcm_update(&aes, length, (unsigned char const*)data, (unsigned char*) output);
+        mbedtls_gcm_free(&aes);
+        return output;
+    }
+
+
+
     //
     uint8_t* decryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
         esp_aes_context ctx;
@@ -109,7 +133,6 @@ namespace tc {
         remote_hmac = remote_hmac ? remote_hmac : (uint8_t*)calloc(1, hmac_length);
 
         //
-#ifdef CONFIG_IDF_TARGET_ESP32S3
         mbedtls_md_context_t ctx;
         mbedtls_md_init(&ctx);
         mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
@@ -117,10 +140,8 @@ namespace tc {
         mbedtls_md_hmac_update(&ctx, (const unsigned char *) remote_nonce, key_len);
         mbedtls_md_hmac_finish(&ctx, remote_hmac);
         mbedtls_md_free(&ctx);
-#else
-        sf_hmac_sha256(original_key, key_len, remote_nonce, key_len, remote_hmac, hmac_length);
-#endif
 
+        //
         encryptDataECB(original_key, remote_hmac, hmac_length, remote_hmac, false);
 
         // needs to send these data
@@ -200,10 +221,36 @@ namespace tc {
         return payloadSize + header_len;
     }
 
-
-
     // HMAC i.e. hmac_key
     size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc, uint8_t* output) {
+/*
+        // write header
+        *(uint32_t*)(output+0) = bswap32(0x00006699);
+
+        // encode as big-endian
+        const uint32_t header_len = 30;
+        const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
+        *(uint16_t*)(output+4)  = 0u;
+        *(uint32_t*)(output+6)  = bswap32(cmdDesc.SEQ_NO);
+        *(uint32_t*)(output+10) = bswap32(cmdDesc.CMD_ID);
+        *(uint32_t*)(output+14) = bswap32(payloadSize);
+
+        //
+        // [18...30] IV/Nonce
+        const auto codeSize     = payloadSize + header_len;
+
+        //
+        size_t key_len = 16;
+        const auto payload = output + header_len;
+        memcpy(payload, encrypted_data, length);
+
+        // after payload goes 16-bytes AES-GCM tag
+
+        // write suffix
+        *(uint32_t*)(payload + length + 16) = bswap32(0x00009966);
+        return codeSize;
+        */
+
         // write header
         *(uint32_t*)(output+0) = bswap32(0x000055AA);
 
@@ -236,6 +283,5 @@ namespace tc {
 
         //
         return codeSize;
-        //return output;
     }
 };
