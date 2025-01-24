@@ -1,6 +1,9 @@
 #include "./libtuya.hpp"
 #include "../crypto/soc.hpp"
 #include "utils.hpp"
+#include <m5stack/rtc.hpp>
+
+//
 #define AES128 1
 #define AES_BLOCKLEN 16
 
@@ -8,29 +11,44 @@
 namespace tc {
 
     // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
-    uint8_t* decryptDataGCM(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+    uint8_t* decryptDataGCM(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr) {
+        if (!output) { output = data + 12; };
+
+        //
         mbedtls_gcm_context aes;
         mbedtls_gcm_init(&aes);
         mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (const unsigned char*) key, 128);
-        mbedtls_gcm_starts(&aes, MBEDTLS_GCM_DECRYPT, (const unsigned char*)iv, 12, NULL, 0);
-        mbedtls_gcm_update(&aes, length, (unsigned char const*)data, (unsigned char*) output);
+        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_DECRYPT, 
+            length, // length of payload only
+            (const unsigned char*)data, 12, // prepared IV
+            NULL, 0, 
+            (unsigned char const*)data+12, // payload stream
+            (unsigned char*) output, // output (if present)
+            16, output + length);
         mbedtls_gcm_free(&aes);
         return output;
     }
 
     // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
-    uint8_t* encryptDataGCM(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
+    uint8_t* encryptDataGCM(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr) {
+        if (!output) { output = data + 12; };
+
+        //
         mbedtls_gcm_context aes;
         mbedtls_gcm_init(&aes);
         mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES , (const unsigned char*) key, 128);
-        mbedtls_gcm_starts(&aes, MBEDTLS_GCM_ENCRYPT, (const unsigned char*)iv, 12, NULL, 0);
-        mbedtls_gcm_update(&aes, length, (unsigned char const*)data, (unsigned char*) output);
+        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_ENCRYPT, 
+            length, // length of payload only
+            (const unsigned char*)data, 12, // prepared IV
+            NULL, 0, 
+            (unsigned char const*)data+12, // payload stream
+            (unsigned char*) output, // output (if present)
+            16, output + length);
         mbedtls_gcm_free(&aes);
         return output;
     }
 
-
-
+/*
     //
     uint8_t* decryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output) {
         esp_aes_context ctx;
@@ -49,7 +67,7 @@ namespace tc {
         esp_aes_crypt_cbc(&ctx, ESP_AES_ENCRYPT, length, iv, data, output = output ? output : data);
         esp_aes_free(&ctx);
         return output;
-    }
+    }*/
 
     //
     uint8_t*  encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output, const bool usePadding) {
@@ -192,7 +210,7 @@ namespace tc {
         return payloadSize + header_len;
     }
 
-    //
+    // TODO? needs to merge into payload part?
     size_t checksumTuyaCode(uint8_t* code, uint8_t* HMAC) {
         const uint32_t header_len = 16;
         const auto payloadSize = bswap32(*(uint32_t const*)(code+12));
@@ -221,67 +239,36 @@ namespace tc {
         return payloadSize + header_len;
     }
 
-    // HMAC i.e. hmac_key
-    size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc, uint8_t* output) {
-/*
+    //
+    size_t prepareTuyaCode35(size_t& encrypted_length, TuyaCmd const& cmdDesc, uint8_t* output) {
         // write header
         *(uint32_t*)(output+0) = bswap32(0x00006699);
 
         // encode as big-endian
-        const uint32_t header_len = 30;
-        const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
         *(uint16_t*)(output+4)  = 0u;
         *(uint32_t*)(output+6)  = bswap32(cmdDesc.SEQ_NO);
         *(uint32_t*)(output+10) = bswap32(cmdDesc.CMD_ID);
-        *(uint32_t*)(output+14) = bswap32(payloadSize);
+        *(uint32_t*)(output+14) = bswap32(encrypted_length);
 
-        //
-        // [18...30] IV/Nonce
-        const auto codeSize     = payloadSize + header_len;
-
-        //
-        size_t key_len = 16;
-        const auto payload = output + header_len;
-        memcpy(payload, encrypted_data, length);
-
+        // all of those is a part encryption/encoding stage
+        // before payload goes 12-bytes IV
         // after payload goes 16-bytes AES-GCM tag
+        const uint32_t header_len = 18;
+        *(uint32_t*)(output + header_len + encrypted_length) = bswap32(0x00009966);
+        return ((encrypted_length + header_len) + 4);
+    }
 
-        // write suffix
-        *(uint32_t*)(payload + length + 16) = bswap32(0x00009966);
-        return codeSize;
-        */
+    //
+    size_t encodeTuyaCode35(uint8_t* encrypted_data, size_t& encrypted_length, TuyaCmd const& cmdDesc, uint8_t* output) {
+        prepareTuyaCode35(encrypted_length, cmdDesc, output);
+        memcpy(output + 18, encrypted_data, encrypted_length);
+        return ((encrypted_length + 18) + 4);
+    }
 
-        // write header
-        *(uint32_t*)(output+0) = bswap32(0x000055AA);
-
-        // encode as big-endian
-        const uint32_t header_len = 16; 
-        const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
-        *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
-        *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
-        *(uint32_t*)(output+12) = bswap32(payloadSize);
-        const auto codeSize     = payloadSize + header_len;
-
-        //
-        size_t key_len = 16;
-        const auto payload = output + header_len;
-        memcpy(payload, encrypted_data, length);
-        if (cmdDesc.HMAC) {
-            mbedtls_md_context_t ctx;
-            mbedtls_md_init(&ctx);
-            mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-            mbedtls_md_hmac_starts(&ctx, (const unsigned char *) cmdDesc.HMAC, key_len);
-            mbedtls_md_hmac_update(&ctx, (const unsigned char *) output, length + header_len); // header + payload
-            mbedtls_md_hmac_finish(&ctx, payload + length); // write after payload
-            mbedtls_md_free(&ctx);
-        } else {
-            *(uint32_t*)(payload + length) = crc32_be(0, output, length + header_len);
-        }
-
-        // write suffix
-        *(uint32_t*)(payload + length + (cmdDesc.HMAC ? 32 : 4)) = bswap32(0x0000AA55);
-
-        //
-        return codeSize;
+    // HMAC i.e. hmac_key
+    size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc, uint8_t* output) {
+        prepareTuyaCode(length, cmdDesc, output);
+        memcpy(output + 16, encrypted_data, length);
+        return checksumTuyaCode(output, cmdDesc.HMAC);
     }
 };
