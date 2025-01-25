@@ -47,8 +47,12 @@ namespace tc {
 
 
     //
-    uint8_t* decryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output = nullptr);
-    uint8_t* encryptDataCBC(uint8_t* key,  uint8_t* iv,  uint8_t* data, size_t& length,  uint8_t* output = nullptr);
+    uint8_t* decryptDataCBC(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr);
+    uint8_t* encryptDataCBC(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr);
+
+    // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
+    uint8_t* decryptDataGCM(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr);
+    uint8_t* encryptDataGCM(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output = nullptr);
 
     //
     uint8_t* encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output = nullptr, const bool usePadding = true);
@@ -65,5 +69,10 @@ namespace tc {
     size_t prepareTuyaCode(size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
     size_t checksumTuyaCode(uint8_t* code, uint8_t* HMAC);
     size_t encodeTuyaCode(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
+
+    //
+    size_t prepareTuyaCode35(size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
+    size_t encodeTuyaCode35(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
+
 
 };

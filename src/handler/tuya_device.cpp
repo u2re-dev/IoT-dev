@@ -58,34 +58,35 @@ namespace th {
 
     // protocol 3.4 specific
     void TuyaDevice34::sendJSON(uint cmd, ArduinoJson::JsonDocument& doc) {
-        // write into json actual info
-
-        // 
-        const size_t HEADER_OFFSET = 16;
-
-        //
+#ifdef TUYA_35_SUPPORT
+        const size_t HEADER_OFFSET = 18;
         size_t jsonLen = ArduinoJson::measureJson(doc);
 
-        // protocol 3.4 specific
-        size_t withHeadLen = jsonLen + 15, encryptLen = ((withHeadLen + 16) >> 4) << 4;
-        outLen = tc::prepareTuyaCode(encryptLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
+        // protocol 3.5 specific
+        size_t withHeadLen = jsonLen + 15;
+        size_t encryptLen = (((withHeadLen + 16) >> 4) << 4);
+        size_t prepareLen = encryptLen + 12 + 16;
 
         //
-        uint8_t* payload = outBuffer + HEADER_OFFSET;
+        outLen = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
+
+        //
+        uint8_t* enc = outBuffer + HEADER_OFFSET;
+        uint8_t* payload = enc + 12;
         serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
         for (uint i=0;i<15;i++) { payload[i] = 0; };
-        memcpy(payload, "3.4", 3);
+
+        //
+        memcpy(payload, "3.5", 3); // protocol version
+        memcpy(enc, std::to_string(getUnixTime() * 100ull).c_str(), 12); // generate IV
 
         //
         DebugLog("Sent Code");
         DebugCode(outBuffer, outLen);
-        DebugLog((char*)(payload+15));
+        DebugLog((char*)(enc+15));
 
-        // protocol 3.4 specific
-        tc::encryptDataECB(hmac_key, payload, withHeadLen, payload);
-
-        //
-        tc::checksumTuyaCode(outBuffer, hmac_key);
+        // protocol 3.5 specific
+        tc::encryptDataGCM(hmac_key, enc, encryptLen);
 
         //
         if (outLen > 0) { // debug-log
@@ -95,12 +96,57 @@ namespace th {
         if (outLen > 0) {
             waitAndSend(client, outBuffer, outLen);
         }
+#endif
+
+        // 
+        const size_t HEADER_OFFSET = 16;
+
+        //
+        size_t jsonLen = ArduinoJson::measureJson(doc);
+
+        // protocol 3.4 specific
+        size_t withHeadLen = jsonLen + 15;
+        size_t encryptLen  = ((withHeadLen + 16) >> 4) << 4; // 'encryptLen = (((jsonLen + 16) >> 4) << 4)' if tuya protocol is 3.3
+        size_t prepareLen  = encryptLen;                     // 'prepareLen = encryptLen + 15' if tuya protocol is 3.3
+
+        //
+        outLen = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
+
+        //
+        uint8_t* payload = outBuffer + HEADER_OFFSET;
+        uint8_t* enc = payload; // 'payload + 15' if tuya protocol 3.3
+
+        //
+        serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
+        for (uint i=0;i<15;i++) { payload[i] = 0; };
+        memcpy(payload, "3.4", 3);
+
+        //
+        DebugLog("Sent Code");
+        DebugCode(outBuffer, outLen);
+        DebugLog((char*)(payload+15));
+
+        //
+        tc::encryptDataECB(hmac_key, enc, encryptLen);
+        tc::checksumTuyaCode(outBuffer, hmac_key);
+
+        //
+        if (outLen > 0) { // debug-log
+            DebugLog("Sent Code");
+            DebugCode(outBuffer, outLen);
+        }
+
+        //
+        if (outLen > 0) {
+            waitAndSend(client, outBuffer, outLen);
+        }
 
         // protocol 3.3 specific
         //size_t withHeadLen = jsonLen + 15, encryptLen = (((jsonLen + 16) >> 4) << 4) + 15;
         //tc::encryptDataECB(hmac_key, payload + 15, jsonLen, payload);
     }
 
+    //
     void TuyaDevice34::handleSignal() {
         if (!client.connected()) {
             return;
