@@ -121,7 +121,7 @@ namespace tc {
         return output;
     }
 
-    //
+    // UNUSED
     std::array<uint32_t, 2> prepareJSON(uint8_t*data, size_t& length, char const* protocolVersion, uint8_t* output) {
         // protocol 3.4 - encrypted with header
         const auto encLen = ((length + 15 + 16) >> 4) << 4;
@@ -167,11 +167,15 @@ namespace tc {
     }
 
     //
-    uint8_t* encode_hmac_key(uint8_t* original_key, uint8_t* remote_nonce,  uint8_t* hmac_key) {
+    uint8_t* encode_hmac_key(uint8_t* original_key, uint8_t* remote_nonce,  uint8_t* hmac_payload) {
         size_t key_len = 16;
 
         //
-        uint32_t* loc = hmac_key ? (uint32_t*)hmac_key : (uint32_t*)calloc(1, key_len);
+        hmac_payload = (hmac_payload ? hmac_payload : (uint8_t*)calloc(1, key_len + 12));
+        uint8_t* hmac_key = hmac_payload + 12;
+        uint32_t* loc = (uint32_t*)hmac_key;
+
+        //
         const uint32_t* loc_n = (uint32_t*)local_nonce;
         const uint32_t* rem_n = (uint32_t*)remote_nonce;
         for (uint8_t I=0;I<4;I++) { loc[I] = loc_n[I]^rem_n[I]; }
@@ -179,6 +183,14 @@ namespace tc {
         //
         uint8_t* local_key = (uint8_t*)loc; // encode without padding
         encryptDataECB(original_key, local_key, key_len, local_key, false);
+
+        //
+#ifdef TUYA_35_SUPPORT
+        memcpy(hmac_key + key_len + 12, local_nonce, 16);
+        encryptDataGCM(original_key, local_key, key_len, local_key, false);
+#endif
+
+        //
         return local_key;
     }
 

@@ -10,6 +10,9 @@ namespace th {
         this->device_id  = device_id;
         this->device_uid = device_uid;
 
+        // padding from IV
+        hmac_key = hmac_payload + 12;
+
         // parse from string and use it
         uint8_t ip[4] = {0,0,0,0}; ipv4_parse((uint8_t*)tuya_local_ip.c_str(), tuya_local_ip.size(), ip);
         connectToDevice(client, IPAddress(ip));
@@ -58,92 +61,61 @@ namespace th {
 
     // protocol 3.4 specific
     void TuyaDevice34::sendJSON(uint cmd, ArduinoJson::JsonDocument& doc) {
-#ifdef TUYA_35_SUPPORT
-        const size_t HEADER_OFFSET = 18;
+        //
         size_t jsonLen = ArduinoJson::measureJson(doc);
 
+#ifdef TUYA_35_SUPPORT
         // protocol 3.5 specific
+        const size_t HEADER_OFFSET = 18;
         size_t withHeadLen = jsonLen + 15;
         size_t encryptLen = (((withHeadLen + 16) >> 4) << 4);
         size_t prepareLen = encryptLen + 12 + 16;
-
-        //
-        outLen = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
-
-        //
-        uint8_t* enc = outBuffer + HEADER_OFFSET;
-        uint8_t* payload = enc + 12;
-        serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
-        for (uint i=0;i<15;i++) { payload[i] = 0; };
-
-        //
-        memcpy(payload, "3.5", 3); // protocol version
-        memcpy(enc, std::to_string(getUnixTime() * 100ull).c_str(), 12); // generate IV
-
-        //
-        DebugLog("Sent Code");
-        DebugCode(outBuffer, outLen);
-        DebugLog((char*)(enc+15));
-
-        // protocol 3.5 specific
-        tc::encryptDataGCM(hmac_key, enc, encryptLen);
-
-        //
-        if (outLen > 0) { // debug-log
-            DebugLog("Sent Code");
-            DebugCode(outBuffer, outLen);
-        }
-        if (outLen > 0) {
-            waitAndSend(client, outBuffer, outLen);
-        }
-#endif
-
-        // 
+#else   // protocol 3.4 specific
         const size_t HEADER_OFFSET = 16;
-
-        //
-        size_t jsonLen = ArduinoJson::measureJson(doc);
-
-        // protocol 3.4 specific
         size_t withHeadLen = jsonLen + 15;
         size_t encryptLen  = ((withHeadLen + 16) >> 4) << 4; // 'encryptLen = (((jsonLen + 16) >> 4) << 4)' if tuya protocol is 3.3
         size_t prepareLen  = encryptLen;                     // 'prepareLen = encryptLen + 15' if tuya protocol is 3.3
+#endif
 
         //
         outLen = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
 
         //
+#ifdef TUYA_35_SUPPORT 
+        uint8_t* enc = outBuffer + HEADER_OFFSET;
+        uint8_t* payload = enc + 12;
+#else
         uint8_t* payload = outBuffer + HEADER_OFFSET;
         uint8_t* enc = payload; // 'payload + 15' if tuya protocol 3.3
+#endif
 
         //
         serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
         for (uint i=0;i<15;i++) { payload[i] = 0; };
+
+        //
+#ifdef TUYA_35_SUPPORT // protocol 3.5 specific
+        memcpy(payload, "3.5", 3); // protocol version
+        memcpy(enc, std::to_string(getUnixTime() * 100ull).c_str(), 12); // generate IV
+        tc::encryptDataGCM(hmac_key, enc, encryptLen);
+#else
         memcpy(payload, "3.4", 3);
-
-        //
-        DebugLog("Sent Code");
-        DebugCode(outBuffer, outLen);
-        DebugLog((char*)(payload+15));
-
-        //
         tc::encryptDataECB(hmac_key, enc, encryptLen);
         tc::checksumTuyaCode(outBuffer, hmac_key);
+#endif
 
-        //
+        // ===== //
+        // debug //
+        // ===== //
+
         if (outLen > 0) { // debug-log
             DebugLog("Sent Code");
             DebugCode(outBuffer, outLen);
         }
 
-        //
         if (outLen > 0) {
             waitAndSend(client, outBuffer, outLen);
         }
-
-        // protocol 3.3 specific
-        //size_t withHeadLen = jsonLen + 15, encryptLen = (((jsonLen + 16) >> 4) << 4) + 15;
-        //tc::encryptDataECB(hmac_key, payload + 15, jsonLen, payload);
     }
 
     //
@@ -167,13 +139,16 @@ namespace th {
             if (code == 0x4) {
                 // make linked with local remote hmac
                 size_t hmac_len = 48; hmac = (uint8_t*)calloc(1, hmac_len);
+                hmac_key = hmac_payload + 12;
+
+                //
                 tc::encode_remote_hmac(hmac_key, payload, hmac);
 
                 // send computed hmac
                 sendMessage(0x5u, hmac, hmac_len);
 
-                //
-                tc::encode_hmac_key((uint8_t*)(tuya_local_key.c_str()), payload, hmac_key);
+                // protocol 3.4 specific
+                tc::encode_hmac_key((uint8_t*)(tuya_local_key.c_str()), payload, hmac_payload);
 
                 // protocol 3.4 link status
                 linked = true;

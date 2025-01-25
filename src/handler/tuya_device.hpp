@@ -30,6 +30,7 @@ namespace th {
         uint8_t* tmp = nullptr; // for sending local_nonce
         uint8_t* hmac = nullptr; // length = 32 or 48
         uint8_t* hmac_key = nullptr; // length = 16
+        uint8_t* hmac_payload = nullptr;
 
         // data buffer
         uint8_t* inBuffer = nullptr;
@@ -42,6 +43,7 @@ namespace th {
         TuyaDevice34() {
             tmp = (uint8_t*)calloc(1, 16);
             hmac_key = (uint8_t*)calloc(1, 16);
+            hmac_payload = (uint8_t*)calloc(1, 16 + 16 + 12);
 
             // TODO: auto extension when required
             inBuffer = (uint8_t*)calloc(1, 512);
