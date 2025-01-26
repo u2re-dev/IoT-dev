@@ -1,25 +1,24 @@
 #define VERY_LARGE_STRING_LENGTH 8000
-
-//
 #define NTP_TIMEZONE  "UTC+7"
 
 //
 #include <std/std.hpp>
-#include "hal/interface.hpp"
-#include "persistent/nv_typed.hpp"
 
 //
-#include <esp32-hal-gpio.h>
+#include <WiFi.h>
 #include <HardwareSerial.h>
 #include <M5Unified.hpp>
-#include "hal/network.hpp"
-#include <WiFi.h>
-#include "m5stack/rtc.hpp"
-#include "std/libtuya.hpp"
-#include "private.hpp"
 #include <ArduinoJson.hpp>
 
 //
+#include "hal/interface.hpp"
+#include "hal/network.hpp"
+#include "m5stack/rtc.hpp"
+#include "std/libtuya.hpp"
+#include "private.hpp"
+
+//
+#include "persistent/nv_typed.hpp"
 #include "handler/tuya_device.hpp"
 
 //
@@ -31,15 +30,7 @@ void IOTask() {
 void loop(void) {};
 void setup(void)
 {
-    setCpuFrequencyMhz(240);
-
-    //
-    pinMode(PIN_POWER_ON, OUTPUT);
-    pinMode(PIN_LCD_BL, OUTPUT);
-
-    //
-    digitalWrite(PIN_POWER_ON, LOW);
-    digitalWrite(PIN_LCD_BL, LOW);
+    setCpuFrequencyMhz(160);
 
     //
     Serial.setDebugOutput(true);
@@ -56,10 +47,8 @@ void setup(void)
     initWiFi();
 
     //
-    WiFiClient client;
     while (true) {
         connectWifi();
-        connectToDevice(client, IPAddress(192, 168, 0, 133));
         initRTC();
 
         //
@@ -67,8 +56,6 @@ void setup(void)
 
         //
         ArduinoJson::JsonDocument dps;
-
-        //
         auto obj = dps.to<ArduinoJson::JsonObject>();
         obj["20"] = false;
 
