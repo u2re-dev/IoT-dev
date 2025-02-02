@@ -10,40 +10,34 @@ encode_remote_hmac, encode_hmac_key).
 import time
 import socket
 import json
-from libtuya import (encrypt_data_ecb, decrypt_data_ecb, encode_tuya_code, prepare_tuya_code,
-                     checksum_tuya_code, encode_remote_hmac, encode_hmac_key)
+from python.tuya import (encrypt_data_ecb, decrypt_data_ecb, encode_tuya_code, prepare_tuya_code, checksum_tuya_code, encode_remote_hmac, encode_hmac_key)
+from python.debug import debug_code, debug_log
+from python.tcp import connect_to_device, wait_and_send, wait_for_receive
 # Если используются функции для протокола 3.5, их тоже можно импортировать:
 # from libtuya import encrypt_data_gcm, decrypt_data_gcm
 
 # --- Заглушки для функций отладки и работы с сетью ---
-def debug_log(msg):
-    print("[DEBUG]", msg)
-
-def debug_code(buf):
-    # Выводим буфер в виде шестнадцатеричной строки
-    print("[DEBUG CODE]", buf.hex())
-
-def wait_and_send(client, data):
-    """Заглушка для функции, которая отправляет данные через клиентское соединение."""
+#def wait_and_send(client, data):
+    #"""Заглушка для функции, которая отправляет данные через клиентское соединение."""
     # Возможная реализация: client.send(data)
-    client.send(data)
+    #client.send(data)
 
-def wait_for_receive(client, timeout_ms=100):
-    """Заглушка для функции, которая ждёт данные с клиента в течение timeout_ms миллисекунд.
-       Возвращает полученные данные в виде bytearray.
-    """
+#def wait_for_receive(client, timeout_ms=100):
+    #"""Заглушка для функции, которая ждёт данные с клиента в течение timeout_ms миллисекунд.
+    #   Возвращает полученные данные в виде bytearray.
+    #"""
     # Реализуйте согласно возможностям вашего устройства/сокетной библиотеки.
     # Здесь просто возвращаем пустой bytearray.
-    return bytearray()
+    #return bytearray()
 
-def connect_to_device(client, ip_bytes):
-    """Простая функция подключения к устройству по IP.
-       ip_bytes – bytes длиной 4, полученные, например, через socket.inet_aton()
-    """
+#def connect_to_device(client, ip_bytes):
+    #"""Простая функция подключения к устройству по IP.
+    #   ip_bytes – bytes длиной 4, полученные, например, через socket.inet_aton()
+    #"""
     # Реализуйте подключение, например, вызовом client.connect((ip, port))
-    ip_str = socket.inet_ntoa(ip_bytes)
-    debug_log("Подключаемся к устройству с IP: " + ip_str)
-    client.connect(ip_str)  # пример вызова; port можно задать внутри клиента
+    #ip_str = socket.inet_ntoa(ip_bytes)
+    #debug_log("Подключаемся к устройству с IP: " + ip_str)
+    #client.connect(ip_str)  # пример вызова; port можно задать внутри клиента
 
 # Если необходимо – заглушки для выделения payload и получения команд из входящего пакета.
 def get_tuya_payload(in_buffer):
@@ -65,7 +59,6 @@ def get_tuya_cmd(in_buffer):
     if len(in_buffer) < 12:
         return None
     return int.from_bytes(in_buffer[8:12], "big")
-
 
 # --- Класс устройства Tuya ---
 
@@ -282,30 +275,3 @@ class TuyaDevice34:
                 print(current)
             except Exception as ex:
                 debug_log("Ошибка при разборе JSON: " + str(ex))
-
-# Пример использования:
-if __name__ == "__main__":
-    # Здесь предполагается, что у вас есть класс Client с методами connected(), connect(), send(), etc.
-    # Для теста можно создать dummy-класс.
-    class DummyClient:
-        def __init__(self):
-            self._connected = False
-        def connect(self, ip):
-            self._connected = True
-            debug_log("DummyClient: подключено к " + ip)
-        def connected(self):
-            return self._connected
-        def send(self, data):
-            debug_log("DummyClient: отправляю данные длиной " + str(len(data)))
-    client = DummyClient()
-    device = TuyaDevice34(client)
-    device.connect_device("192.168.1.100", "0123456789ABCDEF", "device_id_123", "device_uid_456")
-    # Отправка local_nonce
-    device.send_local_nonce()
-    # Пример отправки набора DPS
-    sample_dps = {"1": True, "2": 25}
-    device.set_dps(sample_dps)
-    # В цикле обработки сигналов:
-    while True:
-        device.handle_signal()
-        time.sleep(0.1)
