@@ -1,7 +1,4 @@
-
-
-#ifndef NODE_REMOTE_H
-#define NODE_REMOTE_H
+#pragma once
 
 //
 #include <esp_err.h>
@@ -26,5 +23,3 @@ private: //
     client::peer_device_t *mPeerDevice;
     client::request_handle_t *mReqHandle;
 };
-
-#endif // NODE_REMOTE_H

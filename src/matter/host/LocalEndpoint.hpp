@@ -1,5 +1,4 @@
-#ifndef NODE_REMOTE_H
-#define NODE_REMOTE_H
+#pragma once
 
 //
 #include <esp_err.h>
@@ -15,5 +14,3 @@ protected:
     node_t *mNode;
     endpoint_t *mEndpoint;
 };
-
-#endif // NODE_REMOTE_H

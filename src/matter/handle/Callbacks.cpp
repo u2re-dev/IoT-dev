@@ -14,7 +14,6 @@ static const char *TAG = "Callbacks";
 
 //
 namespace Callbacks {
-
     void cmdSuccess(void *context, const chip::app::ConcreteCommandPath &command_path, const chip::app::StatusIB &status, chip::TLV::TLVReader *response_data) { ESP_LOGI(TAG, "Command sent successfully"); }
     void cmdFailed(void *context, CHIP_ERROR error) { ESP_LOGI(TAG, "Command failure: err: %" CHIP_ERROR_FORMAT, error.Format()); }
     void appEvent(const ChipDeviceEvent *event, intptr_t arg)

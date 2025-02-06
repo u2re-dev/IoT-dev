@@ -1,7 +1,4 @@
-
-
-#ifndef NODE_REMOTE_H
-#define NODE_REMOTE_H
+#pragma once
 
 //
 #include <esp_err.h>
@@ -27,9 +24,6 @@ public:
     ~ClientRemote();
 
     // subscribe remote endpoint to changes in local cluster
-    void subscribe(uintptr_t clusterId, LocalEndpoint *local, RemoteEndpoint *remote);
+    void subscribe(uintptr_t clusterId, LocalEndpoint *local, uintptr_t remoteId);
     //void invoke(uintptr_t clusterId);
 };
-
-//
-#endif // NODE_REMOTE_H

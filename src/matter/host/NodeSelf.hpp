@@ -1,5 +1,4 @@
-#ifndef NODE_SELF_H
-#define NODE_SELF_H
+#pragma once
 
 //
 #include <esp_err.h>
@@ -11,15 +10,15 @@ public:
     MatterNodeSelf();
     ~MatterNodeSelf();
 
-    // Инициализация узла (создание Node, а затем эндпоинтов/кластеров)
+    //
     esp_err_t init();
-    esp_err_t startMatter();
+    esp_err_t start();
 
-    // Пример синхронизации по NTP (например, через TimeSynchronization Cluster)
-    void syncWithNTP();
-
-    // Возвращает указатель на локальный node_t
+    //
     node_t *getNode() const { return mNode; }
+
+protected:
+    void syncWithNTP();
 
 private:
     node_t *mNode;
@@ -28,5 +27,3 @@ private:
     //
     ClientRemote mRemote;
 };
-
-#endif // NODE_SELF_H
