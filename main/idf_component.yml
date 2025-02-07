@@ -8,8 +8,8 @@ dependencies:
   idf: 
     path: '../../esp-idf/'
     version: '>=5.4'
-  #esp-matter: 
-    #path: '../../esp-matter/'
+  esp-matter: 
+    path: '../../esp-matter/'
   arduino-esp32: 
     path: '../../arduino-esp32/'
     #git: 'https://github.com/espressif/arduino-esp32.git'
