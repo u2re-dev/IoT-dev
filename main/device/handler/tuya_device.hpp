@@ -5,8 +5,8 @@
 #include <ArduinoJson.hpp>
 
 //
+#include "../../std/libtuya.hpp"
 #include "../hal/network.hpp"
-#include "../std/libtuya.hpp"
 #include "../m5stack/rtc.hpp"
 
 //

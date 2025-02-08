@@ -7,7 +7,7 @@
 
 //
 #include "../persistent/nv_string.hpp"
-#include "../std/debug.hpp"
+#include "../../std/debug.hpp"
 
 //
 static std::string wifi_ssid = "mozg";//nv::_NvString_<16> wifi_ssid("wifi_ssid");

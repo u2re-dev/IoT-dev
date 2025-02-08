@@ -1,11 +1,5 @@
 #include "../crypto/soc.hpp"
-
-//
-#include "./utils.hpp"
 #include "./libtuya.hpp"
-
-//
-//#include <m5stack/rtc.hpp>
 
 //
 #define AES128 1

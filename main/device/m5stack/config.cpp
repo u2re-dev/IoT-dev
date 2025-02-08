@@ -16,4 +16,3 @@ void makeM5Config() {
     cfg.external_rtc = true; 
     M5.begin(cfg);
 }
-

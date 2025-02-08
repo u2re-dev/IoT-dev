@@ -4,7 +4,7 @@
 #include "./nv_typed.hpp"
 
 //
-#include "../std/string.hpp"
+#include "../../std/string.hpp"
 
 //
 namespace nv {
