@@ -4,7 +4,7 @@
 #include "./std.hpp"
 
 //
-#ifdef ENABLE_ARDUINO_STRING
+#ifdef USE_ARDUINO
 inline String cString(char const* data, size_t length) {
     String _str_(data);
     _str_.reserve(std::min(_str_.length(), length));
@@ -70,7 +70,7 @@ public:
     }
 
 
-#ifdef ENABLE_ARDUINO_STRING
+#ifdef USE_ARDUINO
     explicit operator String() const {
         return cString(_chars_, _length_);
     }
@@ -135,7 +135,7 @@ public:
     }
 
 //
-#ifdef ENABLE_ARDUINO_STRING
+#ifdef USE_ARDUINO
     _StringView_(String const& _str_) {
         _chars_ = _str_.bytes();
         _length_ = std::min(_str_.length(), strlen(_chars_));
@@ -229,7 +229,7 @@ public:
         return _length_;
     }
 
-#ifdef ENABLE_ARDUINO_STRING
+#ifdef USE_ARDUINO
     _String_& operator =(String const& _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));

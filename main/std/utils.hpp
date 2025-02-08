@@ -2,7 +2,11 @@
 
 //
 #include "./std.hpp"
+
+//
+#ifdef USE_ARDUINO
 #include <IPAddress.h>
+#endif
 
 //
 void binary_hex(uint8_t const* pin, char* pout, size_t blen);
@@ -13,8 +17,12 @@ void store32(uint8_t* ptr, uint32_t _a_);
 
 //
 inline bool compareIP(uint8_t const* a, uint8_t const* b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
+
+//
+#ifdef USE_ARDUINO
 inline bool compareIP(IPAddress const& a, uint8_t const* b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
 inline bool compareIP(IPAddress const& a, IPAddress const& b) { return a[0]==b[0]&&a[1]==b[1]&&a[2]==b[2]&&a[3]==b[3]; }
+#endif
 
 //
 static const uint64_t unix_shift = 946684800;

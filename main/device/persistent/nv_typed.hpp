@@ -1,14 +1,11 @@
 #pragma once
 
 //
-#include "../..std/std.hpp"
+#include "../../std/std.hpp"
 #include "../hal/arduino.hpp"
 
 //
 namespace nv {
-
-    //
-    static Preferences storage;
 
     //
     inline char const* _concat_(char const * one, char const * two) {
@@ -17,6 +14,9 @@ namespace nv {
         strcat(result, two);
         return result;
     }
+
+#ifdef USE_ARDUINO
+    static Preferences storage;
 
     //
     template<class T>
@@ -53,9 +53,10 @@ namespace nv {
             return *this;
         }
     };
+#endif
 
 
-    //
+#ifdef USE_ARDUINO
     class nv_float {
     protected: 
         char const* key = 0;
@@ -86,8 +87,12 @@ namespace nv {
             return *this;
         }
     };
+#else
+    using nv_float = float;
+#endif
 
     //
+#ifdef USE_ARDUINO
     class nv_uint8_t {
     protected: 
         char const* key = 0;
@@ -118,8 +123,12 @@ namespace nv {
             return *this;
         }
     };
+#else
+    using nv_uint8_t = uint8_t;
+#endif
 
     //
+#ifdef USE_ARDUINO
     class nv_uint32_t {
     protected: 
         char const* key = 0;
@@ -150,8 +159,12 @@ namespace nv {
             return *this;
         }
     };
+#else
+    using nv_uint32_t = uint32_t;
+#endif
 
     //
+#ifdef USE_ARDUINO
     class nv_int32_t {
     protected: 
         char const* key = 0;
@@ -182,8 +195,12 @@ namespace nv {
             return *this;
         }
     };
+#else
+    using nv_int32_t = int32_t;
+#endif
 
     //
+#ifdef USE_ARDUINO
     class nv_bool {
     protected: 
         char const* key = 0;
@@ -214,5 +231,8 @@ namespace nv {
             return *this;
         }
     };
+#else
+    using nv_bool = bool;
+#endif
 
 };

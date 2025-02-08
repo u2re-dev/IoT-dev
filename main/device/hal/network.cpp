@@ -1,6 +1,7 @@
 #include "network.hpp"
 
 //
+#ifdef USE_ARDUINO
 wl_status_t connectWifi() {
     const auto start = millis();
     WiFi.mode(WIFI_STA);
@@ -81,6 +82,7 @@ bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length, size_t ti
     //
     return done;
 }
+#endif
 
 //
 ipv4_error ipv4_parse( const uint8_t * string, uint8_t string_length, uint8_t* result )

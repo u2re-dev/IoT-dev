@@ -15,7 +15,11 @@ namespace th {
 
         // parse from string and use it
         uint8_t ip[4] = {0,0,0,0}; ipv4_parse((uint8_t*)tuya_local_ip.c_str(), tuya_local_ip.size(), ip);
+
+#ifdef USE_ARDUINO
         connectToDevice(client, IPAddress(ip));
+#endif
+
         memcpy(hmac_key, tuya_local_key.c_str(), 16);
         SEQ_NO = 1; linked = false;
     }
@@ -27,20 +31,25 @@ namespace th {
             DebugLog("Sent Code");
             DebugCode(outBuffer, outLen);
         }
+#ifdef USE_ARDUINO
         if (outLen > 0) {
             waitAndSend(client, outBuffer, outLen);
         }
+#endif
     }
 
     //
     void TuyaDevice34::sendLocalNonce() {
+#ifdef USE_ARDUINO
         if (client.connected()) {
             size_t keyLen = 16; // say hello with local_nonce with local_key encryption and checksum
             sendMessage(0x3u, tc::encryptDataECB((uint8_t*)tuya_local_key.c_str(), (uint8_t*)tc::local_nonce, keyLen, tmp, false), keyLen);
         }
+#endif
     }
 
     //
+#ifdef USE_ARDUINO_JSON
     void TuyaDevice34::setDPS(ArduinoJson::JsonObject const& dps) {
         sending["protocol"] = 5;
         sending["t"] = uint64_t(getUnixTime()) * 1000ull;
@@ -117,15 +126,16 @@ namespace th {
             waitAndSend(client, outBuffer, outLen);
         }
     }
+#endif
 
     //
     void TuyaDevice34::handleSignal() {
-        if (!client.connected()) {
-            return;
-        }
+#ifdef USE_ARDUINO
+        if (!client.connected()) { return; };
+        waitForReceive(client, inBuffer, inLen, 100);
+#endif
 
         //
-        waitForReceive(client, inBuffer, inLen, 100);
         if (inLen > 0) {
             DebugLog("Received Code");
             DebugCode(inBuffer, inLen);
@@ -166,7 +176,9 @@ namespace th {
                 //uint8_t* json_part = payload + data_offset; json_len -= data_offset;
 
                 //
+#ifdef USE_ARDUINO_JSON
                 deserializeJson(current, json_part, json_len);
+#endif
             }
         }
         inLen = 0;

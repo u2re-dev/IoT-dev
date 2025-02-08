@@ -2,24 +2,34 @@
 #define NTP_TIMEZONE  "UTC+7"
 
 //
-
-//
+#ifdef USE_ARDUINO
 #include <WiFi.h>
 #include <HardwareSerial.h>
+#endif
+
+//
+#ifdef USE_M5STACK
 #include <M5Unified.hpp>
+#endif
+
+//
+#ifdef USE_ARDUINO_JSON
 #include <ArduinoJson.hpp>
+#endif
 
 //
 #include "hal/interface.hpp"
 #include "hal/network.hpp"
 #include "m5stack/rtc.hpp"
-#include "std/libtuya.hpp"
 
 //
 #include "../private.hpp"
-#include "./std/std.hpp"
 #include "./persistent/nv_typed.hpp"
 #include "./handler/tuya_device.hpp"
+
+//
+#include "../tuya/libtuya.hpp"
+#include "../std/std.hpp"
 
 //
 void IOTask() {
@@ -33,11 +43,15 @@ void setup(void)
     setCpuFrequencyMhz(160);
 
     //
+#ifdef USE_ARDUINO
     Serial.setDebugOutput(true);
     Serial.begin(115200);
 
     //
     nv::storage.begin("nvs", false);
+#endif
+
+    //
     std::thread IOTaskThread = std::thread(IOTask);
 
     //
@@ -48,21 +62,33 @@ void setup(void)
 
     //
     while (true) {
+#ifdef USE_ARDUINO
         connectWifi();
+#endif
+
         initRTC();
 
         //
         DebugLog(std::to_string(getUnixTime()));
 
         //
+#ifdef USE_ARDUINO_JSON
         ArduinoJson::JsonDocument dps;
         auto obj = dps.to<ArduinoJson::JsonObject>();
         obj["20"] = false;
+#endif
 
         //
         auto device = th::TuyaDevice34();
-        while (WiFi.status() == WL_CONNECTED) {
+
+        //
+#ifdef USE_ARDUINO
+        while (WiFi.status() == WL_CONNECTED) 
+#endif
+        {
+#ifdef USE_M5STACK
             M5.delay(1);
+#endif
 
             //
             if (!device.connected()) {
@@ -75,7 +101,9 @@ void setup(void)
 
             //
             if (device.available() && !once) {
+#ifdef USE_ARDUINO_JSON
                 device.setDPS(obj); once = true;
+#endif
             }
         }
     }

@@ -2,12 +2,16 @@
 
 //
 #include <cstdint>
-#include <ArduinoJson.hpp>
 
 //
-#include "../../std/libtuya.hpp"
+#include "../../tuya/libtuya.hpp"
 #include "../hal/network.hpp"
 #include "../m5stack/rtc.hpp"
+
+//
+#ifdef USE_ARDUINO_JSON
+#include <ArduinoJson.hpp>
+#endif
 
 //
 namespace th {
@@ -16,13 +20,19 @@ namespace th {
     class TuyaDevice34 {
         protected:
         uint32_t SEQ_NO = 1;
+
+#ifdef USE_ARDUINO
         WiFiClient client;
+#endif
 
         //
+#ifdef USE_ARDUINO_JSON
         ArduinoJson::JsonDocument blank;
         ArduinoJson::JsonDocument data;
         ArduinoJson::JsonDocument sending;
         ArduinoJson::JsonDocument current;
+#endif
+
         std::string tuya_local_key = "";
         std::string tuya_local_ip = "";
         std::string device_id = "";
@@ -57,13 +67,22 @@ namespace th {
         void connectDevice(std::string tuya_local_ip, std::string tuya_local_key, std::string device_id, std::string device_uid);
         void sendMessage(uint cmd, uint8_t* data, size_t& keyLen);
         void sendLocalNonce();
+
+#ifdef USE_ARDUINO_JSON
         void getDPS() { sendJSON(0x10, blank); }
         void setDPS(ArduinoJson::JsonObject const& dps);
         void sendJSON(uint cmd, ArduinoJson::JsonDocument& doc);
+#endif
 
         //
         bool available() { return linked; }
-        bool connected() {  return client.connected(); }
+        bool connected() {
+#ifdef USE_ARDUINO
+            return client.connected(); 
+#else
+            return false;
+#endif
+        }
         void handleSignal();
     };
 

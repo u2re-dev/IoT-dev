@@ -7,6 +7,9 @@
 #include "../../std/string.hpp"
 
 //
+#include <stddef.h>
+
+//
 namespace nv {
 
     //
@@ -37,6 +40,11 @@ namespace nv {
             return this->_chars_;
         }
 
+        uint8_t length() const {
+            return _length_;
+        }
+
+#ifdef USE_ARDUINO
         _NvString_& operator =(_StringView_ _str_) {
             storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
             return *this;
@@ -63,12 +71,6 @@ namespace nv {
             return (char*)_code_;
         }
 
-        uint8_t length() const {
-            return _length_;
-        }
-
-
-#ifdef ENABLE_ARDUINO_STRING
         _NvString_& operator =(String const& _str_) {
             storage.putBytes(_chars_, _str_.bytes(), _length_ = min(_str_.length(), MAX_STRING_LENGTH));
             return *this;

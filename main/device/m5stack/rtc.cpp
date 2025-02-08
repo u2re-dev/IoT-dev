@@ -1,19 +1,30 @@
 #include "./rtc.hpp"
 
 //
+#ifdef USE_M5STACK_RTC
 #include <M5Unified.hpp>
-#include <WiFi.h>
+#endif
 
 //
-#include "../std/debug.hpp"
+#ifdef USE_ARDUINO
+#include <WiFi.h>
+#endif
+
+//
+#include "../../std/debug.hpp"
 
 //
 const long  gmtOffset_sec = 3600 * 7;
 const int   daylightOffset_sec = 0;
 
 //
+#ifndef USE_ARDUINO
+inline uintptr_t millis() { return 1; };
+#endif
+
+//
 void initRTC() {
-    M5.setLogDisplayIndex(0);
+    //M5.setLogDisplayIndex(0);
 
     //
     sntp_set_sync_interval(60000);
@@ -49,11 +60,17 @@ void initRTC() {
 
     //
     struct tm timeInfo;
-    if (getLocalTime(&timeInfo)) {
+#ifdef USE_ARDUINO
+    if (getLocalTime(&timeInfo))
+#endif
+    {
         time_t t = time(nullptr);
         DebugLog("Getting local time done");
+#ifdef USE_M5STACK_RTC
         M5.Rtc.setDateTime(gmtime(&t));
-    } else {
-        DebugLog("Getting local time failed");
-    }
+#endif
+    } 
+#ifdef USE_ARDUINO
+    else {  DebugLog("Getting local time failed"); }
+#endif
 }

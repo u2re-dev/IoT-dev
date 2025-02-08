@@ -1,5 +1,8 @@
-#include <M5Unified.hpp>
 #include "./config.hpp"
+
+//
+#ifdef USE_M5STACK_DISPLAY
+#include <M5Unified.hpp>
 
 //
 void makeM5Config() {
@@ -16,3 +19,5 @@ void makeM5Config() {
     cfg.external_rtc = true; 
     M5.begin(cfg);
 }
+
+#endif

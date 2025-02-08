@@ -1,5 +1,8 @@
 //
 #include "./display.hpp"
+
+//
+#ifdef USE_M5STACK_DISPLAY
 #include <M5AtomDisplay.h>
 #include <M5ModuleDisplay.h>
 #include <M5ModuleRCA.h>
@@ -25,3 +28,4 @@ M5GFX& getDisplay() {
     //
     return M5.Displays(0);
 }
+#endif

@@ -8,4 +8,4 @@ set(CXX_COMPILE_OPTIONS "-std=gnu++23;-Os" APPEND)
 
 #
 #idf_build_set_property(CXX_COMPILE_OPTIONS "-std=gnu++23;-Os" APPEND)
-idf_component_register(SRCS "./main.cpp" INCLUDE_DIRS ".")
+idf_component_register(SRCS "main.cpp" "./main.cpp" INCLUDE_DIRS ".")
