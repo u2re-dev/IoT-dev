@@ -1,5 +1,7 @@
 #pragma once
 #include "./STD.hpp"
+#include "./Types.hpp"
+#include "../diagnostic/Diagnostic.hpp"
 
 // 
 namespace Bytes {
@@ -94,6 +96,7 @@ public:
     inline ByteArray toByteArray() const {
         return data;
     }
+
 private:
     ByteArray data;
 };

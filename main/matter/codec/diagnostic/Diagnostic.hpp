@@ -2,6 +2,7 @@
 
 //
 #include "../core/STD.hpp"
+#include "../message/Message.hpp"
 
 //
 struct NotImplementedError : public std::logic_error { using std::logic_error::logic_error; };
@@ -9,7 +10,7 @@ struct UnexpectedDataError : public std::runtime_error { using std::runtime_erro
 
 //
 namespace Diagnostic {
-    inline std::string messageDiagnostics(const Message& message, const std::optional<std::string>& logContext = std::nullopt);
+    inline std::string messageDiagnostics(const Message& message, std::optional<std::string> const& logContext = std::nullopt);
 
     inline std::string hex(uint32_t val) {
         std::ostringstream oss;

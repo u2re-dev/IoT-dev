@@ -2,6 +2,8 @@
 
 //
 #include "../core/STD.hpp"
+#include "../core/Types.hpp"
+#include "../core/Utils.hpp"
 
 //
 enum PacketHeaderFlag : uint8_t {

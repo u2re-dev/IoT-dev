@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 #
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_STANDARD 23)
-set(CXX_COMPILE_OPTIONS "-std=gnu++17;-DCHIP_HAVE_CONFIG_H;-Os" APPEND)
+set(CXX_COMPILE_OPTIONS "-std=gnu++23;-DCHIP_HAVE_CONFIG_H;-Os" APPEND)
 
 #
 find_package(PkgConfig REQUIRED)

@@ -1,8 +1,9 @@
 #include "./PayloadCodec.hpp"
 #include "../core/Utils.hpp"
+#include "../core/Types.hpp"
 
 //
-static inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& ph) {
+inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& ph) {
     DataWriter writer;
     uint16_t vendorId = static_cast<uint16_t>((ph.protocolId >> 16) & 0xffff);
     uint8_t flags = (ph.isInitiatorMessage ? IsInitiatorMessage : 0) |
@@ -19,7 +20,7 @@ static inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& p
 }
 
 //
-static inline PayloadHeader PayloadCodec::decodePayloadHeader(DataReader& reader) {
+inline PayloadHeader PayloadCodec::decodePayloadHeader(DataReader& reader) {
     PayloadHeader ph{};
     uint8_t exchFlags = reader.readUInt8();
     bool isAck = (exchFlags & IsAckMessage) != 0;
@@ -44,7 +45,7 @@ static inline PayloadHeader PayloadCodec::decodePayloadHeader(DataReader& reader
 
 
 // Декодирование полезной нагрузки
-static inline DecodedMessage PayloadCodec::decodePayload(const DecodedPacket& packet) {
+inline DecodedMessage PayloadCodec::decodePayload(const DecodedPacket& packet) {
     DataReader reader(packet.applicationPayload);
     PayloadHeader payloadHeader = decodePayloadHeader(reader);
     std::optional<ByteArray> secExt = std::nullopt;
@@ -60,7 +61,7 @@ static inline DecodedMessage PayloadCodec::decodePayload(const DecodedPacket& pa
 }
 
 // Кодирование полезной нагрузки
-static inline Packet PayloadCodec::encodePayload(const Message& message) {
+inline Packet PayloadCodec::encodePayload(const Message& message) {
     if (message.securityExtension.has_value() || message.payloadHeader.hasSecuredExtension) 
         throw NotImplementedError("Security extensions not supported when encoding a payload.");
     ByteArray encodedPH = encodePayloadHeader(message.payloadHeader);

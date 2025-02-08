@@ -1,5 +1,6 @@
 //
 #include "./Diagnostic.hpp"
+#include "../message/Message.hpp"
 
 //
 static inline std::string Diagnostic::messageDiagnostics(const Message& message, const std::optional<std::string>& logContext = std::nullopt) 

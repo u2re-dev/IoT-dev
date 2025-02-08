@@ -1,8 +1,9 @@
 #include "./PacketCodec.hpp"
 #include "../core/Utils.hpp"
+#include "../core/Types.hpp"
 
 //
-static inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
+inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
     DecodedPacketHeader header{};
     uint8_t flags = reader.readUInt8();
     uint8_t version = (flags & VersionMask) >> 4;
@@ -23,8 +24,8 @@ static inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& re
 
     //
     if (hasSN) header.sourceNodeId = reader.readUInt64();
-    if (hasDN) header.destNodeId = reader.readUInt64();
-    if (hasDG) header.destGroupId = static_cast<GroupId>(reader.readUInt16());
+    if (hasDN) header.destNodeId   = reader.readUInt64();
+    if (hasDG) header.destGroupId  = static_cast<GroupId>(reader.readUInt16());
     
     //
     uint8_t sessionTypeVal = header.securityFlags & 0b00000011;
@@ -45,7 +46,7 @@ static inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& re
 }
 
 //
-static inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
+inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
     DataWriter writer;
 
     //
@@ -62,8 +63,8 @@ static inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) 
 
     //
     if (ph.sourceNodeId) writer.writeUInt64(*ph.sourceNodeId);
-    if (ph.destNodeId) writer.writeUInt64(*ph.destNodeId);
-    if (ph.destGroupId) writer.writeUInt16(*ph.destGroupId);
+    if (ph.destNodeId)   writer.writeUInt64(*ph.destNodeId);
+    if (ph.destGroupId)  writer.writeUInt16(*ph.destGroupId);
 
     //
     return writer.toByteArray();
@@ -72,7 +73,7 @@ static inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) 
 
 
 // Декодирование пакета
-static inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
+inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
     DataReader reader(data);
     DecodedPacketHeader header = decodePacketHeader(reader);
 
@@ -89,7 +90,7 @@ static inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
 }
 
 // Кодирование пакета
-static inline ByteArray PacketCodec::encodePacket(const Packet& packet) {
+inline ByteArray PacketCodec::encodePacket(const Packet& packet) {
     if (packet.messageExtension.has_value() || packet.header.hasMessageExtensions) 
         throw NotImplementedError("Message extensions not supported when encoding a packet.");
     return Bytes::concat({encodePacketHeader(packet.header), packet.applicationPayload});
