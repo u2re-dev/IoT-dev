@@ -30,6 +30,7 @@ struct OnboardingPayload {
 
 
 ```c
+
 // если нужно просто
 struct OnboardingPayloadHeader {
   uint8_t   version;
@@ -102,7 +103,6 @@ struct OnboardingPayload {
     }
 }
 ```
-
 
 * **IdentificationDeclaration-struct (Раздел 5.3.5):**
 
