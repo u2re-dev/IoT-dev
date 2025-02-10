@@ -72,9 +72,9 @@ private:
     }
 
     //
-    const Byte* begin;
-    const Byte* ptr;
-    const Byte* end;
+    const Byte* begin = nullptr;
+    const Byte* ptr   = nullptr;
+    const Byte* end   = nullptr;
 };
 
 
@@ -159,9 +159,9 @@ public:
     }
 
 private:
-    uint8_t* data;
-    uint8_t* ptr;
-    size_t capacity;
+    uint8_t* data = nullptr;
+    uint8_t* ptr  = nullptr;
+    size_t   capacity  =  0;
 
     // Проверяет, достаточно ли места в буфере для записи
     void ensureCapacity(size_t additionalBytes) {

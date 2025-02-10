@@ -4,8 +4,8 @@
 #include <iomanip>
 
 #include "limits"
-#include "../utilities/hexdump.h"
-#include "../utilities/stream_guard.h"
+#include "./std/hexdump.h"
+#include "./std/stream_guard.h"
 
 namespace tlvcpp
 {

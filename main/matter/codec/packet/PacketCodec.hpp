@@ -14,30 +14,30 @@ enum PacketHeaderFlag : uint8_t {
     VersionMask     = 0b11110000,
 };
 
-
 // Структуры, соответствующие интерфейсам
 struct PacketHeader {
-    uint16_t sessionId;
+    uint16_t    sessionId;
     SessionType sessionType;
-    bool hasPrivacyEnhancements;
-    bool isControlMessage;
-    bool hasMessageExtensions;
-    uint32_t messageId;
-    NodeId sourceNodeId;
-    NodeId destNodeId;
-    GroupId destGroupId;
+    bool        hasPrivacyEnhancements;
+    bool        isControlMessage;
+    bool        hasMessageExtensions;
+    uint32_t    messageId;
+    NodeId      sourceNodeId;
+    NodeId      destNodeId;
+    GroupId     destGroupId;
 };
 
 //
 struct Packet {
     PacketHeader header;
-    ByteArray messageExtension;
-    ByteArray applicationPayload;
+    ByteArray    messageExtension;
+    ByteArray    applicationPayload;
 };
 
-//
+
+// extended types
 struct DecodedPacketHeader : public PacketHeader {
-    uint8_t securityFlags; // используется как nonce
+    uint8_t securityFlags; // using as nonce
 };
 
 //

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./lib/tlv.h"
-#include "./lib/tree.h"
+#include "./tlv.h"
+#include "./std/tree.h"
 
 namespace tlvcpp
 {

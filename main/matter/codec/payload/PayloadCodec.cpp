@@ -13,8 +13,7 @@ inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& ph) {
     writer.writeUInt8(flags);
     writer.writeUInt8(ph.messageType);
     writer.writeUInt16(ph.exchangeId);
-    if (vendorId != COMMON_VENDOR_ID) writer.writeUInt32(ph.protocolId);
-    else writer.writeUInt16(static_cast<uint16_t>(ph.protocolId));
+    if (vendorId != COMMON_VENDOR_ID) { writer.writeUInt32(ph.protocolId); } else { writer.writeUInt16(static_cast<uint16_t>(ph.protocolId)); };
     if (ph.ackedMessageId) writer.writeUInt32(ph.ackedMessageId);
     return writer.toByteArray();
 }
@@ -23,15 +22,15 @@ inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& ph) {
 inline PayloadHeader PayloadCodec::decodePayloadHeader(DataReader& reader) {
     PayloadHeader ph{};
     uint8_t exchFlags = reader.readUInt8();
-    bool isAck = (exchFlags & IsAckMessage) != 0;
-    bool hasVendor = (exchFlags & HasVendorId) != 0;
+    bool isAck     = (exchFlags & IsAckMessage) != 0;
+    bool hasVendor = (exchFlags & HasVendorId ) != 0;
 
     //
-    ph.isInitiatorMessage = (exchFlags & IsInitiatorMessage) != 0;
-    ph.requiresAck = (exchFlags & RequiresAck) != 0;
+    ph.isInitiatorMessage  = (exchFlags & IsInitiatorMessage) != 0;
     ph.hasSecuredExtension = (exchFlags & HasSecureExtension) != 0;
+    ph.requiresAck = (exchFlags & RequiresAck) != 0;
     ph.messageType = reader.readUInt8();
-    ph.exchangeId = reader.readUInt16();
+    ph.exchangeId  = reader.readUInt16();
 
     //
     uint16_t vendorId = hasVendor ? reader.readUInt16() : COMMON_VENDOR_ID;

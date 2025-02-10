@@ -5,7 +5,7 @@
 //
 inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
     DecodedPacketHeader header{};
-    uint8_t flags = reader.readUInt8();
+    uint8_t flags   = reader.readUInt8();
     uint8_t version = (flags & VersionMask) >> 4;
 
     //
@@ -26,7 +26,7 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
     if (hasSN) header.sourceNodeId = reader.readUInt64();
     if (hasDN) header.destNodeId   = reader.readUInt64();
     if (hasDG) header.destGroupId  = static_cast<GroupId>(reader.readUInt16());
-    
+
     //
     uint8_t sessionTypeVal = header.securityFlags & 0b00000011;
     if (sessionTypeVal != static_cast<uint8_t>(SessionType::Group) &&
@@ -34,12 +34,14 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
         throw UnexpectedDataError("Unsupported session type " + std::to_string(sessionTypeVal));
 
     //
-    header.sessionType = static_cast<SessionType>(sessionTypeVal);
-    header.hasPrivacyEnhancements = (header.securityFlags & HasPrivacyEnhancements) != 0;
-    if (header.hasPrivacyEnhancements) throw NotImplementedError("Privacy enhancements not supported");
-    header.isControlMessage = (header.securityFlags & IsControlMessage) != 0;
-    if (header.isControlMessage) throw NotImplementedError("Control Messages not supported");
-    header.hasMessageExtensions = (header.securityFlags & HasMessageExtension) != 0;
+    header.sessionType              = static_cast<SessionType>(sessionTypeVal);
+    header.hasPrivacyEnhancements   = (header.securityFlags & HasPrivacyEnhancements) != 0;
+    header.isControlMessage         = (header.securityFlags & IsControlMessage)       != 0;
+    header.hasMessageExtensions     = (header.securityFlags & HasMessageExtension)    != 0;
+
+    //
+    if (header.hasPrivacyEnhancements)  throw NotImplementedError("Privacy enhancements not supported");
+    if (header.isControlMessage)        throw NotImplementedError("Control Messages not supported");
 
     //
     return header;
@@ -72,24 +74,20 @@ inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
 
 
 
-// Декодирование пакета
+//
 inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
     DataReader reader(data);
     DecodedPacketHeader header = decodePacketHeader(reader);
 
     //
-    ByteArray messageExt = {};
-    if (header.hasMessageExtensions) messageExt = reader.readByteArray(reader.readUInt16());
-
-    //
     DecodedPacket dp;
-    dp.header = header;
-    dp.messageExtension = messageExt;
+    dp.header             = header;
+    dp.messageExtension   = header.hasMessageExtensions ? reader.readByteArray(reader.readUInt16()) : ByteArray{};
     dp.applicationPayload = reader.remainingBytes();
     return dp;
 }
 
-// Кодирование пакета
+//
 inline ByteArray PacketCodec::encodePacket(const Packet& packet) {
     if (packet.messageExtension.size() || packet.header.hasMessageExtensions) 
         throw NotImplementedError("Message extensions not supported when encoding a packet.");
