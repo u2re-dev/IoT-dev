@@ -23,15 +23,15 @@ struct PacketHeader {
     bool isControlMessage;
     bool hasMessageExtensions;
     uint32_t messageId;
-    std::optional<NodeId> sourceNodeId;
-    std::optional<NodeId> destNodeId;
-    std::optional<GroupId> destGroupId;
+    NodeId sourceNodeId;
+    NodeId destNodeId;
+    GroupId destGroupId;
 };
 
 //
 struct Packet {
     PacketHeader header;
-    std::optional<ByteArray> messageExtension;
+    ByteArray messageExtension;
     ByteArray applicationPayload;
 };
 

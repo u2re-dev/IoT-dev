@@ -19,7 +19,7 @@ struct PayloadHeader {
     uint8_t messageType;
     bool isInitiatorMessage;
     bool requiresAck;
-    std::optional<uint32_t> ackedMessageId;
+    uint32_t ackedMessageId;
     bool hasSecuredExtension;
 };
 

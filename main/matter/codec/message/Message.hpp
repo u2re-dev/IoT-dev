@@ -40,7 +40,7 @@ struct MessageType {
 struct Message {
     PacketHeader packetHeader;
     PayloadHeader payloadHeader;
-    std::optional<ByteArray> securityExtension;
+    ByteArray securityExtension;
     ByteArray payload;
 };
 
@@ -52,7 +52,7 @@ struct DecodedMessage : public Message {
 //
 struct MsgTypeInfo {
     std::string type;
-    std::optional<std::string> forType;
+    std::string forType;
 };
 
 //
@@ -63,5 +63,5 @@ inline MsgTypeInfo mapProtocolAndMessageType(uint32_t protocolId, uint8_t messag
         { return { type, "SC/" + SecureMessageType::toString(messageType) }; }
     else if (protocolId == INTERACTION_PROTOCOL_ID) 
         { return { type, "I/" + MessageType::toString(messageType) }; }
-    return { type, std::nullopt };
+    return { type, "" };
 }

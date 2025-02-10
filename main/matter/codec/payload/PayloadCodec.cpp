@@ -7,15 +7,15 @@ inline ByteArray PayloadCodec::encodePayloadHeader(const PayloadHeader& ph) {
     DataWriter writer;
     uint16_t vendorId = static_cast<uint16_t>((ph.protocolId >> 16) & 0xffff);
     uint8_t flags = (ph.isInitiatorMessage ? IsInitiatorMessage : 0) |
-                    (ph.ackedMessageId.has_value() ? IsAckMessage : 0) |
-                    (ph.requiresAck ? RequiresAck : 0) |
+                    (ph.ackedMessageId     ? IsAckMessage       : 0) |
+                    (ph.requiresAck        ? RequiresAck        : 0) |
                     (vendorId != COMMON_VENDOR_ID ? HasVendorId : 0);
     writer.writeUInt8(flags);
     writer.writeUInt8(ph.messageType);
     writer.writeUInt16(ph.exchangeId);
     if (vendorId != COMMON_VENDOR_ID) writer.writeUInt32(ph.protocolId);
     else writer.writeUInt16(static_cast<uint16_t>(ph.protocolId));
-    if (ph.ackedMessageId) writer.writeUInt32(*ph.ackedMessageId);
+    if (ph.ackedMessageId) writer.writeUInt32(ph.ackedMessageId);
     return writer.toByteArray();
 }
 
@@ -48,7 +48,7 @@ inline PayloadHeader PayloadCodec::decodePayloadHeader(DataReader& reader) {
 inline DecodedMessage PayloadCodec::decodePayload(const DecodedPacket& packet) {
     DataReader reader(packet.applicationPayload);
     PayloadHeader payloadHeader = decodePayloadHeader(reader);
-    std::optional<ByteArray> secExt = std::nullopt;
+    ByteArray secExt = {};
     if (payloadHeader.hasSecuredExtension) secExt = reader.readByteArray(reader.readUInt16());
     
     //
@@ -62,7 +62,7 @@ inline DecodedMessage PayloadCodec::decodePayload(const DecodedPacket& packet) {
 
 // Кодирование полезной нагрузки
 inline Packet PayloadCodec::encodePayload(const Message& message) {
-    if (message.securityExtension.has_value() || message.payloadHeader.hasSecuredExtension) 
+    if (message.securityExtension.size() || message.payloadHeader.hasSecuredExtension) 
         throw NotImplementedError("Security extensions not supported when encoding a payload.");
     ByteArray encodedPH = encodePayloadHeader(message.payloadHeader);
 

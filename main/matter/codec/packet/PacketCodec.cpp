@@ -51,9 +51,9 @@ inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
 
     //
     uint8_t flags = (HEADER_VERSION << 4) |
-                    (ph.destGroupId.has_value() ? HasDestGroupId : 0) |
-                    (ph.destNodeId.has_value() ? HasDestNodeId : 0) |
-                    (ph.sourceNodeId.has_value() ? HasSourceNodeId : 0);
+                    (ph.destGroupId  ? HasDestGroupId  : 0) |
+                    (ph.destNodeId   ? HasDestNodeId   : 0) |
+                    (ph.sourceNodeId ? HasSourceNodeId : 0);
 
     //
     writer.writeUInt8(flags);
@@ -62,9 +62,9 @@ inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
     writer.writeUInt32(ph.messageId);
 
     //
-    if (ph.sourceNodeId) writer.writeUInt64(*ph.sourceNodeId);
-    if (ph.destNodeId)   writer.writeUInt64(*ph.destNodeId);
-    if (ph.destGroupId)  writer.writeUInt16(*ph.destGroupId);
+    if (ph.sourceNodeId) writer.writeUInt64(ph.sourceNodeId);
+    if (ph.destNodeId)   writer.writeUInt64(ph.destNodeId);
+    if (ph.destGroupId)  writer.writeUInt16(ph.destGroupId);
 
     //
     return writer.toByteArray();
@@ -78,7 +78,7 @@ inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
     DecodedPacketHeader header = decodePacketHeader(reader);
 
     //
-    std::optional<ByteArray> messageExt = std::nullopt;
+    ByteArray messageExt = {};
     if (header.hasMessageExtensions) messageExt = reader.readByteArray(reader.readUInt16());
 
     //
@@ -91,7 +91,7 @@ inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
 
 // Кодирование пакета
 inline ByteArray PacketCodec::encodePacket(const Packet& packet) {
-    if (packet.messageExtension.has_value() || packet.header.hasMessageExtensions) 
+    if (packet.messageExtension.size() || packet.header.hasMessageExtensions) 
         throw NotImplementedError("Message extensions not supported when encoding a packet.");
     return Bytes::concat({encodePacketHeader(packet.header), packet.applicationPayload});
 }

@@ -5,13 +5,12 @@
 #include "../message/Message.hpp"
 
 //
-struct NotImplementedError : public std::logic_error { using std::logic_error::logic_error; };
+struct NotImplementedError : public std::logic_error   { using std::logic_error::logic_error; };
 struct UnexpectedDataError : public std::runtime_error { using std::runtime_error::runtime_error; };
 
 //
 namespace Diagnostic {
-    inline std::string messageDiagnostics(const Message& message, std::optional<std::string> const& logContext = std::nullopt);
-
+    inline std::string messageDiagnostics(const Message& message, std::string const& logContext = "");
     inline std::string hex(uint32_t val) {
         std::ostringstream oss;
         oss << std::hex << val;
