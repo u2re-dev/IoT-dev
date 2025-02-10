@@ -97,6 +97,7 @@ void store32(uint8_t* ptr, uint32_t _a_) {
     *(ptr+3) = (_a_>>24)&0xFF;
 }
 
+//
 int64_t getTimestamp(int year, int mon, int mday, int hour, int min, int sec)
 {
     const uint16_t ytd[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}; /* Anzahl der Tage seit Jahresanfang ohne Tage des aktuellen Monats und ohne Schalttag */

@@ -1,6 +1,6 @@
 #include "NodeSelf.hpp"
 
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 //
 void MatterNodeSelf::syncWithNTP()
 {

@@ -1,7 +1,7 @@
 #include "Switch.hpp"
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include <esp_log.h>
 #include <esp_matter.h>
 

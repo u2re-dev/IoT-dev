@@ -1,23 +1,12 @@
 #pragma once
 
 //
-#include "./arduino.hpp"
-
-//
 #include "../persistent/nv_string.hpp"
 #include "../../std/debug.hpp"
 
 //
 static std::string wifi_ssid = "mozg";//nv::_NvString_<16> wifi_ssid("wifi_ssid");
 static std::string wifi_pass = "n3v3rm1nd";//nv::_NvString_<16> wifi_pass("wifi_pass");
-
-//
-#ifdef USE_ARDUINO
-wl_status_t connectWifi();
-int connectToDevice(WiFiClient& client, IPAddress const& local, uint16_t port = 6668);
-void waitAndSend(WiFiClient& client, uint8_t* data, size_t length = 0);
-bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length, size_t timeout = 8000);
-#endif
 
 //
 enum ipv4_error {
@@ -31,3 +20,13 @@ enum ipv4_error {
 
 //
 ipv4_error ipv4_parse( const uint8_t * string, uint8_t string_length, uint8_t* result );
+
+
+//
+#ifdef USE_ARDUINO
+#include "./arduino.hpp"
+wl_status_t connectWifi();
+int connectToDevice(WiFiClient& client, IPAddress const& local, uint16_t port = 6668);
+void waitAndSend(WiFiClient& client, uint8_t* data, size_t length = 0);
+bool waitForReceive(WiFiClient& client, uint8_t* data, size_t& length, size_t timeout = 8000);
+#endif

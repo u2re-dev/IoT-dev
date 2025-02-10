@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include <esp_err.h>
 #include <esp_matter.h>
 #include <client/CHIPClient.h>

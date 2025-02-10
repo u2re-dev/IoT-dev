@@ -4,7 +4,7 @@
 #include "../io/Callbacks.hpp"
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include <esp_log.h>
 #include <app_priv.h>  // для app_attribute_update_cb, app_identification_cb
 

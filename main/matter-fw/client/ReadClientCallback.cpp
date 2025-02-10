@@ -1,7 +1,7 @@
 #include "./ReadClientCallback.hpp"
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 namespace Callback {
 
     //

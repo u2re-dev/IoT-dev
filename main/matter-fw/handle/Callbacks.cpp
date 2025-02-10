@@ -5,7 +5,7 @@
 #include "../client/ClientRequest.hpp"
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include <esp_log.h>
 #include <chip/CHIPLogging.h>
 #include <inttypes.h>

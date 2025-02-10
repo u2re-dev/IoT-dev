@@ -1,5 +1,5 @@
 #define VERY_LARGE_STRING_LENGTH 8000
-#define NTP_TIMEZONE  "UTC+7"
+#define NTP_TIMEZONE "UTC+7"
 
 //
 #ifdef USE_ARDUINO
@@ -25,11 +25,13 @@
 //
 #include "../private.hpp"
 #include "./persistent/nv_typed.hpp"
-#include "./handler/tuya_device.hpp"
 
 //
 #include "../tuya/libtuya.hpp"
 #include "../std/std.hpp"
+
+//
+#include "./session/TuyaSession.hpp"
 
 //
 void IOTask() {
@@ -61,7 +63,8 @@ void setup(void)
     initWiFi();
 
     //
-    while (true) {
+    while (true)
+    {
 #ifdef USE_ARDUINO
         connectWifi();
 #endif
@@ -79,11 +82,11 @@ void setup(void)
 #endif
 
         //
-        auto device = th::TuyaDevice34();
+        auto session = th::TuyaSession();
 
         //
 #ifdef USE_ARDUINO
-        while (WiFi.status() == WL_CONNECTED) 
+        while (WiFi.status() == WL_CONNECTED)
 #endif
         {
 #ifdef USE_M5STACK
@@ -91,18 +94,21 @@ void setup(void)
 #endif
 
             //
-            if (!device.connected()) {
-                device.connectDevice(tuya_local_ip, tuya_local_key, device_id, device_uuid);
-                device.sendLocalNonce();
+            if (!session.connected())
+            {
+                session.connectDevice(tuya_local_ip, tuya_local_key, device_id, device_uuid);
+                session.sendLocalNonce();
             }
 
             //
-            device.handleSignal();
+            session.handleSignal();
 
             //
-            if (device.available() && !once) {
+            if (session.available() && !once)
+            {
 #ifdef USE_ARDUINO_JSON
-                device.setDPS(obj); once = true;
+                device.setDPS(obj);
+                once = true;
 #endif
             }
         }

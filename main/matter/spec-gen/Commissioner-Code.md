@@ -28,7 +28,6 @@ struct OnboardingPayload {
 };
 ```
 
-
 ```c
 
 // если нужно просто
@@ -61,7 +60,7 @@ struct OnboardingPayloadHeaderRepack {
 ```
 
 Чтение таких битов.
-	
+
 ```cpp
 #include <cstdint>
 #include <iostream>

@@ -1,7 +1,7 @@
 #include "LocalEndpoint.hpp"
 
 //
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include <esp_log.h>
 
 //

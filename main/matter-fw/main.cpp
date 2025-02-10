@@ -1,4 +1,4 @@
-#ifdef ENABLE_MATTER
+#ifdef USE_ESP_MATTER
 #include "stack/NodeSelf.hpp"
 #include "stack/HostIO.hpp"
 #include "stack/NodeRemote.hpp"
