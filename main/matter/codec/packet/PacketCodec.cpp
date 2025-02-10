@@ -9,18 +9,18 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
     uint8_t version = (flags & VersionMask) >> 4;
 
     //
-    bool hasDN = (flags & HasDestNodeId) != 0;
-    bool hasDG = (flags & HasDestGroupId) != 0;
+    bool hasDN = (flags & HasDestNodeId)   != 0;
+    bool hasDG = (flags & HasDestGroupId)  != 0;
     bool hasSN = (flags & HasSourceNodeId) != 0;
 
     //
-    if (hasDN && hasDG) throw UnexpectedDataError("Header cannot contain both destination node and group.");
+    if (hasDN && hasDG)            throw UnexpectedDataError("Header cannot contain both destination node and group.");
     if (version != HEADER_VERSION) throw NotImplementedError("Unsupported header version " + std::to_string(version) + ".");
 
     //
-    header.sessionId = reader.readUInt16();
+    header.sessionId     = reader.readUInt16();
     header.securityFlags = reader.readUInt8();
-    header.messageId = reader.readUInt32();
+    header.messageId     = reader.readUInt32();
 
     //
     if (hasSN) header.sourceNodeId = reader.readUInt64();

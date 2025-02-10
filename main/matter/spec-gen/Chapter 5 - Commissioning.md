@@ -12,19 +12,97 @@
 
 * **Packed Binary Data Structure for Onboarding Payload (Таблица 39):**
 
-    ```c
-    struct OnboardingPayload {
-      uint8_t version : 3;
-      uint16_t vendor_id;
-      uint16_t product_id;
-      uint8_t custom_flow : 2;
-      uint8_t discovery_capabilities_bitmask;
-      uint16_t discriminator : 12;
-      uint32_t passcode : 27;
-      uint8_t padding : 4;
-      uint8_t tlv_data[]; // переменная длина
-    };
-    ```
+```c
+struct OnboardingPayload {
+  /* here is 11 bytes bitfield flow, aka 88-bit */
+  uint88_t version                        : 3;
+  uint88_t vendor_id                      : 16;
+  uint88_t product_id                     : 16;
+  uint88_t custom_flow                    : 2;
+  uint88_t discovery_capabilities_bitmask : 8;
+  uint88_t discriminator                  : 12;
+  uint88_t passcode                       : 27;
+  uint88_t padding                        : 4;
+  
+  uint8_t tlv_data[]; // переменная длина
+};
+```
+
+
+```c
+// если нужно просто
+struct OnboardingPayloadHeader {
+  uint8_t   version;
+  uint16_t  vendor_id;
+  uint16_t  product_id;
+  uint8_t   custom_flow;
+  uint8_t   discovery_capabilities_bitmask;
+  uint16_t  discriminator;
+  uint32_t  passcode;
+  uint8_t   padding;
+};
+
+// только внутри программмы, сохраняет компактность в памяти
+// но передавать такое некорректно
+struct OnboardingPayloadHeaderRepack {
+  uint32_t version     : 3;
+  uint32_t passcode    : 27;
+  uint32_t custom_flow : 2;
+  
+  uint16_t vendor_id ; //: 16;
+  uint16_t product_id; //: 16;
+  
+  uint16_t discriminator : 12;
+  uint16_t padding       : 4;
+  
+  uint8_t discovery_capabilities_bitmask : 8;
+};
+```
+
+Чтение таких битов.
+	
+```cpp
+#include <cstdint>
+#include <iostream>
+
+struct OnboardingPayload {
+    uint8_t data[11]; // 88 бит = 11 байт
+
+    // Извлечение полей из массива данных
+    uint8_t getVersion() const {
+        return data[0] & 0b111; // Первые три бита
+    }
+
+    uint16_t getVendorId() const {
+        return ((data[0] >> 3) | (data[1] << 5)) & 0xFFFF; // Следующие 16 бит
+    }
+
+    uint16_t getProductId() const {
+        return ((data[2]) | (data[3] << 8)) & 0xFFFF; // Следующие 16 бит
+    }
+
+    uint8_t getCustomFlow() const {
+        return (data[4] & 0b11); // Первые два бита пятого байта
+    }
+
+    uint8_t getDiscoveryCapabilitiesBitmask() const {
+        return (data[4] >> 2) & 0xFF; // Следующие восемь бит
+    }
+
+    uint16_t getDiscriminator() const {
+        return ((data[5] >> 6) | (data[6] << 2) | ((data[7] & 0b1111) << 10)) & 0xFFF; // Следующие двенадцать бит
+    }
+
+    uint32_t getPasscode() const {
+        return ((data[7] >> 4) | (data[8] << 4) | (data[9] << 12) | ((uint32_t)(data[10]) << 20)) & ((1u << 27) - 1); // Следующие двадцать семь бит
+    }
+
+    uint8_t getPadding() const {
+        return data[10] >> (27 - (20 + sizeof(uint32_t)));
+    }
+}
+```
+
 
 * **IdentificationDeclaration-struct (Раздел 5.3.5):**
 
