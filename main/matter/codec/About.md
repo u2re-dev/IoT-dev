@@ -11,3 +11,7 @@ Specification you can get only from here:
 <https://csa-iot.org/developer-resource/specifications-download-request/>
 
 I don't want have copyright problems.
+
+## Details
+
+Look at: `4.4. Message Frame Format`
