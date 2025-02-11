@@ -2,6 +2,7 @@
 #include "../spake2p.hpp"
 
 // unusual in device itself
+#ifdef USE_OPENSSL
 #ifdef ENABLE_PAKE_SERVER
 static int Spake2p::computeW0W1(uint32_t pin, const std::vector<unsigned char>& salt, int iterations, BIGNUM** w0, BIGNUM** w1)
 {
@@ -42,4 +43,5 @@ static int Spake2p::computeW0W1(uint32_t pin, const std::vector<unsigned char>& 
     BN_CTX_free(ctx);
     return 0;
 }
+#endif
 #endif

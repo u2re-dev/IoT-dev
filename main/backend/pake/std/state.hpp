@@ -1,5 +1,7 @@
 #pragma once
 #include "./std.hpp"
+#include "./consts.hpp"
+// TODO: support for C language
 
 //
 struct SpakeKeys {

@@ -2,6 +2,7 @@
 #include "../spake2p.hpp"
 
 // no sense in ESP32-device
+#ifdef USE_OPENSSL
 #ifdef ENABLE_PAKE_SERVER
 static Spake2p* Spake2p::create(const std::vector<unsigned char>& ctx, BIGNUM* w0_val) {
     EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
@@ -41,4 +42,5 @@ static Spake2p* Spake2p::create(const std::vector<unsigned char>& ctx, BIGNUM* w
     EC_POINT_free(N_point);
     return sp;
 }
+#endif
 #endif

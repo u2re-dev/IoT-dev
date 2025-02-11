@@ -1,7 +1,8 @@
-#include "./spake.hpp"
-#include "../std/utils.hpp"
+/* Originally: https://github.com/jedisct1/spake2-ee */
+#include "../spake.h"
 
 //
+#ifdef USE_SODIUM
 #include <sodium.h>
 
 //
@@ -11,8 +12,9 @@ static int crypto_spake_step4(ServerState &st, SharedKeys &shared_keys, const un
     { sodium_memzero(&st, sizeof(st)); return -1; }
 
     //
-    std::memcpy(shared_keys.client_sk.data(), st.shared_keys.client_sk.data(), crypto_spake_SHAREDKEYBYTES);
-    std::memcpy(shared_keys.server_sk.data(), st.shared_keys.server_sk.data(), crypto_spake_SHAREDKEYBYTES);
+    memcpy(shared_keys.client_sk.data(), st.shared_keys.client_sk.data(), crypto_spake_SHAREDKEYBYTES);
+    memcpy(shared_keys.server_sk.data(), st.shared_keys.server_sk.data(), crypto_spake_SHAREDKEYBYTES);
     sodium_memzero(&st, sizeof(st));
     return 0;
 }
+#endif

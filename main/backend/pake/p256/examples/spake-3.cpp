@@ -1,3 +1,4 @@
+#ifdef USE_OPENSSL
 int main() {
     //
     uint32_t pin = 123456;
@@ -84,3 +85,4 @@ int main() {
     //
     return 0;
 }
+#endif

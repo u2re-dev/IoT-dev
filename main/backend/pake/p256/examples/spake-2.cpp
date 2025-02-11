@@ -1,3 +1,4 @@
+#ifdef USE_OPENSSL
 int main() {
     //
     OpenSSL_add_all_algorithms();
@@ -53,3 +54,4 @@ int main() {
     EVP_cleanup();
     return 0;
 }
+#endif

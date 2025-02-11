@@ -1,7 +1,8 @@
-#include "./spake.hpp"
-#include "../std/utils.hpp"
+/* Originally: https://github.com/jedisct1/spake2-ee */
+#include "../spake.h"
 
 //
+#ifdef USE_SODIUM
 #include <sodium.h>
 
 //
@@ -34,6 +35,7 @@ const unsigned char response2[crypto_spake_RESPONSE2BYTES])
     { sodium_memzero(&st, sizeof(st)); return -1; }
 
     //
-    std::memcpy(response3, validators.server_validator.data(), 32);
+    memcpy(response3, validators.server_validator.data(), 32);
     sodium_memzero(&st, sizeof(st)); return 0;
 }
+#endif

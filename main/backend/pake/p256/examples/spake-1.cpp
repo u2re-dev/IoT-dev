@@ -1,3 +1,4 @@
+#ifdef USE_OPENSSL
 int main() {
     uint32_t pin = 123456;
     std::vector<unsigned char> salt(16);
@@ -25,3 +26,4 @@ int main() {
     //
     return 0;
 }
+#endif

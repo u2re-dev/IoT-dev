@@ -11,6 +11,7 @@ public:
     std::vector<unsigned char> context;
 
     //
+#ifdef USE_OPENSSL
     BIGNUM* random, w0;
     EC_GROUP* group;
     EC_POINT* M, N;
@@ -51,4 +52,6 @@ public:
     EC_POINT* computeY();
     bool computeSecretAndVerifiersFromX(EC_POINT* L, const EC_POINT* X, const EC_POINT* Y, std::vector<unsigned char>& Ke, std::vector<unsigned char>& hAY, std::vector<unsigned char>& hBX);
 #endif
+#endif
+
 };

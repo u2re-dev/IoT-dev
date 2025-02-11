@@ -1,7 +1,8 @@
-#include "./spake.hpp"
-#include "../std/utils.hpp"
+/* Originally: https://github.com/jedisct1/spake2-ee */
+#include "../spake.h"
 
 //
+#ifdef USE_SODIUM
 #include <sodium.h>
 
 //
@@ -27,7 +28,7 @@ const char *passwd, unsigned long long passwdlen)
     pop64(memlimit, public_data, pos);
 
     //
-    std::memcpy(salt.data(), public_data + pos, crypto_pwhash_SALTBYTES);
+    memcpy(salt.data(), public_data + pos, crypto_pwhash_SALTBYTES);
     pos += crypto_pwhash_SALTBYTES;
 
     //
@@ -47,10 +48,11 @@ const char *passwd, unsigned long long passwdlen)
 #endif
 
     // Сохраняем необходимые данные в состоянии
-    std::memcpy(st.h_K.data(), keys.h_K.data(), 32);
-    std::memcpy(st.h_L.data(), keys.h_L.data(), 32);
-    std::memcpy(st.N.data(), keys.N.data(), 32);
-    std::memcpy(st.x.data(), x_scalar.data(), 32);
-    std::memcpy(st.X.data(), response1, 32);
+    memcpy(st.h_K.data(), keys.h_K.data(), 32);
+    memcpy(st.h_L.data(), keys.h_L.data(), 32);
+    memcpy(st.N.data(), keys.N.data(), 32);
+    memcpy(st.x.data(), x_scalar.data(), 32);
+    memcpy(st.X.data(), response1, 32);
     return 0;
 }
+#endif

@@ -2,6 +2,7 @@
 #include "../spake2p.hpp"
 
 //
+#ifdef USE_OPENSSL
 #ifdef ENABLE_PAKE_SERVER
 bool Spake2p::computeSecretAndVerifiersFromX(EC_POINT* L, const EC_POINT* X, const EC_POINT* Y,
 std::vector<unsigned char>& Ke, std::vector<unsigned char>& hAY, std::vector<unsigned char>& hBX)
@@ -75,4 +76,5 @@ std::vector<unsigned char>& Ke, std::vector<unsigned char>& hAY, std::vector<uns
     BN_CTX_free(ctx);
     return true;
 }
+#endif
 #endif

@@ -2,6 +2,7 @@
 #include "../spake2p.hpp"
 
 //
+#ifdef USE_OPENSSL
 static EC_POINT* Spake2p::computeK(EC_GROUP* group, const EC_POINT* P) {
     EC_POINT* K = EC_POINT_new(group);
     BN_CTX* ctx = BN_CTX_new();
@@ -53,4 +54,5 @@ EC_POINT* Spake2p::computeX() { return Spake2p::compute(M); }
 //
 #ifdef ENABLE_PAKE_SERVER
 EC_POINT* Spake2p::computeY() { return Spake2p::compute(N); }
+#endif
 #endif

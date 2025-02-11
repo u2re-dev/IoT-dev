@@ -1,5 +1,5 @@
-#include "./spake.hpp"
-#include "../std/utils.hpp"
+/* Originally: https://github.com/jedisct1/spake2-ee */
+#include "../spake.h"
 
 //
 static int crypto_spake_step0(ServerState &st, unsigned char public_data[crypto_spake_PUBLICDATABYTES], const unsigned char stored_data[crypto_spake_STOREDBYTES])
@@ -23,8 +23,8 @@ static int crypto_spake_step0(ServerState &st, unsigned char public_data[crypto_
 
     //
     unsigned char salt[crypto_pwhash_SALTBYTES];
-    std::memcpy(salt,  stored_data + pos_in, crypto_pwhash_SALTBYTES); pos_in  += crypto_pwhash_SALTBYTES;
-    std::memcpy(public_data + pos_out, salt, crypto_pwhash_SALTBYTES); pos_out += crypto_pwhash_SALTBYTES;
+    memcpy(salt,  stored_data + pos_in, crypto_pwhash_SALTBYTES); pos_in  += crypto_pwhash_SALTBYTES;
+    memcpy(public_data + pos_out, salt, crypto_pwhash_SALTBYTES); pos_out += crypto_pwhash_SALTBYTES;
     assert(pos_out == crypto_spake_PUBLICDATABYTES);
     return 0;
 }
