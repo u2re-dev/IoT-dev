@@ -13,7 +13,7 @@ namespace tc {
     //
     struct TuyaCmd {
         uint32_t SEQ_NO; //= 0;
-        uint32_t CMD_ID;// = 0; 
+        uint32_t CMD_ID;// = 0;
         uint8_t* HMAC;// = nullptr;
     };
 

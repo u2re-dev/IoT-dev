@@ -20,4 +20,3 @@ inline time_t getUnixTime() {
     //localtime(&t);
     return t;
 }
-

@@ -69,7 +69,7 @@ void initRTC() {
 #ifdef USE_M5STACK_RTC
         M5.Rtc.setDateTime(gmtime(&t));
 #endif
-    } 
+    }
 #ifdef USE_ARDUINO
     else {  DebugLog("Getting local time failed"); }
 #endif

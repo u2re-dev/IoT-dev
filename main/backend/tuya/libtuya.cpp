@@ -68,7 +68,7 @@ namespace tc {
         *(uint32_t*)(output+0) = bswap32(0x000055AA);
 
         // encode as big-endian
-        const uint32_t header_len = 16; 
+        const uint32_t header_len = 16;
         const auto payloadSize  = computePayloadSize(length, cmdDesc.HMAC ? true : false);
         *(uint32_t*)(output+4)  = bswap32(cmdDesc.SEQ_NO);
         *(uint32_t*)(output+8)  = bswap32(cmdDesc.CMD_ID);
@@ -189,10 +189,10 @@ namespace tc {
         mbedtls_gcm_context aes;
         mbedtls_gcm_init(&aes);
         mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (const unsigned char*) key, 128);
-        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_DECRYPT, 
+        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_DECRYPT,
             length, // length of payload only
             (const unsigned char*)data, 12, // prepared IV
-            NULL, 0, 
+            NULL, 0,
             (unsigned char const*)data+12, // payload stream
             (unsigned char*) output, // output (if present)
             16, output + length);
@@ -208,10 +208,10 @@ namespace tc {
         mbedtls_gcm_context aes;
         mbedtls_gcm_init(&aes);
         mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES , (const unsigned char*) key, 128);
-        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_ENCRYPT, 
+        mbedtls_gcm_crypt_and_tag(&aes, MBEDTLS_GCM_ENCRYPT,
             length, // length of payload only
             (const unsigned char*)data, 12, // prepared IV
-            NULL, 0, 
+            NULL, 0,
             (unsigned char const*)data+12, // payload stream
             (unsigned char*) output, // output (if present)
             16, output + length);

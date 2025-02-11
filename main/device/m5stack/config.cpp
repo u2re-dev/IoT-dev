@@ -16,7 +16,7 @@ void makeM5Config() {
     cfg.external_display.unit_lcd       = false; // default=true. use UnitLCD
     cfg.external_display.unit_rca       = false; // default=true. use UnitRCA VideoOutput
     cfg.external_display.module_rca     = false; // default=true. use ModuleRCA VideoOutput
-    cfg.external_rtc = true; 
+    cfg.external_rtc = true;
     M5.begin(cfg);
 }
 

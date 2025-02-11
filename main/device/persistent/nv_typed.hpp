@@ -21,16 +21,16 @@ namespace nv {
     //
     template<class T>
     class nv_t {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_t() {
-            
+
         }
 
         explicit nv_t(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {
@@ -58,16 +58,16 @@ namespace nv {
 
 #ifdef USE_ARDUINO
     class nv_float {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_float() {
-            
+
         }
 
         explicit nv_float(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {
@@ -94,16 +94,16 @@ namespace nv {
     //
 #ifdef USE_ARDUINO
     class nv_uint8_t {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_uint8_t() {
-            
+
         }
 
         explicit nv_uint8_t(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {
@@ -130,16 +130,16 @@ namespace nv {
     //
 #ifdef USE_ARDUINO
     class nv_uint32_t {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_uint32_t() {
-            
+
         }
 
         explicit nv_uint32_t(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {
@@ -166,16 +166,16 @@ namespace nv {
     //
 #ifdef USE_ARDUINO
     class nv_int32_t {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_int32_t() {
-            
+
         }
 
         explicit nv_int32_t(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {
@@ -202,16 +202,16 @@ namespace nv {
     //
 #ifdef USE_ARDUINO
     class nv_bool {
-    protected: 
+    protected:
         char const* key = 0;
 
-    public: 
+    public:
         nv_bool() {
-            
+
         }
 
         explicit nv_bool(char const* key) : key(key) {
-            
+
         }
 
         void setKey(char const* key) {

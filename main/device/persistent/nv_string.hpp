@@ -19,7 +19,7 @@ namespace nv {
         char const* _chars_ = 0;
         volatile char* _code_ = 0;
 
-    public: 
+    public:
         _NvString_() {
             _code_ = new char[MAX_STRING_LENGTH];
             bzero((char*)_code_, MAX_STRING_LENGTH);
