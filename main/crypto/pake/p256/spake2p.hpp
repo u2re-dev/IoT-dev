@@ -4,8 +4,8 @@
 //
 class Spake2p {
 private:
-    const char* M_hex = "02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f";
-    const char* N_hex = "03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49";
+    const char* M_hex = "886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f";
+    const char* N_hex = "d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49";
 
 public:
     std::vector<unsigned char> context;

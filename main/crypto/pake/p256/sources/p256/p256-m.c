@@ -479,6 +479,8 @@ static const m256_mod p256_p = {
     0x00000001, /* -p^-1 mod 2^32 */
 };
 
+// match order BCE6FAAD A7179E84 F3B9CAC2 FC632551
+
 /*
  * Data for Montgomery operations modulo the curve's n
  */
