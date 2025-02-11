@@ -16,7 +16,7 @@ Take Control your IoT devices.
 
 (Local keys can be gained from <https://iot.tuya.com/>).
 
-**Mattter** (<https://github.com/project-chip>):
+**Matter** (<https://github.com/project-chip>):
 
 - Coming soon (but not sure)
 

@@ -20,14 +20,13 @@
 //
 #include "hal/interface.hpp"
 #include "hal/network.hpp"
-#include "m5stack/rtc.hpp"
+#include "hal/rtc.hpp"
 
 //
 #include "../private.hpp"
 #include "./persistent/nv_typed.hpp"
 
 //
-#include "../tuya/libtuya.hpp"
 #include "../std/std.hpp"
 
 //

@@ -4,9 +4,9 @@
 #include <cstdint>
 
 //
-#include "../../tuya/libtuya.hpp"
+#include "../../backend/tuya/libtuya.hpp"
 #include "../hal/network.hpp"
-#include "../m5stack/rtc.hpp"
+#include "../hal/rtc.hpp"
 
 //
 #ifdef USE_ARDUINO_JSON
@@ -16,7 +16,6 @@
 //
 namespace th
 {
-
     //
     class TuyaSession
     {

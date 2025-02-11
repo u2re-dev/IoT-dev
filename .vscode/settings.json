@@ -179,5 +179,11 @@
     "${workspaceFolder}/include/"
   ],
   "idf.espIdfPathWin": "C:\\Users\\AdminX\\espressif\\esp-idf",
-  "idf.toolsPathWin": "C:\\Users\\AdminX\\.espressif\\"
+  "idf.toolsPathWin": "C:\\Users\\AdminX\\.espressif\\",
+  "editor.indentSize": "tabSize",
+  "editor.tabSize": 4,
+  "cmake.automaticReconfigure": false,
+  "cmake.configureOnEdit": false,
+"cmake.configureOnOpen": false,
+"editor.detectIndentation": false
 }
