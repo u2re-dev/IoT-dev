@@ -5,14 +5,16 @@ files:
   include:
   - MakeLists.txt
 dependencies:
-  idf: 
+  idf:
     path: '../../esp-idf/'
     version: '>=5.4'
-  esp-matter: 
+  esp-matter:
     path: '../../esp-matter/'
-  arduino-esp32: 
+  arduino-esp32:
     path: '../../arduino-esp32/'
     #git: 'https://github.com/espressif/arduino-esp32.git'
     version: '>=3.1.1'
-  #chip: 
+  espressif/libsodium:
+    version: ">=1.0.20"
+  #chip:
     #path: '../../esp-matter/connectedhomeip/connectedhomeip/config/esp32/components/chip'

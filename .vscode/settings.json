@@ -185,5 +185,11 @@
   "cmake.automaticReconfigure": false,
   "cmake.configureOnEdit": false,
 "cmake.configureOnOpen": false,
-"editor.detectIndentation": false
+"editor.detectIndentation": false,
+"C_Cpp.clang_format_path": "C:\\Program Files\\Clang\\bin",
+"workbench.editor.pinnedTabSizing": "shrink",
+"workbench.editor.highlightModifiedTabs": true,
+"workbench.editor.pinnedTabsOnSeparateRow": true,
+"workbench.editor.tabSizing": "shrink",
+"workbench.editor.wrapTabs": true
 }
