@@ -1,13 +1,13 @@
+#include "./spake.hpp"
 #include "../std/utils.hpp"
-//#include <sodium.h>
 
 //
-int crypto_spake_step2(ServerState &st,
-                       unsigned char response2[crypto_spake_RESPONSE2BYTES],
-                       const char *client_id, size_t client_id_len,
-                       const char *server_id, size_t server_id_len,
-                       const unsigned char stored_data[crypto_spake_STOREDBYTES],
-                       const unsigned char response1[crypto_spake_RESPONSE1BYTES])
+static int crypto_spake_step2(ServerState &st,
+unsigned char response2[crypto_spake_RESPONSE2BYTES],
+const char *client_id, size_t client_id_len,
+const char *server_id, size_t server_id_len,
+const unsigned char stored_data[crypto_spake_STOREDBYTES],
+const unsigned char response1[crypto_spake_RESPONSE1BYTES])
 {
     SpakeKeys keys;
     SpakeValidators validators;
@@ -58,14 +58,9 @@ int crypto_spake_step2(ServerState &st,
 
     //
     if (shared_keys_and_validators(st.shared_keys, validators,
-                                   client_id, client_id_len,
-                                   server_id, server_id_len,
-                                   response1, response2, Z,
-                                   keys.h_K.data(), V) != 0)
-    {
-        sodium_memzero(&st, sizeof(st));
-        return -1;
-    }
+    client_id, client_id_len, server_id, server_id_len,
+    response1, response2, Z, keys.h_K.data(), V) != 0)
+    { sodium_memzero(&st, sizeof(st)); return -1; }
 
     //
     std::memcpy(response2 + 32, validators.client_validator.data(), 32);

@@ -1,7 +1,8 @@
+#include "./spake.hpp"
 #include "../std/utils.hpp"
 
 //
-int crypto_spake_step0(ServerState &st, unsigned char public_data[crypto_spake_PUBLICDATABYTES], const unsigned char stored_data[crypto_spake_STOREDBYTES])
+static int crypto_spake_step0(ServerState &st, unsigned char public_data[crypto_spake_PUBLICDATABYTES], const unsigned char stored_data[crypto_spake_STOREDBYTES])
 {
     size_t pos_in = 0, pos_out = 0;
     uint16_t ver; pop16(ver, stored_data, pos_in);

@@ -1,11 +1,14 @@
+#include "./spake.hpp"
 #include "../std/utils.hpp"
+
+//
 #include <sodium.h>
 
 //
-int crypto_spake_step1(ClientState &st,
-                       unsigned char response1[crypto_spake_RESPONSE1BYTES],
-                       const unsigned char public_data[crypto_spake_PUBLICDATABYTES],
-                       const char *passwd, unsigned long long passwdlen)
+static int crypto_spake_step1(ClientState &st,
+unsigned char response1[crypto_spake_RESPONSE1BYTES],
+const unsigned char public_data[crypto_spake_PUBLICDATABYTES],
+const char *passwd, unsigned long long passwdlen)
 {
     SpakeKeys keys;
     std::array<unsigned char, crypto_pwhash_SALTBYTES> salt{};

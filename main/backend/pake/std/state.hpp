@@ -1,4 +1,5 @@
-#include "../std/utils.hpp"
+#pragma once
+#include "./std.hpp"
 
 //
 struct SpakeKeys {
