@@ -33,6 +33,16 @@ static void zeroize(void *d, size_t n)
 #endif
 
 
+static void u288_rshift32(uint32_t z[9], uint32_t c)
+{
+    for (unsigned i = 0; i < 8; i++) {
+        z[i] = z[i + 1];
+    }
+    z[8] = c;
+}
+
+
+
 static void u256_set32(uint32_t z[8], uint32_t x)
 {
     z[0] = x;
@@ -41,8 +51,7 @@ static void u256_set32(uint32_t z[8], uint32_t x)
     }
 }
 
-static uint32_t u256_add(uint32_t z[8],
-                         const uint32_t x[8], const uint32_t y[8])
+static uint32_t u256_add(uint32_t z[8], const uint32_t x[8], const uint32_t y[8])
 {
     uint32_t carry = 0;
 
@@ -55,8 +64,7 @@ static uint32_t u256_add(uint32_t z[8],
     return carry;
 }
 
-static uint32_t u256_sub(uint32_t z[8],
-                         const uint32_t x[8], const uint32_t y[8])
+static uint32_t u256_sub(uint32_t z[8], const uint32_t x[8], const uint32_t y[8])
 {
     uint32_t carry = 0;
 
@@ -95,155 +103,6 @@ static uint32_t u256_diff0(const uint32_t x[8])
     return diff;
 }
 
-static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t);
-
-#undef MULADD64_ASM
-#undef MULADD64_SMALL
-
-#if defined(__GNUC__) &&\
-    defined(__ARM_ARCH) && __ARM_ARCH >= 6 && defined(__ARM_ARCH_PROFILE) && \
-    ( __ARM_ARCH_PROFILE == 77 || __ARM_ARCH_PROFILE == 65 )
-
-#if defined(__ARM_FEATURE_DSP)
-
-static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
-{
-    __asm__(
-        "umaal   %[z], %[t], %[x], %[y]"
-        : [z] "+l" (z), [t] "+l" (t)
-        : [x] "l" (x), [y] "l" (y)
-    );
-    return ((uint64_t) t << 32) | z;
-}
-#define MULADD64_ASM
-#define MULADD64_SMALL
-
-#else
-
-static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
-{
-    uint32_t tmp1, tmp2, tmp3;
-    __asm__(
-        ".syntax unified\n\t"
-        "lsrs    %[u], %[x], #16\n\t"
-        "lsrs    %[v], %[y], #16\n\t"
-        "uxth    %[x], %[x]\n\t"
-        "uxth    %[y], %[y]\n\t"
-        "movs    %[w], %[v]\n\t"
-        "muls    %[w], %[u]\n\t"
-        "muls    %[v], %[x]\n\t"
-        "muls    %[x], %[y]\n\t"
-        "muls    %[y], %[u]\n\t"
-        "lsls    %[u], %[y], #16\n\t"
-        "lsrs    %[y], %[y], #16\n\t"
-        "adds    %[x], %[u]\n\t"
-        "adcs    %[y], %[w]\n\t"
-        "lsls    %[u], %[v], #16\n\t"
-        "lsrs    %[v], %[v], #16\n\t"
-        "adds    %[x], %[u]\n\t"
-        "adcs    %[y], %[v]\n\t"
-        : [x] "+l" (x), [y] "+l" (y),
-          [u] "=&l" (tmp1), [v] "=&l" (tmp2), [w] "=&l" (tmp3)
-        :
-        : "cc"
-    );
-    (void) tmp1;
-    (void) tmp2;
-    (void) tmp3;
-
-    __asm__(
-        ".syntax unified\n\t"
-        "movs    %[u], #0\n\t"
-        "adds    %[x], %[z]\n\t"
-        "adcs    %[y], %[u]\n\t"
-        "adds    %[x], %[t]\n\t"
-        "adcs    %[y], %[u]\n\t"
-        : [x] "+l" (x), [y] "+l" (y), [u] "=&l" (tmp1)
-        : [z] "l" (z), [t] "l" (t)
-        : "cc"
-    );
-    (void) tmp1;
-
-    return ((uint64_t) y << 32) | x;
-}
-#define MULADD64_ASM
-
-#endif
-
-#endif
-
-#if !defined(MULADD64_ASM)
-#if defined(MUL64_IS_CONSTANT_TIME)
-static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
-{
-    return (uint64_t) x * y + z + t;
-}
-#define MULADD64_SMALL
-#else
-static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
-{
-    const uint16_t xl = (uint16_t) x;
-    const uint16_t yl = (uint16_t) y;
-    const uint16_t xh = x >> 16;
-    const uint16_t yh = y >> 16;
-
-    const uint32_t lo = (uint32_t) xl * yl;
-    const uint32_t m1 = (uint32_t) xh * yl;
-    const uint32_t m2 = (uint32_t) xl * yh;
-    const uint32_t hi = (uint32_t) xh * yh;
-
-    uint64_t acc = lo + ((uint64_t) (hi + (m1 >> 16) + (m2 >> 16)) << 32);
-    acc += m1 << 16;
-    acc += m2 << 16;
-    acc += z;
-    acc += t;
-
-    return acc;
-}
-#endif
-#endif
-
-static uint32_t u288_muladd(uint32_t z[9], uint32_t x, const uint32_t y[8])
-{
-    uint32_t carry = 0;
-
-#define U288_MULADD_STEP(i) \
-    do { \
-        uint64_t prod = u32_muladd64(x, y[i], z[i], carry); \
-        z[i] = (uint32_t) prod; \
-        carry = (uint32_t) (prod >> 32); \
-    } while( 0 )
-
-#if defined(MULADD64_SMALL)
-    U288_MULADD_STEP(0);
-    U288_MULADD_STEP(1);
-    U288_MULADD_STEP(2);
-    U288_MULADD_STEP(3);
-    U288_MULADD_STEP(4);
-    U288_MULADD_STEP(5);
-    U288_MULADD_STEP(6);
-    U288_MULADD_STEP(7);
-#else
-    for (unsigned i = 0; i < 8; i++) {
-        U288_MULADD_STEP(i);
-    }
-#endif
-
-    uint64_t sum = (uint64_t) z[8] + carry;
-    z[8] = (uint32_t) sum;
-    carry = (uint32_t) (sum >> 32);
-
-    return carry;
-}
-
-static void u288_rshift32(uint32_t z[9], uint32_t c)
-{
-    for (unsigned i = 0; i < 8; i++) {
-        z[i] = z[i + 1];
-    }
-    z[8] = c;
-}
-
 static void u256_from_bytes(uint32_t z[8], const uint8_t p[32])
 {
     for (unsigned i = 0; i < 8; i++) {
@@ -266,41 +125,7 @@ static void u256_to_bytes(uint8_t p[32], const uint32_t z[8])
     }
 }
 
-
-typedef struct {
-    uint32_t m[8];
-    uint32_t R2[8];
-    uint32_t ni;
-}
-m256_mod;
-
-static const m256_mod p256_p = {
-    {
-        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000,
-        0x00000000, 0x00000000, 0x00000001, 0xFFFFFFFF,
-    },
-    {
-        0x00000003, 0x00000000, 0xffffffff, 0xfffffffb,
-        0xfffffffe, 0xffffffff, 0xfffffffd, 0x00000004,
-    },
-    0x00000001,
-};
-
-static const m256_mod p256_n = {
-    {
-        0xFC632551, 0xF3B9CAC2, 0xA7179E84, 0xBCE6FAAD,
-        0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF,
-    },
-    {
-        0xbe79eea2, 0x83244c95, 0x49bd6fa6, 0x4699799c,
-        0x2b6bec59, 0x2845b239, 0xf3d95620, 0x66e12d94,
-    },
-    0xee00bc4f,
-};
-
-static void m256_add(uint32_t z[8],
-                     const uint32_t x[8], const uint32_t y[8],
-                     const m256_mod *mod)
+static void m256_add(uint32_t z[8], const uint32_t x[8], const uint32_t y[8], const m256_mod *mod)
 {
     uint32_t r[8];
     uint32_t carry_add = u256_add(z, x, y);
@@ -309,15 +134,12 @@ static void m256_add(uint32_t z[8],
     u256_cmov(z, r, use_sub);
 }
 
-static void m256_add_p(uint32_t z[8],
-                       const uint32_t x[8], const uint32_t y[8])
+static void m256_add_p(uint32_t z[8], const uint32_t x[8], const uint32_t y[8])
 {
     m256_add(z, x, y, &p256_p);
 }
 
-static void m256_sub(uint32_t z[8],
-                     const uint32_t x[8], const uint32_t y[8],
-                     const m256_mod *mod)
+static void m256_sub(uint32_t z[8], const uint32_t x[8], const uint32_t y[8], const m256_mod *mod)
 {
     uint32_t r[8];
     uint32_t carry = u256_sub(z, x, y);
@@ -325,15 +147,12 @@ static void m256_sub(uint32_t z[8],
     u256_cmov(z, r, carry);
 }
 
-static void m256_sub_p(uint32_t z[8],
-                       const uint32_t x[8], const uint32_t y[8])
+static void m256_sub_p(uint32_t z[8], const uint32_t x[8], const uint32_t y[8])
 {
     m256_sub(z, x, y, &p256_p);
 }
 
-static void m256_mul(uint32_t z[8],
-                     const uint32_t x[8], const uint32_t y[8],
-                     const m256_mod *mod)
+static void m256_mul(uint32_t z[8], const uint32_t x[8], const uint32_t y[8], const m256_mod *mod)
 {
     uint32_t m_prime = mod->ni;
     uint32_t a[9];
@@ -356,8 +175,7 @@ static void m256_mul(uint32_t z[8],
     u256_cmov(z, a, 1 - use_sub);
 }
 
-static void m256_mul_p(uint32_t z[8],
-                       const uint32_t x[8], const uint32_t y[8])
+static void m256_mul_p(uint32_t z[8], const uint32_t x[8], const uint32_t y[8])
 {
     m256_mul(z, x, y, &p256_p);
 }
@@ -380,8 +198,7 @@ static void m256_set32(uint32_t z[8], uint32_t x, const m256_mod *mod)
     m256_prep(z, mod);
 }
 
-static void m256_inv(uint32_t z[8], const uint32_t x[8],
-                     const m256_mod *mod)
+static void m256_inv(uint32_t z[8], const uint32_t x[8], const m256_mod *mod)
 {
     uint32_t bitval[8];
     u256_cmov(bitval, x, 1);
@@ -407,8 +224,7 @@ static void m256_inv(uint32_t z[8], const uint32_t x[8],
     }
 }
 
-static int m256_from_bytes(uint32_t z[8],
-                           const uint8_t p[32], const m256_mod *mod)
+static int m256_from_bytes(uint32_t z[8], const uint8_t p[32], const m256_mod *mod)
 {
     u256_from_bytes(z, p);
 
@@ -421,8 +237,7 @@ static int m256_from_bytes(uint32_t z[8],
     return 0;
 }
 
-static void m256_to_bytes(uint8_t p[32],
-                          const uint32_t z[8], const m256_mod *mod)
+static void m256_to_bytes(uint8_t p[32], const uint32_t z[8], const m256_mod *mod)
 {
     uint32_t zi[8];
     u256_cmov(zi, z, 1);
@@ -431,20 +246,6 @@ static void m256_to_bytes(uint8_t p[32],
     u256_to_bytes(p, zi);
 }
 
-
-static const uint32_t p256_b[8] = {
-    0x29c4bddf, 0xd89cdf62, 0x78843090, 0xacf005cd,
-    0xf7212ed6, 0xe5a220ab, 0x04874834, 0xdc30061d,
-};
-
-static const uint32_t p256_gx[8] = {
-    0x18a9143c, 0x79e730d4, 0x5fedb601, 0x75ba95fc,
-    0x77622510, 0x79fb732b, 0xa53755c6, 0x18905f76,
-};
-static const uint32_t p256_gy[8] = {
-    0xce95560a, 0xddf25357, 0xba19e45c, 0x8b4ab8e4,
-    0xdd21f325, 0xd2e88688, 0x25885d85, 0x8571ff18,
-};
 
 static uint32_t point_check(const uint32_t x[8], const uint32_t y[8])
 {
@@ -505,8 +306,7 @@ static void point_double(uint32_t x[8], uint32_t y[8], uint32_t z[8])
     m256_sub_p(y, y, u);
 }
 
-static void point_add(uint32_t x1[8], uint32_t y1[8], uint32_t z1[8],
-                      const uint32_t x2[8], const uint32_t y2[8])
+static void point_add(uint32_t x1[8], uint32_t y1[8], uint32_t z1[8], const uint32_t x2[8], const uint32_t y2[8])
 {
     uint32_t t1[8], t2[8], t3[8];
 
@@ -539,10 +339,7 @@ static void point_add(uint32_t x1[8], uint32_t y1[8], uint32_t z1[8],
     m256_sub_p(y1, t3, t1);
 }
 
-static void point_add_or_double_leaky(
-                        uint32_t x3[8], uint32_t y3[8],
-                        const uint32_t x1[8], const uint32_t y1[8],
-                        const uint32_t x2[8], const uint32_t y2[8])
+static void point_add_or_double_leaky(uint32_t x3[8], uint32_t y3[8], const uint32_t x1[8], const uint32_t y1[8], const uint32_t x2[8], const uint32_t y2[8])
 {
 
     uint32_t z3[8];
@@ -578,17 +375,14 @@ static int point_from_bytes(uint32_t x[8], uint32_t y[8], const uint8_t p[64])
     return (int) point_check(x, y);
 }
 
-static void point_to_bytes(uint8_t p[64],
-                           const uint32_t x[8], const uint32_t y[8])
+static void point_to_bytes(uint8_t p[64], const uint32_t x[8], const uint32_t y[8])
 {
     m256_to_bytes(p,        x, &p256_p);
     m256_to_bytes(p + 32,   y, &p256_p);
 }
 
 
-static void scalar_mult(uint32_t rx[8], uint32_t ry[8],
-                        const uint32_t px[8], const uint32_t py[8],
-                        const uint32_t s[8])
+static void scalar_mult(uint32_t rx[8], uint32_t ry[8], const uint32_t px[8], const uint32_t py[8], const uint32_t s[8])
 {
     uint32_t s_odd[8], py_neg[8], py_use[8], rz[8];
 
@@ -633,8 +427,7 @@ static int scalar_from_bytes(uint32_t s[8], const uint8_t p[32])
     return -1;
 }
 
-static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
-                               uint32_t x[8], uint32_t y[8])
+static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8], uint32_t x[8], uint32_t y[8])
 {
     int ret;
     unsigned nb_tried = 0;
@@ -660,6 +453,16 @@ static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
     return 0;
 }
 
+
+
+
+
+
+
+
+
+
+
 int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64])
 {
     uint32_t s[8], x[8], y[8];
@@ -673,8 +476,7 @@ int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64])
 }
 
 
-int p256_ecdh_shared_secret(uint8_t secret[32],
-                            const uint8_t priv[32], const uint8_t peer[64])
+int p256_ecdh_shared_secret(uint8_t secret[32], const uint8_t priv[32], const uint8_t peer[64])
 {
     CT_POISON(priv, 32);
 
@@ -704,7 +506,6 @@ cleanup:
     return ret;
 }
 
-
 static void ecdsa_m256_mod_n(uint32_t x[8])
 {
     uint32_t t[8];
@@ -712,8 +513,7 @@ static void ecdsa_m256_mod_n(uint32_t x[8])
     u256_cmov(x, t, 1 - c);
 }
 
-static void ecdsa_m256_from_hash(uint32_t z[8],
-                                 const uint8_t *h, size_t hlen)
+static void ecdsa_m256_from_hash(uint32_t z[8], const uint8_t *h, size_t hlen)
 {
     if (hlen < 32) {
         uint8_t p[32];
@@ -731,8 +531,7 @@ static void ecdsa_m256_from_hash(uint32_t z[8],
     m256_prep(z, &p256_n);
 }
 
-int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
-                    const uint8_t *hash, size_t hlen)
+int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32], const uint8_t *hash, size_t hlen)
 {
     CT_POISON(priv, 32);
 
@@ -783,8 +582,7 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
     return P256_SUCCESS;
 }
 
-int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
-                      const uint8_t *hash, size_t hlen)
+int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64], const uint8_t *hash, size_t hlen)
 {
     int ret;
 
