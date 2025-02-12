@@ -1,24 +1,24 @@
+#pragma once
+#include "./types.hpp"
 
-//////////////////////////////////////////////////////////
-// 1. Математические функции (модульное деление, powMod, sqrt и т.д.)
-//////////////////////////////////////////////////////////
-namespace MathUtil {
+//
+namespace bmath {
     // Функция для приведения к модулю (a mod m)
     //inline uint256_t mod(uint256_t a, uint256_t m) {
         //return a % m; // доработайте обработку отрицательных значений, если необходимо.
     //}
 
     // Возвращает положительный остаток от деления dividend на divisor.
-    template<typename T>
-    T mod(const T dividend, const T divisor) {
+    template<typename T = BigInt>
+    inline T mod(const T dividend, const T divisor) {
         T r = dividend % divisor;
         return (r >= 0) ? r : r + divisor;
     }
 
     // Функция возведения в степень по модулю (подход getPowMod из TS-кода).
     // floorFn – функция целочисленного деления; для встроенных целых типов стандартное деление уже округляет вниз.
-    template<typename T, typename FloorFn>
-    T powMod(const T base, T exponent, const T modulus, FloorFn floorFn) {
+    template<typename FloorFn, typename T = BigInt>
+    inline T powMod(const T base, T exponent, const T modulus, FloorFn floorFn) {
         if(modulus == T(1))
             return T(0);
         T result = T(1);
@@ -34,8 +34,8 @@ namespace MathUtil {
     }
 
     // Для целых типов C++ деление уже является целочисленным округлением вниз.
-    template<typename T>
-    T powModBI(const T base, T exponent, const T modulus) {
+    template<typename T = BigInt>
+    inline T powModBI(const T base, T exponent, const T modulus) {
         if(modulus == T(1))
             return T(0);
         T result = T(1);
@@ -52,6 +52,22 @@ namespace MathUtil {
     // Простой вариант squareRoot для double
     inline double squareRoot(const double n) {
         return std::sqrt(n);
+    }
+
+    //
+    inline BigInt inv(BigInt num, BigInt mod) {
+        if(num == 0 || mod <= 0) throw std::runtime_error("no inverse");
+        BigInt a = mod(num, mod), b = mod;
+        BigInt x = 0, y = 1, u = 1, v = 0;
+        while(a != 0) {
+            BigInt q = b / a;
+            BigInt r = b % a;
+            BigInt m = x - u * q;
+            BigInt n = y - v * q;
+            b = a; a = r; x = u; y = v; u = m; v = n;
+        }
+        if(b == 1) return mod(x, mod);
+        throw std::runtime_error("no inverse");
     }
 
     // Извлечение целочисленного квадратного корня для BigInt методом Ньютона.
@@ -127,4 +143,4 @@ namespace MathUtil {
             return r;
         return 0;
     }
-} // namespace MathUtil
+}

@@ -22,21 +22,22 @@ public:
         for (size_t i = 0; i < 4; i++) {
             pinBytes[i] = static_cast<uint8_t>((pin >> (8 * i)) & 0xff);
         }
+
         // Выходной буфер должен иметь длину, равную (CRYPTO_W_SIZE_BYTES * 2)
         constexpr size_t CRYPTO_W_SIZE_BYTES = 40; // пример, может быть иное, зависит от кривой (256 бит + 8)
         size_t outputLen = CRYPTO_W_SIZE_BYTES * 2;
 
+        //
         ByteArray ws = Crypto::pbkdf2(pinBytes, pbkdfParameters.salt, pbkdfParameters.iterations, outputLen);
-        if (ws.size() < outputLen)
-            throw std::runtime_error("pbkdf2: недостаточная длина вывода");
+        if (ws.size() < outputLen) throw std::runtime_error("pbkdf2: недостаточная длина вывода");
 
         // Преобразуем байты в число (предполагается функция bytesToBigInt)
         uint256_t w0 = bytesToBigInt(ByteArray(ws.begin(), ws.begin() + CRYPTO_W_SIZE_BYTES));
         uint256_t w1 = bytesToBigInt(ByteArray(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.begin() + 2 * CRYPTO_W_SIZE_BYTES));
 
         // Приведение к модулю порядка кривой – предполагается, что P256_CURVE.n определён
-        w0 = mod(w0, getCurveOrder());
-        w1 = mod(w1, getCurveOrder());
+        w0 = mod(w0, Point::getCurveOrder());
+        w1 = mod(w1, Point::getCurveOrder());
         return { w0, w1 };
     }
 
@@ -44,8 +45,7 @@ public:
     static std::pair<uint256_t, ByteArray> computeW0L(const PbkdfParameters& pbkdfParameters, uint32_t pin) {
         auto [w0, w1] = computeW0W1(pbkdfParameters, pin);
         // L = BASE * w1, преобразуем в байты (не сжато)
-        Point Lpoint = Point::Base().multiply(w1);
-        ByteArray L = Lpoint.toBytes(false);
+        ByteArray L = (Point::getBase() * w1).toBytes(false);
         return { w0, L };
     }
 
@@ -61,18 +61,16 @@ public:
     // Вычисление X = BASE * random + M * w0.
     // M – константная точка (определённая по стандарту, например, задана в виде массива байт)
     ByteArray computeX() const {
-        Point part1 = Point::Base().multiply(random_);
-        Point part2 = M().multiply(w0_);
-        Point X = part1.add(part2);
-        return X.toBytes(false);
+        Point part1 = Point::getBase() * random_;
+        Point part2 = Point::getM()    * w0_;
+        return (part1 + part2).toBytes(false);
     }
 
     // Вычисление Y = BASE * random + N * w0.
     ByteArray computeY() const {
-        Point part1 = Point::Base().multiply(random_);
-        Point part2 = N().multiply(w0_);
-        Point Y = part1.add(part2);
-        return Y.toBytes(false);
+        Point part1 = Point::getBase() * random_;
+        Point part2 = Point::getN()    * w0_;
+        return (part1 + part2).toBytes(false);
     }
 
     // Вычисление секретного ключа и контрольных значений (верификаторов) на основе Y-версии протокола.
@@ -80,57 +78,40 @@ public:
     // X и Y – обменянные байтовые представления точек.
     SecretAndVerifiers computeSecretAndVerifiersFromY(uint256_t w1, const ByteArray& X, const ByteArray& Y) const {
         // Преобразуем Y в точку
-        Point YPoint = Point::fromBytes(Y);
-        YPoint.assertValidity();
-        // Вычисляем yNwo = Y – (N * w0)
-        Point yNwo = YPoint.add( N().multiply(w0_).negate() );
-        // Z = yNwo * random_
-        Point Z = yNwo.multiply(random_);
-        // V = yNwo * w1
-        Point V = yNwo.multiply(w1);
+        Point YPoint = Point::fromBytes(Y); YPoint.assertValidity();
+        Point yNwo = YPoint - (Point::getN() * w0_);
+        Point Z = yNwo * random_;
+        Point V = yNwo * w1;
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
     // Вычисление секретного ключа и контрольных значений (верификаторов) для стороны, где известен L.
     // Используется, если известен L (другая сторона вычислила L = BASE * w1).
     SecretAndVerifiers computeSecretAndVerifiersFromX(const ByteArray& L, const ByteArray& X, const ByteArray& Y) const {
-        Point XPoint = Point::fromBytes(X);
+        Point XPoint = Point::fromBytes(X); XPoint.assertValidity();
         Point LPoint = Point::fromBytes(L);
-        XPoint.assertValidity();
-        // Вычисляем: Z = (X - M*w0) * random_
-        Point Z = XPoint.add(M().multiply(w0_).negate()).multiply(random_);
-        // V = L * random_
-        Point V = LPoint.multiply(random_);
+        Point Z = (XPoint - (Point::getM() * w0_)) * random_;
+        Point V =  LPoint * random_;
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
 private:
-    // Константы протокола. M и N – точки на кривой, константы протокола.
-    // Они задаются в стандарте, здесь реализуем их как статические методы.
-    /*static const Point& M() {
-        static Point m = Point::fromBytes(hexToBytes("02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f"));
-        return m;
-    }
-    static const Point& N() {
-        static Point n = Point::fromBytes(hexToBytes("03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49"));
-        return n;
-    }*/
-
     // Служебный метод для вычисления секретного ключа и верификаторов.
     SecretAndVerifiers computeSecretAndVerifiers(const ByteArray& X, const ByteArray& Y, const ByteArray& Z, const ByteArray& V) const {
         // Формирование транскрипта.
         ByteArray transcript = computeTranscriptHash(X, Y, Z, V);
         // Разбиение на Ka и Ke.
         // Предположим, что transcript имеет длину не менее 32 байт (например, выход SHA256)
-        ByteArray Ka(transcript.begin(), transcript.begin() + 16);
+        ByteArray Ka(transcript.begin()     , transcript.begin() + 16);
         ByteArray Ke(transcript.begin() + 16, transcript.begin() + 32);
 
         // Генерация KcAB через HKDF: info = "ConfirmationKeys", длина 32 байт
         ByteArray info = stringToBytes("ConfirmationKeys");
         ByteArray KcAB = Crypto::hkdf(Ka, ByteArray{}, info, 32);
         // Разбиение: первые 16 байт – KcA, следующие 16 – KcB
-        ByteArray KcA(KcAB.begin(), KcAB.begin() + 16);
-        ByteArray KcB(KcAB.begin() + 16, KcAB.end());
+        ByteArray KcA(KcAB.begin()     , KcAB.begin() + 16);
+        ByteArray KcB(KcAB.begin() + 16, KcAB.end()       );
+
         // Вычисляем HMAC ключей от данных Y и X
         SecretAndVerifiers result;
         result.Ke = Ke;
@@ -167,8 +148,7 @@ private:
     }
 
     // Приватный конструктор
-    Spake2p(const ByteArray& context, uint256_t random, uint256_t w0)
-        : context_(context), random_(random), w0_(w0) {}
+    Spake2p(const ByteArray& context, uint256_t random, uint256_t w0) : context_(context), random_(random), w0_(w0) {}
 
     // Члены экземпляра
     ByteArray context_;

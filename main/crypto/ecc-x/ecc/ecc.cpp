@@ -5,22 +5,8 @@
 
 
 
-
-//
-static BigInt inv(BigInt num, BigInt mod) {
-    if(num == 0 || mod <= 0) throw std::runtime_error("no inverse");
-    BigInt a = mod(num, mod), b = mod;
-    BigInt x = 0, y = 1, u = 1, v = 0;
-    while(a != 0) {
-        BigInt q = b / a;
-        BigInt r = b % a;
-        BigInt m = x - u * q;
-        BigInt n = y - v * q;
-        b = a; a = r; x = u; y = v; u = m; v = n;
-    }
-    if(b == 1) return mod(x, mod);
-    throw std::runtime_error("no inverse");
-}
+//?======================================================
+//? Math specific implementation (except operators)
 
 //
 Ecc_Point Ecc_Point::multiply(const BigInt &scalar) const {
@@ -39,22 +25,10 @@ Ecc_Point Ecc_Point::multiply(const BigInt &scalar) const {
 }
 
 //
-// Проверка равенства точек (по видимым аффинным координатам)
-/*bool Ecc_Point::equals(const Ecc_Point &other) const {
-    BigInt X1Z2 = mod(px * other.pz, P);
-    BigInt X2Z1 = mod(other.px * pz, P);
-    BigInt Y1Z2 = mod(py * other.pz, P);
-    BigInt Y2Z1 = mod(other.py * pz, P);
-    return (X1Z2 == X2Z1 && Y1Z2 == Y2Z1);
-}*/
-
-//
 Ecc_Point Ecc_Point::doublePoint() const {
-    if (this->isInfinity || yCoord.isZero()) {
-        return Ecc_Point();
-    }
-
-    BigInt lambda = (BigInt(static_cast<unsigned long int>(3)) * xCoord * xCoord + curveParams.a) * inv(BigInt(static_cast<unsigned long int>(2)) * yCoord, curveParams.p);
+    //if (this->isInfinity || yCoord.isZero()) { return Ecc_Point(); };
+    if (this->isInfinity || yCoord == 0) { return Ecc_Point(); };
+    BigInt lambda = (BigInt(static_cast<unsigned long int>(3)) * xCoord * xCoord + curveParams.a) * bmath::inv(BigInt(static_cast<unsigned long int>(2)) * yCoord, curveParams.p);
     BigInt x3 = (lambda * lambda - BigInt(static_cast<unsigned long int>(2)) * xCoord) % curveParams.p;
     BigInt y3 = (lambda * (xCoord - x3) - yCoord) % curveParams.p;
     return Ecc_Point(x3, y3);
@@ -62,11 +36,11 @@ Ecc_Point Ecc_Point::doublePoint() const {
 
 //
 AffinePoint Ecc_Point::toAffine() const {
-    if (equals(ZERO)) return {0, 0};
+    if (*this == ZERO) return {0, 0};
     if (pz == 1) return {px, py};
-    BigInt iz = inv(pz, P);
-    if (mod(pz * iz, P) != 1) throw std::runtime_error("inverse invalid");
-    return { mod(px * iz, P), mod(py * iz, P) };
+    BigInt iz = bmath::inv(pz, P);
+    if (bmath::(pz * iz, P) != 1) throw std::runtime_error("inverse invalid");
+    return { bmath::mod(px * iz, P), bmath::mod(py * iz, P) };
 }
 
 //
@@ -74,6 +48,19 @@ static Ecc_Point Ecc_Point::fromAffine(const AffinePoint &pt) {
     if(pt.x == 0 && pt.y == 0) return ZERO;
     return Ecc_Point(pt.x, pt.y, 1);
 }
+
+
+
+
+
+
+//?======================================================
+//? HEX and bytes ops
+
+//
+static BigInt curve(BigInt x, BigIntB B, BigIntB P) {
+    return std::mod(std::mod(x * x, P) * x + B);
+};
 
 //
 static Ecc_Point Ecc_Point::fromHex(const std::string &hexStr) {
@@ -86,13 +73,13 @@ static Ecc_Point Ecc_Point::fromHex(const std::string &hexStr) {
     BigInt x = b2n(xBytes); // преобразование байтов в BigInt (функция b2n ниже)
     // Для сжатого представления определяем y через sqrt(x^3+7) с учетом четности.
     if (len == 33) {
-        if (x <= 0 || x >= BASE.P) throw std::runtime_error("Point hex invalid: x not FE");
-        BigInt lambda = mod(curve(x), BASE.P); // вычисляем x^3+7 mod P
-        BigInt y = MathUtil::squareRootBI(lambda);
+        if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point hex invalid: x not FE");
+        BigInt lambda = bmath::mod(curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
+        BigInt y = bmath::squareRootBI(lambda);
         bool isYOdd = (y & 1) == 1;
         bool headOdd = (hex[0] & 1) == 1; // если префикс 0x03 – нечётное, 0x02 – чётное
         if(isYOdd != headOdd)
-            y = mod(-y, BASE.P);
+            y = bmath::mod(-y, curveParams.p);
         return Ecc_Point(x, y, 1).assertValidity();
     }
     // Если несжатый формат, x – первые 32 байта после префикса 0x04, y – следующие 32 байта.
@@ -105,33 +92,6 @@ static Ecc_Point Ecc_Point::fromHex(const std::string &hexStr) {
     }
     throw std::runtime_error("Point invalid: not on curve");
 }
-
-
-
-
-
-//
-Ecc_Point Ecc_Point::assertValidity() const {
-    AffinePoint a = toAffine();
-    if(a.x <= 0 || a.x >= P || a.y <= 0 || a.y >= P) throw std::runtime_error("Point invalid: x or y");
-    if (mod(a.y * a.y, P) != mod((a.x * a.x * a.x) + 7, P)) throw std::runtime_error("Point invalid: not on curve");
-    return *this;
-}
-
-//
-std::string Ecc_Point::toHex(bool isCompressed = true) const {
-    AffinePoint a = toAffine();
-    std::string head = isCompressed ? ((a.y & 1) == 0 ? "02" : "03") : "04";
-    return head + n2h(a.x) + (isCompressed ? "" : n2h(a.y));
-}
-
-//─────────────────────────────────────────────────────────────
-// Дополнительные преобразования для вывода числа в hex-строку (например, для отладки)
-/*inline std::string n2h(const U256 &num) {
-    std::ostringstream oss;
-    for (size_t i = 0; i < num.size(); i++) { oss << std::hex << std::setw(8) << std::setfill('0') << num[num.size()-1-i]; };
-    return oss.str();
-}*/
 
 //
 static std::string Ecc_Point::n2h(const BigInt &num) {
@@ -150,8 +110,25 @@ static BigInt b2n(const Bytes &b) {
     return res;
 }
 
+//
+Ecc_Point Ecc_Point::assertValidity() const {
+    AffinePoint a = toAffine();
+    if(a.x <= 0 || a.x >= P || a.y <= 0 || a.y >= P) throw std::runtime_error("Point invalid: x or y");
+    if (bmath::mod(a.y * a.y, P) != bmath::mod((a.x * a.x * a.x) + 7, P)) throw std::runtime_error("Point invalid: not on curve");
+    return *this;
+}
 
+//
+Bytes Ecc_Point::toRawBytes(bool isCompressed = true) const {
+    return HexUtil::hexToBytes(toHex(isCompressed));
+}
 
+//
+std::string Ecc_Point::toHex(bool isCompressed = true) const {
+    AffinePoint a = toAffine();
+    std::string head = isCompressed ? ((a.y & 1) == 0 ? "02" : "03") : "04";
+    return head + n2h(a.x) + (isCompressed ? "" : n2h(a.y));
+}
 
 //
 void Ecc_Point::print() const {
@@ -164,12 +141,13 @@ void Ecc_Point::print() const {
     }
 }
 
-//
-Bytes Ecc_Point::toRawBytes(bool isCompressed = true) const {
-    return HexUtil::hexToBytes(toHex(isCompressed));
-}
 
 
+
+
+
+//?======================================================
+//? Curves definitions
 
 //
 static const CurveParameters& Ecc_Point::GetCurveParameters() {
@@ -218,4 +196,29 @@ void Ecc_Point::setCurveParameters() {
     #else
         #error "No elliptic curve defined"
     #endif
+
+    //
+    Ecc_Point::BASE = Ecc_Point(curveParams.Gx, curveParams.Gy, 1);
 }
+
+
+
+//?======================================================
+//? Unused functions
+
+//
+/*inline std::string n2h(const U256 &num) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < num.size(); i++) { oss << std::hex << std::setw(8) << std::setfill('0') << num[num.size()-1-i]; };
+    return oss.str();
+}*/
+
+//
+// Проверка равенства точек (по видимым аффинным координатам)
+/*bool Ecc_Point::equals(const Ecc_Point &other) const {
+    BigInt X1Z2 = bmath::mod(px * other.pz, P);
+    BigInt X2Z1 = bmath::mod(other.px * pz, P);
+    BigInt Y1Z2 = bmath::mod(py * other.pz, P);
+    BigInt Y2Z1 = bmath::mod(other.py * pz, P);
+    return (X1Z2 == X2Z1 && Y1Z2 == Y2Z1);
+}*/
