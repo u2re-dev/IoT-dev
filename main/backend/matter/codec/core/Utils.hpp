@@ -3,7 +3,7 @@
 #include "./Types.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
-// 
+//
 namespace Bytes {
     inline ByteArray concat(const std::initializer_list<ByteArray>& arrays) {
         ByteArray result;
@@ -84,26 +84,32 @@ public:
     inline void writeUInt8(uint8_t value) {
         data.push_back(value);
     }
-    
+
     inline void writeUInt16(uint16_t value) {
         data.push_back(static_cast<Byte>(value & 0xff));
         data.push_back(static_cast<Byte>((value >> 8) & 0xff));
     }
-    
+
     inline void writeUInt32(uint32_t value) {
         for (int i = 0; i < 4; ++i)
             data.push_back(static_cast<Byte>((value >> (8*i)) & 0xff));
     }
-    
+
     inline void writeUInt64(uint64_t value) {
-        for (int i = 0; i < 8; ++i) 
+        for (int i = 0; i < 8; ++i)
             data.push_back(static_cast<Byte>((value >> (8*i)) & 0xff));
     }
-    
+
+    // Запись массива байт: сначала длина, затем сами данные
+    //inline void writeByteArray(const ByteArray& data) {
+        //writeUInt64(data.size());
+        //buffer.insert(buffer.end(), data.begin(), data.end());
+    //}
+
     inline void writeByteArray(const ByteArray& arr) {
         data.insert(data.end(), arr.begin(), arr.end());
     }
-    
+
     inline ByteArray toByteArray() const {
         return data;
     }
@@ -116,7 +122,7 @@ private:
 //
 class DataWriterLL {
 public:
-    DataWriterLL(uint8_t* buffer, size_t bufferSize) : 
+    DataWriterLL(uint8_t* buffer, size_t bufferSize) :
     ptr(buffer), data(buffer), capacity(bufferSize) {};
 
     inline void writeUInt8(uint8_t value) {
