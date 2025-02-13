@@ -11,8 +11,8 @@
 
 //
 eccp_t eccp_t::multiply(const bigint_t &scalar) const {
-    if(scalar == 0) return ZERO;
-    if(scalar <= 0 || scalar >= N) throw std::runtime_error("scalar invalid");
+    if (scalar == 0) return ZERO;
+    if (scalar <= 0 || scalar >= N) throw std::runtime_error("scalar invalid");
     eccp_t result = ZERO;
     eccp_t addend = *this;
     bigint_t n = scalar;
@@ -60,25 +60,26 @@ static eccp_t eccp_t::fromAffine(const affine_t &pt) {
 
 //
 static eccp_t eccp_t::fromHex(const std::string &hexStr) {
-    bytes_t hex = HexUtil::hexToBytes(hexStr);
+    bytes_t hex = hex::hexToBytes(hexStr);
     size_t len = hex.size();
     if (len != 33 && len != 65) throw std::runtime_error("Invalid point hex length");
 
-    // Извлекаем x – следующие 32 байта после префикса.
-    bytes_t xbytes_t(hex.begin() + 1, hex.begin() + 1 + 32);
-    bigint_t x = b2n(xbytes_t); // преобразование байтов в bigint_t (функция b2n ниже)
-    // Для сжатого представления определяем y через sqrt(x^3+7) с учетом четности.
+    // get first 32-bytes
+    bytes_t      bytes(hex.begin() + 1, hex.begin() + 1 + 32);
+    bigint_t x = b2n(bytes);
+
+    // compressed
     if (len == 33) {
         if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point hex invalid: x not FE");
         bigint_t lambda = bmath::mod(bmath::curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
-        bigint_t y = bmath::squareRootBI(lambda);
-        bool isYOdd = (y & 1) == 1;
-        bool headOdd = (hex[0] & 1) == 1; // если префикс 0x03 – нечётное, 0x02 – чётное
-        if(isYOdd != headOdd)
-            y = bmath::mod(-y, curveParams.p);
+        bigint_t y      = bmath::squareRootBI(lambda);
+        bool isYOdd     = (y & 1) == 1;
+        bool headOdd    = (hex[0] & 1) == 1;
+        if(isYOdd != headOdd) y = bmath::mod(-y, curveParams.p);
         return eccp_t(x, y, 1).assertValidity();
     }
-    // Если несжатый формат, x – первые 32 байта после префикса 0x04, y – следующие 32 байта.
+
+    // uncompressed
     if (len == 65 && hex[0] == 0x04) {
         bytes_t xB(hex.begin() + 1, hex.begin() + 1 + 32);
         bytes_t yB(hex.begin() + 1 + 32, hex.end());
@@ -86,6 +87,8 @@ static eccp_t eccp_t::fromHex(const std::string &hexStr) {
         bigint_t yVal = b2n(yB);
         return eccp_t(xVal, yVal, 1).assertValidity();
     }
+
+    //
     throw std::runtime_error("Point invalid: not on curve");
 }
 
@@ -101,8 +104,7 @@ static std::string eccp_t::n2h(const bigint_t &num) {
 //
 static bigint_t b2n(const bytes_t &b) {
     bigint_t res = 0;
-    for(auto byte : b)
-        res = (res << 8) | byte;
+    for (auto byte : b) res = (res << 8) | byte;
     return res;
 }
 
@@ -116,7 +118,7 @@ eccp_t eccp_t::assertValidity() const {
 
 //
 bytes_t eccp_t::toRawbytes_t(bool isCompressed = true) const {
-    return HexUtil::hexToBytes(toHex(isCompressed));
+    return hex::hexToBytes(toHex(isCompressed));
 }
 
 //
