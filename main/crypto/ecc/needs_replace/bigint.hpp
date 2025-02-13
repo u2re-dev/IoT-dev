@@ -1,6 +1,8 @@
 #ifndef BIGINT_HPP
 #define BIGINT_HPP
 
+//
+#ifdef ENABLE_GMP_BIGINT
 #include <gmp.h>
 #include <string>
 #include <vector>
@@ -8,6 +10,7 @@
 #include <stdexcept>
 #include <cstdint>
 
+//
 #if defined(_WIN32) || defined(_WIN64)
     #include <windows.h>
     #include <wincrypt.h>
@@ -355,3 +358,4 @@ private:
 };
 
 #endif // BIGINT_HPP
+#endif

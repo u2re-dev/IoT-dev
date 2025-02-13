@@ -227,11 +227,18 @@ public:
     //?======================================================
     //? Operations
 
-    // Создание точки из аффинных координат: (x,y) -> (x, y, 1)
+    //
     static Ecc_Point fromAffine(const AffinePoint &pt);
 
-    // Приведение проективной точки к аффинному виду: (x,y,z) -> (x/z, y/z)
+    //
     AffinePoint toAffine() const;
+
+    //
+    Ecc_Point multiply(const BigInt &scalar) const;
+
+    //
+    bool equals(const Ecc_Point &other) const;
+
 
     /**
      * @brief Doubles this Ecc_Point on the elliptic curve.
@@ -249,8 +256,6 @@ public:
      * @return Ecc_Point representing the doubled point 2P on the elliptic curve.
      */
     Ecc_Point doublePoint() const;
-    Ecc_Point multiply(const BigInt &scalar) const;
-    bool equals(const Ecc_Point &other) const;
 
     /**
      * @brief Get the x-coordinate of the Ecc_Point.

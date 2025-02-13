@@ -1,4 +1,7 @@
 #include "bigint.hpp"
+
+//
+#ifdef ENABLE_GMP_BIGINT
 #include <stdexcept>
 #include <iostream>
 
@@ -227,7 +230,7 @@ void BigInt::printAbsolute() const {
 }
 
 void BigInt::addByte(unsigned char byte) {
-    mpz_mul_2exp(value, value, 8);  
+    mpz_mul_2exp(value, value, 8);
     mpz_add_ui(value, value, byte);
 }
 
@@ -295,3 +298,4 @@ std::string bigIntToString(const BigInt& bigint) {
 
     return result;
 }
+#endif
