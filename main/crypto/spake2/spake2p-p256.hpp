@@ -6,13 +6,13 @@
 #include "../ecc/ecc.hpp"
 
 //
-constexpr uint8_t  H_VERSION   = 0x01;
+constexpr  uint8_t H_VERSION   = 0x01;
 constexpr uint16_t SER_VERSION = 0x0001;
 
 //
 constexpr size_t CRYPTO_GROUP_SIZE_BYTES = 32;
-constexpr size_t CRYPTO_W_SIZE_BYTES = CRYPTO_GROUP_SIZE_BYTES + 8;
-constexpr size_t PBKDF2_OUTLEN = CRYPTO_W_SIZE_BYTES * 2;
+constexpr size_t CRYPTO_W_SIZE_BYTES     = CRYPTO_GROUP_SIZE_BYTES + 8;
+constexpr size_t PBKDF2_OUTLEN           = CRYPTO_W_SIZE_BYTES     * 2;
 
 //
 struct SecretAndVerifiers {
@@ -29,10 +29,11 @@ struct PbkdfParameters {
 
 //
 class Spake2p {
-public: //
+public:
+
+    // from-client generation (may be in server due of some limitations)
     static std::pair<uint256_t, uint256_t> computeW0W1(const PbkdfParameters& pbkdfParameters, uint32_t pin) {
-        bytes_t pinbytes_t(4);
-        for (size_t i = 0; i < 4; i++) { pinbytes_t[i] = static_cast<uint8_t>((pin >> (8 * i)) & 0xff); }
+        bytes_t pinbytes_t(4); for (size_t i = 0; i < 4; i++) { pinbytes_t[i] = static_cast<uint8_t>((pin >> (8 * i)) & 0xff); }
 
         //
         constexpr size_t   CRYPTO_W_SIZE_BYTES = 40;
@@ -43,63 +44,67 @@ public: //
         if (ws.size() < outputLen) throw std::runtime_error("pbkdf2: недостаточная длина вывода");
 
         //
-        uint256_t w0 = hex::bytesToBigint(bytes_t(ws.begin()                      , ws.begin() +     CRYPTO_W_SIZE_BYTES));
-        uint256_t w1 = hex::bytesToBigint(bytes_t(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.begin() + 2 * CRYPTO_W_SIZE_BYTES));
+        uint256_t w0 = mod(hex::bytesToBigint(bytes_t(ws.begin()                      , ws.begin() +     CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
+        uint256_t w1 = mod(hex::bytesToBigint(bytes_t(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.begin() + 2 * CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
 
         //
-        w0 = mod(w0, eccp_t::getCurveOrder());
-        w1 = mod(w1, eccp_t::getCurveOrder());
         return { w0, w1 };
     }
 
-    //
-    static std::pair<uint256_t, bytes_t> computeW0L( std::pair<uint256_t, uint256_t> const& w0w1) {
-        auto [w0, w1] = w0w1;
-        bytes_t L = (eccp_t::getBase() * w1).toBytes(false);
-        return { w0, L };
+    // from-server generation (alternate version)
+    static std::pair<uint256_t, bytes_t> computeW0L(const PbkdfParameters& pbkdfParameters, uint32_t pin) {
+        const auto [w0, w1] = computeW0W1(pbkdfParameters, pin);
+        return { w0, computeL(w1) };
+    }
+
+    // from-server generation (just only L generate)
+    static bytes_t computeL(uint256_t const& w1) {
+        return (eccp_t::getBase() * w1).toBytes(false);
     }
 
     //
     static Spake2p create(const bytes_t& context, uint256_t w0) {
-        uint256_t random = crypto::getRandombigint_t(32, getCurveOrder());
+        uint256_t random = crypto::getRandomBigint(32, eccp_t::getCurveOrder());
         return Spake2p(context, random, w0);
     }
 
-    //
+    // from-client
     bytes_t computeX() const {
-        eccp_t part1 = eccp_t::getBase() * random_;
-        eccp_t part2 = eccp_t::getM()    * w0_;
-        return (part1 + part2).toBytes(false);
+        eccp_t Br  = eccp_t::getBase() * random_;
+        eccp_t Mw0 = eccp_t::getM()    * w0_;
+        return (Br + Mw0).toBytes(false);
     }
 
-    //
+    // from-server
     bytes_t computeY() const {
-        eccp_t part1 = eccp_t::getBase() * random_;
-        eccp_t part2 = eccp_t::getN()    * w0_;
-        return (part1 + part2).toBytes(false);
+        eccp_t Br  = eccp_t::getBase() * random_;
+        eccp_t Nw0 = eccp_t::getN()    * w0_;
+        return (Br + Nw0).toBytes(false);
     }
 
-    //
-    SecretAndVerifiers computeSecretAndVerifiersFromY(uint256_t w1, const bytes_t& X, const bytes_t& Y) const {
-        eccp_t Yp   = eccp_t::fromBytes(Y); Yp.assertValidity();
-        eccp_t yNwo = Yp - (eccp_t::getN() * w0_);
-        eccp_t Z    = yNwo * random_;
-        eccp_t V    = yNwo * w1;
+    // to-server (X and L from client)
+    SecretAndVerifiers computeSecretAndVerifiersFromX(const bytes_t& X, const bytes_t& Y, const bytes_t& L) const {
+        eccp_t Lp = eccp_t::fromBytes(L);
+        eccp_t Xp = eccp_t::fromBytes(X); Xp.assertValidity();
+        eccp_t Br = Xp - (eccp_t::getM() * w0_);
+        eccp_t Z  = Br * random_; // multiply to server random
+        eccp_t V  = Lp * random_; // multiply to server random
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
-    //
-    SecretAndVerifiers computeSecretAndVerifiersFromX(const bytes_t& L, const bytes_t& X, const bytes_t& Y) const {
-        eccp_t Xp = eccp_t::fromBytes(X); Xp.assertValidity();
-        eccp_t Lp = eccp_t::fromBytes(L);
-        eccp_t Z  = (Xp - (eccp_t::getM() * w0_)) * random_;
-        eccp_t V  =  Lp * random_;
+    // to-client (Y and w1 from server)
+    SecretAndVerifiers computeSecretAndVerifiersFromY(const bytes_t& X, const bytes_t& Y, const bytes_t& w1b) const {
+        eccp_t w1 = eccp_t::fromBytes(w1b);
+        eccp_t Yp = eccp_t::fromBytes(Y); Yp.assertValidity();
+        eccp_t Br = Yp - (eccp_t::getN() * w0_);
+        eccp_t Z  = Br * random_; // multiply to client random
+        eccp_t V  = Br * w1;     // multiply to client w1
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
 private:
     SecretAndVerifiers computeSecretAndVerifiers(const bytes_t& X, const bytes_t& Y, const bytes_t& Z, const bytes_t& V) const {
-        bytes_t transcript = computeTranscriptHash(X, Y, Z, V);
+        bytes_t    transcript    = computeTranscriptHash(X, Y, Z, V);
         bytes_t Ka(transcript.begin()     , transcript.begin() + 16);
         bytes_t Ke(transcript.begin() + 16, transcript.begin() + 32);
 
@@ -122,37 +127,36 @@ private:
     //
     bytes_t computeTranscriptHash(const bytes_t& X, const bytes_t& Y, const bytes_t& Z, const bytes_t& V) const {
         DataWriter writer;
-        addToContext(writer, context_);
+        writer.writeBytes(context_);
 
         // ? required
-        addToContext(writer, bytes_t{});
-        addToContext(writer, bytes_t{});
+        writer.writeBytes(bytes_t{});
+        writer.writeBytes(bytes_t{});
 
         // N and M write
-        addToContext(writer, M().toBytes(false));
-        addToContext(writer, N().toBytes(false));
+        writer.writeBytes(M().toBytes(false));
+        writer.writeBytes(N().toBytes(false));
 
         // X, Y, Z, V points
-        addToContext(writer, X);
-        addToContext(writer, Y);
-        addToContext(writer, Z);
-        addToContext(writer, V);
+        writer.writeBytes(X);
+        writer.writeBytes(Y);
+        writer.writeBytes(Z);
+        writer.writeBytes(V);
 
         // writing w0 and compute hash
-        addToContext(writer, numberToBytesBE(w0_, 32));
+        writer.writeBytes(numberToBytesBE(w0_, 32));
         return crypto::hash(writer.toBytes());
     }
 
     //
-    static void addToContext(DataWriter& writer, const bytes_t& data) {
-        writer.writeBytes(data);
-    }
+    Spake2p(const bytes_t& context, uint256_t random, uint256_t w0, uint256_t w1) : context_(context), random_(random), w0_(w0), w1_(w1) {}
 
     //
-    Spake2p(const bytes_t& context, uint256_t random, uint256_t w0) : context_(context), random_(random), w0_(w0) {}
-
-    //
-    bytes_t context_;
+      bytes_t context_;
     uint256_t random_;
     uint256_t w0_;
+
+    //
+    //uint256_t w1_; // server-holder
+    //uint256_t L_;  // client-holder
 };
