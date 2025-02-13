@@ -4,6 +4,7 @@
 //
 #ifndef _C_SPAKE_H
 #define _C_SPAKE_H
+#ifdef ENABLE_ED25519
 
     //
     #ifdef __cplusplus
@@ -43,4 +44,5 @@
     }
     #endif
 
+#endif
 #endif

@@ -1,4 +1,7 @@
 #include "blake2b.hpp"
+
+//
+#ifdef ENABLE_BLAKDE2B
 #include <cstring>
 #include <stdexcept> // For std::invalid_argument
 
@@ -167,3 +170,4 @@ void BLAKE2b::mix(uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d, uint64_t x
     c = c + d;
     b = rotr64(b ^ c, 63);
 }
+#endif

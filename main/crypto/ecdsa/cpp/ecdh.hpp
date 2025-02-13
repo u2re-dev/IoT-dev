@@ -2,6 +2,7 @@
 #define ECDH_HPP
 
 //
+#ifdef ENABLE_ECDH
 #include "../../ecc/ecc.hpp"
 //#include "bigint.hpp"
 
@@ -44,4 +45,5 @@ namespace ECDH {
 
 } // namespace ECDH
 
+#endif
 #endif // ECDH_HPP

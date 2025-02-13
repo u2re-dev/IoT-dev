@@ -2,6 +2,7 @@
 #define BLAKE2B_HPP
 
 //
+#ifdef ENABLE_BLAKDE2B
 #include <array>
 #include <vector>
 #include <cstdint>
@@ -80,4 +81,5 @@ private:
 
 // Definition of the IV constants
 
+#endif
 #endif // BLAKE2B_HPP

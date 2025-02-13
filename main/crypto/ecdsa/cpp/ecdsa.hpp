@@ -1,6 +1,8 @@
 #ifndef ECDSA_HPP
 #define ECDSA_HPP
 
+//
+#ifdef ENABLE_ECDSA
 #include "ecdh.hpp"
 #include "../../blake2b/blake2b.hpp"
 #include <utility>
@@ -89,4 +91,5 @@ private:
     // Additional private methods or member variables
 };
 
+#endif
 #endif // ECDSA_HPP

@@ -1,5 +1,7 @@
 #include "ecdh.hpp"
-//#include "ecc.hpp"
+
+//
+#ifdef ENABLE_ECDH
 #include <iostream>
 
 //
@@ -17,3 +19,4 @@ namespace ECDH {
         return otherPublicKey * privateKey;
     }
 }
+#endif

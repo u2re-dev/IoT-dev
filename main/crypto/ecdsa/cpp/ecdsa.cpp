@@ -1,6 +1,7 @@
 #include "ecdsa.hpp"
-//#include "ecc.hpp"
-//#include "bigint.hpp"
+
+//
+#ifdef ENABLE_ECDSA
 #include <iomanip>
 #include <sstream>
 
@@ -69,3 +70,4 @@ bool ECDSA::verify(const Ecc_Point& publicKey, const std::vector<uint8_t>& messa
     // 5. The signature is valid if x mod n equals r.
     return (point.getX() % curveParams.n == r);
 }
+#endif
