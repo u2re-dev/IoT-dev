@@ -16,9 +16,9 @@ constexpr size_t PBKDF2_OUTLEN           = CRYPTO_W_SIZE_BYTES     * 2;
 
 //
 struct SecretAndVerifiers {
-    bytes_t Ke;  // Ключ Ke (обычно 16 байт)
-    bytes_t hAY; // HMAC от Y с ключом KcA (например, 16 байт)
-    bytes_t hBX; // HMAC от X с ключом KcB (например, 16 байт)
+    bytes_t Ke;
+    bytes_t hAY;
+    bytes_t hBX;
 };
 
 //
@@ -68,6 +68,8 @@ public:
         return Spake2p(context, random, w0);
     }
 
+
+
     // from-client
     bytes_t computeX() const {
         eccp_t Br  = eccp_t::getBase() * random_;
@@ -82,23 +84,25 @@ public:
         return (Br + Nw0).toBytes(false);
     }
 
-    // to-server (X and L from client)
-    SecretAndVerifiers computeSecretAndVerifiersFromX(const bytes_t& X, const bytes_t& Y, const bytes_t& L) const {
+
+
+    // to-server (X and L from client), aka. by Y
+    SecretAndVerifiers computeSecretAndVerifiersFromX(const bytes_t& Y,   const bytes_t& X, const bytes_t& L) const {
         eccp_t Lp = eccp_t::fromBytes(L);
         eccp_t Xp = eccp_t::fromBytes(X); Xp.assertValidity();
-        eccp_t Br = Xp - (eccp_t::getM() * w0_);
-        eccp_t Z  = Br * random_; // multiply to server random
-        eccp_t V  = Lp * random_; // multiply to server random
+        eccp_t Br = Xp - (eccp_t::getM() * w0_); // client's           (BASE * client_random)
+        eccp_t Z  = Br * random_; // multiply to server random   (i.e. (BASE * client_random) * server_random)
+        eccp_t V  = Lp * random_; // multiply to server random   (i.e. (BASE * w1           ) * server_random)
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
-    // to-client (Y and w1 from server)
-    SecretAndVerifiers computeSecretAndVerifiersFromY(const bytes_t& X, const bytes_t& Y, const bytes_t& w1b) const {
+    // to-client (Y and w1 from server), aka. by X
+    SecretAndVerifiers computeSecretAndVerifiersFromY(const bytes_t& X,   const bytes_t& Y, const bytes_t& w1b) const {
         eccp_t w1 = eccp_t::fromBytes(w1b);
         eccp_t Yp = eccp_t::fromBytes(Y); Yp.assertValidity();
-        eccp_t Br = Yp - (eccp_t::getN() * w0_);
-        eccp_t Z  = Br * random_; // multiply to client random
-        eccp_t V  = Br * w1;     // multiply to client w1
+        eccp_t Br = Yp - (eccp_t::getN() * w0_); // server's           (BASE * server_random)
+        eccp_t Z  = Br * random_; // multiply to client random   (i.e. (BASE * server_random) * client_random)
+        eccp_t V  = Br * w1;      // multiply to client w1       (i.e. (BASE * server_random) * w1           )
         return computeSecretAndVerifiers(X, Y, Z.toBytes(false), V.toBytes(false));
     }
 
