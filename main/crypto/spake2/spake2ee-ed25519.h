@@ -1,3 +1,4 @@
+#pragma once
 /* Originally: https://github.com/jedisct1/spake2-ee */
 
 //
