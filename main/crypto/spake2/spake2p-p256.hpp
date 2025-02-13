@@ -39,7 +39,7 @@ public: //
         size_t outputLen = CRYPTO_W_SIZE_BYTES * 2;
 
         //
-        bytes_t ws = Crypto::pbkdf2(pinbytes_t, pbkdfParameters.salt, pbkdfParameters.iterations, outputLen);
+        bytes_t ws = crypto::pbkdf2(pinbytes_t, pbkdfParameters.salt, pbkdfParameters.iterations, outputLen);
         if (ws.size() < outputLen) throw std::runtime_error("pbkdf2: недостаточная длина вывода");
 
         //
@@ -61,7 +61,7 @@ public: //
 
     //
     static Spake2p create(const bytes_t& context, uint256_t w0) {
-        uint256_t random = Crypto::getRandombigint_t(32, getCurveOrder());
+        uint256_t random = crypto::getRandombigint_t(32, getCurveOrder());
         return Spake2p(context, random, w0);
     }
 
@@ -105,7 +105,7 @@ private:
 
         //
         bytes_t info = stringToBytes("ConfirmationKeys");
-        bytes_t KcAB = Crypto::hkdf(Ka, bytes_t{}, info, 32);
+        bytes_t KcAB = crypto::hkdf(Ka, bytes_t{}, info, 32);
 
         //
         bytes_t KcA(KcAB.begin()     , KcAB.begin() + 16);
@@ -114,8 +114,8 @@ private:
         //
         SecretAndVerifiers result;
         result.Ke  = Ke;
-        result.hAY = Crypto::hmac(KcA, Y);
-        result.hBX = Crypto::hmac(KcB, X);
+        result.hAY = crypto::hmac(KcA, Y);
+        result.hBX = crypto::hmac(KcB, X);
         return result;
     }
 
@@ -140,7 +140,7 @@ private:
 
         // writing w0 and compute hash
         addToContext(writer, numberToBytesBE(w0_, 32));
-        return Crypto::hash(writer.toBytes());
+        return crypto::hash(writer.toBytes());
     }
 
     //
