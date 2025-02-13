@@ -294,13 +294,18 @@ public:
      */
     void print() const;
 
-
-
     // Парсинг точки из hex‑строки (поддерживается как сжатый, так и несжатый формат).
     // Для сжатого формата: 33 байта (первый байт – 0x02 или 0x03, далее 32 байта x).
     static eccp_t fromHex(const std::string &hexStr);
+    static eccp_t fromBytes(const bytes_t &bytes);
     static std::string n2h(const bigint_t &num);
-    bytes_t toRawbytes_t(bool isCompressed = true) const;
+
+    //
+    //bytes_t toRawBytes(bool isCompressed = true) const; // deprecated method
+    bytes_t toBytes(bool isCompressed = true) const;
+
+    //
+    eccp_t::toBytes(uint8_t* output, bool isCompressed = true);
     eccp_t assertValidity() const;
 
     //

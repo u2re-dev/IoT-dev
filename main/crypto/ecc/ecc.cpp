@@ -59,37 +59,42 @@ static eccp_t eccp_t::fromAffine(const affine_t &pt) {
 //? HEX and bytes ops
 
 //
-static eccp_t eccp_t::fromHex(const std::string &hexStr) {
-    bytes_t hex = hex::hexToBytes(hexStr);
-    size_t len = hex.size();
-    if (len != 33 && len != 65) throw std::runtime_error("Invalid point hex length");
+static eccp_t eccp_t::fromBytes(const bytes_t& bytes) {
+    size_t len = bytes.size();
+    if (len != 33 && len != 65) throw std::runtime_error("Invalid point bytes length");
 
     // get first 32-bytes
-    bytes_t      bytes(hex.begin() + 1, hex.begin() + 1 + 32);
-    bigint_t x = b2n(bytes);
+     bytes_t bytes(bytes.begin() + 1, bytes.begin() + 1 + 32);
+    bigint_t x = hex::b2n(bytes);
 
     // compressed
     if (len == 33) {
-        if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point hex invalid: x not FE");
+        if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point bytes invalid: x not FE");
         bigint_t lambda = bmath::mod(bmath::curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
         bigint_t y      = bmath::squareRootBI(lambda);
         bool isYOdd     = (y & 1) == 1;
-        bool headOdd    = (hex[0] & 1) == 1;
+        bool headOdd    = (bytes[0] & 1) == 1;
         if(isYOdd != headOdd) y = bmath::mod(-y, curveParams.p);
         return eccp_t(x, y, 1).assertValidity();
     }
 
     // uncompressed
     if (len == 65 && hex[0] == 0x04) {
-        bytes_t xB(hex.begin() + 1, hex.begin() + 1 + 32);
-        bytes_t yB(hex.begin() + 1 + 32, hex.end());
-        bigint_t xVal = b2n(xB);
-        bigint_t yVal = b2n(yB);
+        bytes_t xB(bytes.begin() + 1     , bytes.begin() + 1 + 32);
+        bytes_t yB(bytes.begin() + 1 + 32, bytes.end()           );
+        bigint_t xVal = hex::b2n(xB);
+        bigint_t yVal = hex::b2n(yB);
         return eccp_t(xVal, yVal, 1).assertValidity();
     }
 
     //
     throw std::runtime_error("Point invalid: not on curve");
+}
+
+//
+static eccp_t eccp_t::fromHex(const std::string &hexStr) {
+    bytes_t hex = hex::hexToBytes(hexStr);
+    return fromBytes(hex);
 }
 
 //
@@ -101,12 +106,7 @@ static std::string eccp_t::n2h(const bigint_t &num) {
     return s;
 }
 
-//
-static bigint_t b2n(const bytes_t &b) {
-    bigint_t res = 0;
-    for (auto byte : b) res = (res << 8) | byte;
-    return res;
-}
+
 
 //
 eccp_t eccp_t::assertValidity() const {
@@ -116,9 +116,29 @@ eccp_t eccp_t::assertValidity() const {
     return *this;
 }
 
+// deprecated
+//bytes_t eccp_t::toRawbytes(bool isCompressed = true) const {
+    //return hex::hexToBytes(toHex(isCompressed));
+//}
+
 //
-bytes_t eccp_t::toRawbytes_t(bool isCompressed = true) const {
-    return hex::hexToBytes(toHex(isCompressed));
+bytes_t eccp_t::toBytes(bool isCompressed = true) const {
+    bytes_t b = bytes_t(65);
+    toBytes(b.data(), isCompressed);
+    return b;
+}
+
+//
+void eccp_t::toBytes(uint8_t* output, bool isCompressed = true) const {
+    affine_t a = toAffine();
+    if (isCompressed) {
+        output[0] = (a.y & 1) == 0 ? 0x02 : 0x03;
+        hex::n2b(a.x, output + 1, 32);
+    } else {
+        output[0] = 0x04;
+        hex::n2b(a.x, output + 1, 32);
+        hex::n2b(a.y, output + 17, 32);
+    }
 }
 
 //

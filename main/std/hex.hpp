@@ -25,14 +25,14 @@ namespace hex {
     * @endcode
     */
 
-    // Преобразование массива байт в hex‑строку.
+    //
     inline std::string bytesToHex(const bytes_t& bytes) {
         std::ostringstream oss;
         for (auto b : bytes) oss << std::hex << std::setw(2) << std::setfill('0') << (int)b;
         return oss.str();
     }
 
-    // Преобразование hex‑строки в массив байт.
+    //
     inline bytes_t hexToBytes(const std::string& hex) {
         if (hex.size() % 2 != 0) throw std::invalid_argument("hex invalid");
         bytes_t array;
@@ -45,8 +45,11 @@ namespace hex {
         return array;
     }
 
+
+
+
     //
-    inline uint256_t bytesToBigint(const bytes_t& bytes) {
+    inline bigint_t bytesToBigint(const bytes_t& bytes) {
         // Простой пример: интерпретировать массив байт как число (big-endian).
         uint256_t res = 0;
         for (size_t i = 0; i < bytes.size(); i++) {
@@ -56,7 +59,7 @@ namespace hex {
     }
 
     // Функция для преобразования числа в массив байт в big-endian с фиксированной длиной.
-    inline bytes_t numberToBytesBE(uint256_t num, size_t byteLen) {
+    inline bytes_t numberToBytesBE(bigint_t num, size_t byteLen) {
         bytes_t bytes(byteLen, 0);
         for (size_t i = 0; i < byteLen; i++) {
             bytes[byteLen - 1 - i] = static_cast<uint8_t>(num & 0xff);
@@ -68,5 +71,30 @@ namespace hex {
     // Функция для преобразования строки в bytes_t (ASCII)
     inline bytes_t stringToBytes(const std::string& str) {
         return bytes_t(str.begin(), str.end());
+    }
+
+
+
+    //
+    inline bigint_t b2n(const uint8_t* b) {
+        bigint_t res = 0;
+        //for (uint i=0;i<32;i++) res |= (b[i] << 8); // LE
+          for (uint i=0;i<32;i++) res  = (res  << 8) | byte; // BE
+        return res;
+    }
+
+    //
+    inline bigint_t b2n(const bytes_t &b) {
+        bigint_t res = 0;
+        //for (auto byte : b) res |= (byte << 8); // LE
+          for (auto byte : b) res  = (res  << 8) | byte; // BE
+        return res;
+    }
+
+    //
+    inline void n2b(bigint_t num, uint8_t* buffer, size_t size = 32) {
+        for (size_t i = 0; i < size; ++i) {
+            buffer[size - 1 - i] = static_cast<uint8_t>(num >> (i * 8));
+        }
     }
 }
