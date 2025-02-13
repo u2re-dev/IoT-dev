@@ -33,7 +33,7 @@ namespace hex {
     }
 
     // Преобразование hex‑строки в массив байт.
-    inline bytes_t hexTobytes_t(const std::string& hex) {
+    inline bytes_t hexToBytes(const std::string& hex) {
         if (hex.size() % 2 != 0) throw std::invalid_argument("hex invalid");
         bytes_t array;
         array.reserve(hex.size() / 2);
@@ -46,7 +46,7 @@ namespace hex {
     }
 
     //
-    inline uint256_t bytesTobigint_t(const bytes_t& bytes) {
+    inline uint256_t bytesToBigint(const bytes_t& bytes) {
         // Простой пример: интерпретировать массив байт как число (big-endian).
         uint256_t res = 0;
         for (size_t i = 0; i < bytes.size(); i++) {
@@ -56,7 +56,7 @@ namespace hex {
     }
 
     // Функция для преобразования числа в массив байт в big-endian с фиксированной длиной.
-    inline bytes_t numberTobytes_tBE(uint256_t num, size_t byteLen) {
+    inline bytes_t numberToBytesBE(uint256_t num, size_t byteLen) {
         bytes_t bytes(byteLen, 0);
         for (size_t i = 0; i < byteLen; i++) {
             bytes[byteLen - 1 - i] = static_cast<uint8_t>(num & 0xff);
@@ -66,7 +66,7 @@ namespace hex {
     }
 
     // Функция для преобразования строки в bytes_t (ASCII)
-    inline bytes_t stringTobytes_t(const std::string& str) {
+    inline bytes_t stringToBytes(const std::string& str) {
         return bytes_t(str.begin(), str.end());
     }
 }

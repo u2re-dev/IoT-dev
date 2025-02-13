@@ -60,7 +60,7 @@ static eccp_t eccp_t::fromAffine(const affine_t &pt) {
 
 //
 static eccp_t eccp_t::fromHex(const std::string &hexStr) {
-    bytes_t hex = HexUtil::hexTobytes_t(hexStr);
+    bytes_t hex = HexUtil::hexToBytes(hexStr);
     size_t len = hex.size();
     if (len != 33 && len != 65) throw std::runtime_error("Invalid point hex length");
 
@@ -116,7 +116,7 @@ eccp_t eccp_t::assertValidity() const {
 
 //
 bytes_t eccp_t::toRawbytes_t(bool isCompressed = true) const {
-    return HexUtil::hexTobytes_t(toHex(isCompressed));
+    return HexUtil::hexToBytes(toHex(isCompressed));
 }
 
 //

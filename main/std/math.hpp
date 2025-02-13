@@ -3,7 +3,7 @@
 
 //
 namespace bmath {
-        // Функция возведения в степень по модулю (подход getPowMod из TS-кода).
+    // Функция возведения в степень по модулю (подход getPowMod из TS-кода).
     // floorFn – функция целочисленного деления; для встроенных целых типов стандартное деление уже округляет вниз.
     template<typename FloorFn, typename T = bigint_t>
     inline T powMod(const T base, T exponent, const T modulus, FloorFn floorFn) {
