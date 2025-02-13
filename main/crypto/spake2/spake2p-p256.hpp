@@ -3,7 +3,9 @@
 //
 #include "../../std/types.hpp"
 #include "../../std/hex.hpp"
+#include "../../std/types.hpp"
 #include "../ecc/ecc.hpp"
+#include "./crypto.hpp"
 
 //
 constexpr  uint8_t H_VERSION   = 0x01;
@@ -31,7 +33,7 @@ struct PbkdfParameters {
 class Spake2p {
 public:
 
-    // from-client generation (may be in server due of some limitations)
+    // from-server generation (may be in server due of some limitations)
     static std::pair<uint256_t, uint256_t> computeW0W1(const PbkdfParameters& pbkdfParameters, uint32_t pin) {
         bytes_t pinbytes_t(4); for (size_t i = 0; i < 4; i++) { pinbytes_t[i] = static_cast<uint8_t>((pin >> (8 * i)) & 0xff); }
 
@@ -44,8 +46,8 @@ public:
         if (ws.size() < outputLen) throw std::runtime_error("pbkdf2: недостаточная длина вывода");
 
         //
-        uint256_t w0 = mod(hex::bytesToBigint(bytes_t(ws.begin()                      , ws.begin() +     CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
-        uint256_t w1 = mod(hex::bytesToBigint(bytes_t(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.begin() + 2 * CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
+        uint256_t w0 = bmath::mod(hex::bytesToBigint(bytes_t(ws.begin()                      , ws.begin() +     CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
+        uint256_t w1 = bmath::mod(hex::bytesToBigint(bytes_t(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.begin() + 2 * CRYPTO_W_SIZE_BYTES)), eccp_t::getCurveOrder());
 
         //
         return { w0, w1 };
@@ -57,7 +59,7 @@ public:
         return { w0, computeL(w1) };
     }
 
-    // from-server generation (just only L generate)
+    // from-client generation (just only L generate)
     static bytes_t computeL(uint256_t const& w1) {
         return (eccp_t::getBase() * w1).toBytes(false);
     }
@@ -97,8 +99,8 @@ public:
     }
 
     // to-client (Y and w1 from server), aka. by X
-    SecretAndVerifiers computeSecretAndVerifiersFromY(const bytes_t& X,   const bytes_t& Y, const bytes_t& w1b) const {
-        eccp_t w1 = eccp_t::fromBytes(w1b);
+    SecretAndVerifiers computeSecretAndVerifiersFromY(const bytes_t& X,   const bytes_t& Y, const bigint_t& w1) const {
+        //eccp_t w1 = eccp_t::fromBytes(w1b);
         eccp_t Yp = eccp_t::fromBytes(Y); Yp.assertValidity();
         eccp_t Br = Yp - (eccp_t::getN() * w0_); // server's           (BASE * server_random)
         eccp_t Z  = Br * random_; // multiply to client random   (i.e. (BASE * server_random) * client_random)
@@ -113,7 +115,7 @@ private:
         bytes_t Ke(transcript.begin() + 16, transcript.begin() + 32);
 
         //
-        bytes_t info = stringToBytes("ConfirmationKeys");
+        bytes_t info = hex::stringToBytes("ConfirmationKeys");
         bytes_t KcAB = crypto::hkdf(Ka, bytes_t{}, info, 32);
 
         //
@@ -138,8 +140,8 @@ private:
         writer.writeBytes(bytes_t{});
 
         // N and M write
-        writer.writeBytes(M().toBytes(false));
-        writer.writeBytes(N().toBytes(false));
+        writer.writeBytes(eccp_t::getM().toBytes(false));
+        writer.writeBytes(eccp_t::getM().toBytes(false));
 
         // X, Y, Z, V points
         writer.writeBytes(X);
@@ -148,12 +150,12 @@ private:
         writer.writeBytes(V);
 
         // writing w0 and compute hash
-        writer.writeBytes(numberToBytesBE(w0_, 32));
+        writer.writeBytes(hex::numberToBytesBE(w0_, 32));
         return crypto::hash(writer.toBytes());
     }
 
     //
-    Spake2p(const bytes_t& context, uint256_t random, uint256_t w0, uint256_t w1) : context_(context), random_(random), w0_(w0), w1_(w1) {}
+    Spake2p(const bytes_t& context, uint256_t random, uint256_t w0) : context_(context), random_(random), w0_(w0) {}
 
     //
       bytes_t context_;

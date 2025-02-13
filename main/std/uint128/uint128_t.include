@@ -65,7 +65,7 @@ class uint128_t{
     public:
         // Constructors
         uint128_t() = default;
-        uint128_t(const uint128_t & rhs) = default;
+        uint128_t(uint128_t const& rhs) = default;
         uint128_t(uint128_t && rhs) = default;
 
         // do not use prefixes (0x, 0b, etc.)
@@ -104,7 +104,7 @@ class uint128_t{
         //  RHS input args only
 
         // Assignment Operator
-        uint128_t & operator=(const uint128_t & rhs) = default;
+        uint128_t & operator=(uint128_t const& rhs) = default;
         uint128_t & operator=(uint128_t && rhs) = default;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
@@ -131,7 +131,7 @@ class uint128_t{
         operator uint64_t() const;
 
         // Bitwise Operators
-        uint128_t operator&(const uint128_t & rhs) const;
+        uint128_t operator&(uint128_t const& rhs) const;
 
         void export_bits(std::vector<uint8_t> & ret) const;
 
@@ -140,7 +140,7 @@ class uint128_t{
             return uint128_t(0, LOWER & (uint64_t) rhs);
         }
 
-        uint128_t & operator&=(const uint128_t & rhs);
+        uint128_t & operator&=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator&=(const T & rhs){
@@ -149,14 +149,14 @@ class uint128_t{
             return *this;
         }
 
-        uint128_t operator|(const uint128_t & rhs) const;
+        uint128_t operator|(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator|(const T & rhs) const{
             return uint128_t(UPPER, LOWER | (uint64_t) rhs);
         }
 
-        uint128_t & operator|=(const uint128_t & rhs);
+        uint128_t & operator|=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator|=(const T & rhs){
@@ -164,14 +164,14 @@ class uint128_t{
             return *this;
         }
 
-        uint128_t operator^(const uint128_t & rhs) const;
+        uint128_t operator^(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator^(const T & rhs) const{
             return uint128_t(UPPER, LOWER ^ (uint64_t) rhs);
         }
 
-        uint128_t & operator^=(const uint128_t & rhs);
+        uint128_t & operator^=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator^=(const T & rhs){
@@ -182,14 +182,14 @@ class uint128_t{
         uint128_t operator~() const;
 
         // Bit Shift Operators
-        uint128_t operator<<(const uint128_t & rhs) const;
+        uint128_t operator<<(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator<<(const T & rhs) const{
             return *this << uint128_t(rhs);
         }
 
-        uint128_t & operator<<=(const uint128_t & rhs);
+        uint128_t & operator<<=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator<<=(const T & rhs){
@@ -197,14 +197,14 @@ class uint128_t{
             return *this;
         }
 
-        uint128_t operator>>(const uint128_t & rhs) const;
+        uint128_t operator>>(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator>>(const T & rhs) const{
             return *this >> uint128_t(rhs);
         }
 
-        uint128_t & operator>>=(const uint128_t & rhs);
+        uint128_t & operator>>=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator>>=(const T & rhs){
@@ -214,8 +214,8 @@ class uint128_t{
 
         // Logical Operators
         bool operator!() const;
-        bool operator&&(const uint128_t & rhs) const;
-        bool operator||(const uint128_t & rhs) const;
+        bool operator&&(uint128_t const& rhs) const;
+        bool operator||(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator&&(const T & rhs) const{
@@ -228,42 +228,42 @@ class uint128_t{
         }
 
         // Comparison Operators
-        bool operator==(const uint128_t & rhs) const;
+        bool operator==(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator==(const T & rhs) const{
             return (!UPPER && (LOWER == (uint64_t) rhs));
         }
 
-        bool operator!=(const uint128_t & rhs) const;
+        bool operator!=(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator!=(const T & rhs) const{
             return (UPPER | (LOWER != (uint64_t) rhs));
         }
 
-        bool operator>(const uint128_t & rhs) const;
+        bool operator>(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator>(const T & rhs) const{
             return (UPPER || (LOWER > (uint64_t) rhs));
         }
 
-        bool operator<(const uint128_t & rhs) const;
+        bool operator<(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator<(const T & rhs) const{
             return (!UPPER)?(LOWER < (uint64_t) rhs):false;
         }
 
-        bool operator>=(const uint128_t & rhs) const;
+        bool operator>=(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator>=(const T & rhs) const{
             return ((*this > rhs) | (*this == rhs));
         }
 
-        bool operator<=(const uint128_t & rhs) const;
+        bool operator<=(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         bool operator<=(const T & rhs) const{
@@ -271,42 +271,42 @@ class uint128_t{
         }
 
         // Arithmetic Operators
-        uint128_t operator+(const uint128_t & rhs) const;
+        uint128_t operator+(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator+(const T & rhs) const{
             return uint128_t(UPPER + ((LOWER + (uint64_t) rhs) < LOWER), LOWER + (uint64_t) rhs);
         }
 
-        uint128_t & operator+=(const uint128_t & rhs);
+        uint128_t & operator+=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator+=(const T & rhs){
             return *this += uint128_t(rhs);
         }
 
-        uint128_t operator-(const uint128_t & rhs) const;
+        uint128_t operator-(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator-(const T & rhs) const{
             return uint128_t((uint64_t) (UPPER - ((LOWER - rhs) > LOWER)), (uint64_t) (LOWER - rhs));
         }
 
-        uint128_t & operator-=(const uint128_t & rhs);
+        uint128_t & operator-=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator-=(const T & rhs){
             return *this = *this - uint128_t(rhs);
         }
 
-        uint128_t operator*(const uint128_t & rhs) const;
+        uint128_t operator*(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator*(const T & rhs) const{
             return *this * uint128_t(rhs);
         }
 
-        uint128_t & operator*=(const uint128_t & rhs);
+        uint128_t & operator*=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator*=(const T & rhs){
@@ -314,7 +314,7 @@ class uint128_t{
         }
 
     private:
-        std::pair <uint128_t, uint128_t> divmod(const uint128_t & lhs, const uint128_t & rhs) const;
+        std::pair <uint128_t, uint128_t> divmod(uint128_t const& lhs, uint128_t const& rhs) const;
         void ConvertToVector(std::vector<uint8_t> & current, const uint64_t & val) const;
         // do not use prefixes (0x, 0b, etc.)
         // if the input string is too long, only right most characters are read
@@ -325,28 +325,28 @@ class uint128_t{
         void _init_bin(const char *s, std::size_t len);
 
     public:
-        uint128_t operator/(const uint128_t & rhs) const;
+        uint128_t operator/(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator/(const T & rhs) const{
             return *this / uint128_t(rhs);
         }
 
-        uint128_t & operator/=(const uint128_t & rhs);
+        uint128_t & operator/=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator/=(const T & rhs){
             return *this = *this / uint128_t(rhs);
         }
 
-        uint128_t operator%(const uint128_t & rhs) const;
+        uint128_t operator%(uint128_t const& rhs) const;
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t operator%(const T & rhs) const{
             return *this % uint128_t(rhs);
         }
 
-        uint128_t & operator%=(const uint128_t & rhs);
+        uint128_t & operator%=(uint128_t const& rhs);
 
         template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
         uint128_t & operator%=(const T & rhs){
@@ -387,84 +387,84 @@ UINT128_T_EXTERN extern const uint128_t uint128_1;
 
 // Bitwise Operators
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator&(const T & lhs, const uint128_t & rhs){
+uint128_t operator&(const T & lhs, uint128_t const& rhs){
     return rhs & lhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator&=(T & lhs, const uint128_t & rhs){
+T & operator&=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (rhs & lhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator|(const T & lhs, const uint128_t & rhs){
+uint128_t operator|(const T & lhs, uint128_t const& rhs){
     return rhs | lhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator|=(T & lhs, const uint128_t & rhs){
+T & operator|=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (rhs | lhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator^(const T & lhs, const uint128_t & rhs){
+uint128_t operator^(const T & lhs, uint128_t const& rhs){
     return rhs ^ lhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator^=(T & lhs, const uint128_t & rhs){
+T & operator^=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (rhs ^ lhs);
 }
 
 // Bitshift operators
-UINT128_T_EXTERN uint128_t operator<<(const bool     & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const uint8_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const uint16_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const uint32_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const uint64_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const int8_t   & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const int16_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const int32_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator<<(const int64_t  & lhs, const uint128_t & rhs);
+UINT128_T_EXTERN uint128_t operator<<(const bool     & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const uint8_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const uint16_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const uint32_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const uint64_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const int8_t   & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const int16_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const int32_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator<<(const int64_t  & lhs, uint128_t const& rhs);
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator<<=(T & lhs, const uint128_t & rhs){
+T & operator<<=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (uint128_t(lhs) << rhs);
 }
 
-UINT128_T_EXTERN uint128_t operator>>(const bool     & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const uint8_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const uint16_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const uint32_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const uint64_t & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const int8_t   & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const int16_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const int32_t  & lhs, const uint128_t & rhs);
-UINT128_T_EXTERN uint128_t operator>>(const int64_t  & lhs, const uint128_t & rhs);
+UINT128_T_EXTERN uint128_t operator>>(const bool     & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const uint8_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const uint16_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const uint32_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const uint64_t & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const int8_t   & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const int16_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const int32_t  & lhs, uint128_t const& rhs);
+UINT128_T_EXTERN uint128_t operator>>(const int64_t  & lhs, uint128_t const& rhs);
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator>>=(T & lhs, const uint128_t & rhs){
+T & operator>>=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (uint128_t(lhs) >> rhs);
 }
 
 // Comparison Operators
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator==(const T & lhs, const uint128_t & rhs){
+bool operator==(const T & lhs, uint128_t const& rhs){
     return (!rhs.upper() && ((uint64_t) lhs == rhs.lower()));
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator!=(const T & lhs, const uint128_t & rhs){
+bool operator!=(const T & lhs, uint128_t const& rhs){
     return (rhs.upper() | ((uint64_t) lhs != rhs.lower()));
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator>(const T & lhs, const uint128_t & rhs){
+bool operator>(const T & lhs, uint128_t const& rhs){
     return (!rhs.upper()) && ((uint64_t) lhs > rhs.lower());
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator<(const T & lhs, const uint128_t & rhs){
+bool operator<(const T & lhs, uint128_t const& rhs){
     if (rhs.upper()){
         return true;
     }
@@ -472,7 +472,7 @@ bool operator<(const T & lhs, const uint128_t & rhs){
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator>=(const T & lhs, const uint128_t & rhs){
+bool operator>=(const T & lhs, uint128_t const& rhs){
     if (rhs.upper()){
         return false;
     }
@@ -480,7 +480,7 @@ bool operator>=(const T & lhs, const uint128_t & rhs){
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-bool operator<=(const T & lhs, const uint128_t & rhs){
+bool operator<=(const T & lhs, uint128_t const& rhs){
     if (rhs.upper()){
         return true;
     }
@@ -489,55 +489,55 @@ bool operator<=(const T & lhs, const uint128_t & rhs){
 
 // Arithmetic Operators
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator+(const T & lhs, const uint128_t & rhs){
+uint128_t operator+(const T & lhs, uint128_t const& rhs){
     return rhs + lhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator+=(T & lhs, const uint128_t & rhs){
+T & operator+=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (rhs + lhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator-(const T & lhs, const uint128_t & rhs){
+uint128_t operator-(const T & lhs, uint128_t const& rhs){
     return -(rhs - lhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator-=(T & lhs, const uint128_t & rhs){
+T & operator-=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (-(rhs - lhs));
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator*(const T & lhs, const uint128_t & rhs){
+uint128_t operator*(const T & lhs, uint128_t const& rhs){
     return rhs * lhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator*=(T & lhs, const uint128_t & rhs){
+T & operator*=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (rhs * lhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator/(const T & lhs, const uint128_t & rhs){
+uint128_t operator/(const T & lhs, uint128_t const& rhs){
     return uint128_t(lhs) / rhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator/=(T & lhs, const uint128_t & rhs){
+T & operator/=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (uint128_t(lhs) / rhs);
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-uint128_t operator%(const T & lhs, const uint128_t & rhs){
+uint128_t operator%(const T & lhs, uint128_t const& rhs){
     return uint128_t(lhs) % rhs;
 }
 
 template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type >
-T & operator%=(T & lhs, const uint128_t & rhs){
+T & operator%=(T & lhs, uint128_t const& rhs){
     return lhs = static_cast <T> (uint128_t(lhs) % rhs);
 }
 
 // IO Operator
-UINT128_T_EXTERN std::ostream & operator<<(std::ostream & stream, const uint128_t & rhs);
+UINT128_T_EXTERN std::ostream & operator<<(std::ostream & stream, uint128_t const& rhs);
 #endif

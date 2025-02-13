@@ -19,6 +19,12 @@ namespace bmath {
         return result;
     }
 
+    template<typename T = bigint_t>
+    inline T mod(const T dividend, const T divisor) {
+        T r = dividend % divisor;
+        return (r >= 0) ? r : r + divisor;
+    }
+
     // Для целых типов C++ деление уже является целочисленным округлением вниз.
     template<typename T = bigint_t>
     inline T powModBI(const T base, T exponent, const T modulus) {
@@ -33,11 +39,7 @@ namespace bmath {
     }
 
     //
-    template<typename T = bigint_t>
-    inline T mod(const T dividend, const T divisor) {
-        T r = dividend % divisor;
-        return (r >= 0) ? r : r + divisor;
-    }
+    /**/
 
     //
     inline void zeroize(void* d, size_t n) {
@@ -46,14 +48,17 @@ namespace bmath {
     }
 
     //
-    inline bigint_t mod(const bigint_t dividend, const bigint_t divisor) {
+    inline bigint_t mod(
+        bigint_t const& dividend, 
+        bigint_t const& divisor
+    ) {
         bigint_t r = dividend % divisor;
         return (r >= 0) ? r : r + divisor;
     }
 
     //
     inline bigint_t curve(bigint_t x, bigint_t B, bigint_t P) {
-        return mod(mod(x * x, P) * x + B);
+        return mod(mod(x * x, P) * x + B, P);
     };
 
     // Простой вариант squareRoot для double
@@ -62,9 +67,9 @@ namespace bmath {
     }
 
     //
-    inline bigint_t inv(bigint_t num, bigint_t mod) {
-        if (num == 0 || mod <= 0) throw std::runtime_error("no inverse");
-        bigint_t a = mod(num, mod), b = mod;
+    inline bigint_t inv(bigint_t num, bigint_t md) {
+        if (num == 0 || md <= 0) throw std::runtime_error("no inverse");
+        bigint_t a = mod(num, md), b = md;
         bigint_t x = 0, y = 1, u = 1, v = 0;
         while (a != 0) {
             bigint_t q = b / a;
@@ -73,7 +78,7 @@ namespace bmath {
             bigint_t n = y - v * q;
             b = a; a = r; x = u; y = v; u = m; v = n;
         }
-        if (b == 1) return mod(x, mod);
+        if (b == 1) return mod(x, md);
         throw std::runtime_error("no inverse");
     }
 
@@ -131,7 +136,7 @@ namespace bmath {
                 tt = mod(tt * tt, p); i++;
                 if (i == m) return 0;
             }
-            bigint_t b = powModBI(c, powModBI(2, m - i - 1, p - 1), p);
+            bigint_t b = powModBI(c, powModBI(bigint_t(2), m - i - 1, p - 1), p);
             bigint_t b2 = mod(b * b, p);
             r = mod(r * b, p);
             t = mod(t * b2, p);

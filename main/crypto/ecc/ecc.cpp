@@ -1,26 +1,27 @@
 #include "ecc.hpp"
-#include "../../std/math.hpp"
 
 //
 #include <iostream>
 
-
+//
+eccp_t ZERO = eccp_t(0, 1, 0);
 
 //?======================================================
 //? Math specific implementation (except operators)
 
 //
 eccp_t eccp_t::multiply(const bigint_t &scalar) const {
-    if (scalar == 0) return ZERO;
-    if (scalar <= 0 || scalar >= N) throw std::runtime_error("scalar invalid");
+    if (scalar == 0 || this->isInfinity) { return ZERO; }
     eccp_t result = ZERO;
-    eccp_t addend = *this;
-    bigint_t n = scalar;
-    while(n > 0) {
-        if(n % 2 == 1)
-            result = result.add(addend);
-        addend = addend.doublePoint();
-        n /= 2;
+    eccp_t point  = *this;
+
+    bigint_t k = scalar;
+    while (k > bigint_t(static_cast<unsigned long int>(0))) {
+        if (k % bigint_t(static_cast<unsigned long int>(2)) != bigint_t(static_cast<unsigned long int>(0))) {
+            result = result + point;
+        }
+        point = point.doublePoint();
+        k /= bigint_t(static_cast<unsigned long int>(2));
     }
     return result;
 }
@@ -38,79 +39,23 @@ eccp_t eccp_t::doublePoint() const {
 //
 affine_t eccp_t::toAffine() const {
     if (*this == ZERO) return {0, 0};
-    if (pz == 1) return {px, py};
-    bigint_t iz = bmath::inv(pz, P);
-    if (bmath::(pz * iz, P) != 1) throw std::runtime_error("inverse invalid");
-    return { bmath::mod(px * iz, P), bmath::mod(py * iz, P) };
+    if (zCoord == 1) return {xCoord, yCoord};
+    auto& P = curveParams.p;
+    bigint_t iz = bmath::inv(zCoord, P);
+    if (bmath::mod(zCoord * iz, P) != 1) throw std::runtime_error("inverse invalid");
+    return { 
+        bmath::mod(xCoord * iz, P), 
+        bmath::mod(yCoord * iz, P) 
+    };
 }
 
-//
-static eccp_t eccp_t::fromAffine(const affine_t &pt) {
-    if(pt.x == 0 && pt.y == 0) return ZERO;
-    return eccp_t(pt.x, pt.y, 1);
-}
-
-
-
-
-
-
-//?======================================================
-//? HEX and bytes ops
-
-//
-static eccp_t eccp_t::fromBytes(const bytes_t& bytes) {
-    size_t len = bytes.size();
-    if (len != 33 && len != 65) throw std::runtime_error("Invalid point bytes length");
-
-    // get first 32-bytes
-     bytes_t bytes(bytes.begin() + 1, bytes.begin() + 1 + 32);
-    bigint_t x = hex::b2n(bytes);
-
-    // compressed
-    if (len == 33) {
-        if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point bytes invalid: x not FE");
-        bigint_t lambda = bmath::mod(bmath::curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
-        bigint_t y      = bmath::squareRootBI(lambda);
-        bool isYOdd     = (y & 1) == 1;
-        bool headOdd    = (bytes[0] & 1) == 1;
-        if(isYOdd != headOdd) y = bmath::mod(-y, curveParams.p);
-        return eccp_t(x, y, 1).assertValidity();
-    }
-
-    // uncompressed
-    if (len == 65 && hex[0] == 0x04) {
-        bytes_t xB(bytes.begin() + 1     , bytes.begin() + 1 + 32);
-        bytes_t yB(bytes.begin() + 1 + 32, bytes.end()           );
-        bigint_t xVal = hex::b2n(xB);
-        bigint_t yVal = hex::b2n(yB);
-        return eccp_t(xVal, yVal, 1).assertValidity();
-    }
-
-    //
-    throw std::runtime_error("Point invalid: not on curve");
-}
-
-//
-static eccp_t eccp_t::fromHex(const std::string &hexStr) {
-    bytes_t hex = hex::hexToBytes(hexStr);
-    return fromBytes(hex);
-}
-
-//
-static std::string eccp_t::n2h(const bigint_t &num) {
-    std::ostringstream oss;
-    oss << std::hex << num;
-    std::string s = oss.str();
-    if(s.size() < 64) s = std::string(64 - s.size(), '0') + s;
-    return s;
-}
 
 
 
 //
 eccp_t eccp_t::assertValidity() const {
     affine_t a = toAffine();
+    auto P = curveParams.p;
     if(a.x <= 0 || a.x >= P || a.y <= 0 || a.y >= P) throw std::runtime_error("Point invalid: x or y");
     if (bmath::mod(a.y * a.y, P) != bmath::mod((a.x * a.x * a.x) + 7, P)) throw std::runtime_error("Point invalid: not on curve");
     return *this;
@@ -122,14 +67,14 @@ eccp_t eccp_t::assertValidity() const {
 //}
 
 //
-bytes_t eccp_t::toBytes(bool isCompressed = true) const {
+bytes_t eccp_t::toBytes(bool isCompressed) const {
     bytes_t b = bytes_t(65);
     toBytes(b.data(), isCompressed);
     return b;
 }
 
 //
-void eccp_t::toBytes(uint8_t* output, bool isCompressed = true) const {
+void eccp_t::toBytes(uint8_t* output, bool isCompressed) const {
     affine_t a = toAffine();
     if (isCompressed) {
         output[0] = (a.y & 1) == 0 ? 0x02 : 0x03;
@@ -142,10 +87,10 @@ void eccp_t::toBytes(uint8_t* output, bool isCompressed = true) const {
 }
 
 //
-std::string eccp_t::toHex(bool isCompressed = true) const {
+std::string eccp_t::toHex(bool isCompressed) const {
     affine_t a = toAffine();
     std::string head = isCompressed ? ((a.y & 1) == 0 ? "02" : "03") : "04";
-    return head + n2h(a.x) + (isCompressed ? "" : n2h(a.y));
+    return head + hex::n2h(a.x) + (isCompressed ? "" : hex::n2h(a.y));
 }
 
 //
@@ -154,32 +99,13 @@ void eccp_t::print() const {
         std::cout << "Point at Infinity" << std::endl;
     } else {
         std::cout << "eccp_t Coordinates:" << std::endl;
-        std::cout << "x = " << xCoord.toString(16) << std::endl;
-        std::cout << "y = " << yCoord.toString(16) << std::endl;
+        std::cout << "x = " << xCoord.str(16) << std::endl;
+        std::cout << "y = " << yCoord.str(16) << std::endl;
     }
 }
 
 
 
-
-
-
-//?======================================================
-//? Curves definitions
-
-//
-static const CurveParameters& eccp_t::GetCurveParameters() {
-    static CurveParameters staticCurveParams;
-    static bool initialized = false;
-    if (!initialized) {
-        eccp_t temp;
-        temp.setCurveParameters();
-        temp.isInfinity=false;
-        staticCurveParams = temp.curveParams;
-        initialized = true;
-    }
-    return staticCurveParams;
-}
 
 //
 void eccp_t::setCurveParameters() {
@@ -214,9 +140,6 @@ void eccp_t::setCurveParameters() {
     #else
         #error "No elliptic curve defined"
     #endif
-
-    //
-    eccp_t::BASE = eccp_t(curveParams.Gx, curveParams.Gy, 1);
 }
 
 

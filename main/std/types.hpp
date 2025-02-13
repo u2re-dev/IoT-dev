@@ -15,6 +15,8 @@
 #include <functional>
 #include <atomic>
 #include <thread>
+#include <tuple>
+#include <random>
 
 // C-libs
 #include <cmath>
@@ -48,7 +50,7 @@ inline bytes_t concat(const std::initializer_list<bytes_t>& arrays) {
 //
 class DataReader {
 public:
-    inline DataReader(ByteArray const& data_) : begin(data_.data()), ptr(data_.data()), end(data_.data() + data_.size()) {}
+    inline DataReader(bytes_t const& data_) : begin(data_.data()), ptr(data_.data()), end(data_.data() + data_.size()) {}
     inline DataReader(uint8_t const* data_) : begin(data_), ptr(data_), end(nullptr) {}
 
 
@@ -87,26 +89,26 @@ public:
         return point;
     }
 
-    inline ByteArray readByteArray(size_t length) {
+    inline bytes_t readByteArray(size_t length) {
         checkSize(length);
-        ByteArray buf(ptr, ptr + length);
+        bytes_t buf(ptr, ptr + length);
         ptr += length;
         return buf;
     }
 
-    inline ByteArray remainingBytes() const {
-        return ByteArray(ptr, end);
+    inline bytes_t remainingBytes() const {
+        return bytes_t(ptr, end);
     }
 
 private:
     inline void checkSize(size_t n) const {
-        if (end && (ptr + n > end)) throw UnexpectedDataError("Unexpected end of data");
+        if (end && (ptr + n > end)) throw "Unexpected end of data";
     }
 
     //
-    const Byte* begin = nullptr;
-    const Byte* ptr   = nullptr;
-    const Byte* end   = nullptr;
+    const byte_t* begin = nullptr;
+    const byte_t* ptr   = nullptr;
+    const byte_t* end   = nullptr;
 };
 
 //
@@ -117,32 +119,31 @@ public:
     }
 
     inline void writeUInt16(uint16_t value) {
-        data.push_back(static_cast<Byte>(value & 0xff));
-        data.push_back(static_cast<Byte>((value >> 8) & 0xff));
+        data.push_back(static_cast<byte_t>(value & 0xff));
+        data.push_back(static_cast<byte_t>((value >> 8) & 0xff));
     }
 
     inline void writeUInt32(uint32_t value) {
         for (int i = 0; i < 4; ++i) {
-            data.push_back(static_cast<Byte>((value >> (8*i)) & 0xff));
+            data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
     inline void writeUInt64(uint64_t value) {
         for (int i = 0; i < 8; ++i) {
-            data.push_back(static_cast<Byte>((value >> (8*i)) & 0xff));
+            data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
-    inline void writeByteArray(const bytes_t& arr) {
+    inline void writeBytes(const bytes_t& arr) {
         data.insert(data.end(), arr.begin(), arr.end());
     }
 
-    inline ByteArray toByteArray() const {
+    inline bytes_t toBytes() const {
         return data;
     }
 
-private:
-    ByteArray data;
+private: bytes_t data;
 };
 
 //
@@ -174,7 +175,7 @@ public:
             { *ptr = static_cast<uint8_t>((value >> (8 * i)) & 0xff); ptr++; };
     }
 
-    inline void writeByteArray(const uint8_t* arr, size_t length) {
+    inline void writeBytes(const uint8_t* arr, size_t length) {
         ensureCapacity(length);
         memcpy(ptr, arr, length);
         ptr += length;

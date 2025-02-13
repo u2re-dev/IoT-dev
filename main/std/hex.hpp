@@ -76,10 +76,19 @@ namespace hex {
 
 
     //
+    inline std::string n2h(const bigint_t &num) {
+        std::ostringstream oss;
+        oss << std::hex << num;
+        std::string s = oss.str();
+        if(s.size() < 64) s = std::string(64 - s.size(), '0') + s;
+        return s;
+    }
+
+    //
     inline bigint_t b2n(const uint8_t* b) {
         bigint_t res = 0;
         //for (uint i=0;i<32;i++) res |= (b[i] << 8); // LE
-          for (uint i=0;i<32;i++) res  = (res  << 8) | byte; // BE
+          for (uint i=0;i<32;i++) res  = (res  << 8) | b[i]; // BE
         return res;
     }
 

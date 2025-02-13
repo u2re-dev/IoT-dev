@@ -4,7 +4,7 @@
 
 //
 #include "../../std/math.hpp"
-
+#include "../../std/hex.hpp"
 
 //?======================================================
 //? Curves Predeclated
@@ -54,9 +54,6 @@ public:
     //?======================================================
     //? Curve Specific
 
-    static const eccp_t ZERO = eccp_t(0, 1, 0);
-    static const eccp_t BASE;
-
     /**
      * @brief Retrieves a constant reference to the curve parameters.
      *
@@ -75,12 +72,15 @@ public:
      */
 
     //
-    static CurveParameters GetCurveParameters();
+    //static CurveParameters GetCurveParameters();
     static eccp_t getM() { return eccp_t::fromHex("02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f"); }
     static eccp_t getN() { return eccp_t::fromHex("03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49"); }
-    static eccp_t getBase() { return eccp_t::BASE; }
+    static eccp_t getBase() { 
+        auto params = GetCurveParameters();
+        return eccp_t(params.Gx, params.Gy, 1);
+    }
     static bigint_t getCurveOrder() { return bigint_t("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16); }
-    static bigint_t getP() const { return GetCurveParameters().p; }
+    static bigint_t getP() { return GetCurveParameters().p; }
 
 
     //?======================================================
@@ -98,13 +98,13 @@ public:
      * @param x The x-coordinate of the eccp_t.
      * @param y The y-coordinate of the eccp_t.
      */
-    eccp_t(const bigint_t& x, const bigint_t& y, const bigint_t& z = 1) : xCoord(x), yCoord(y), yCoord(z), isInfinity(false) { setCurveParameters(); }
+    eccp_t(const bigint_t& x, const bigint_t& y, const bigint_t& z = 1) : xCoord(x), yCoord(y), zCoord(z), isInfinity(false) { setCurveParameters(); }
 
     /**
      * @brief Copy constructor.
      * @param other The eccp_t to copy.
      */
-    eccp_t(const eccp_t& other) : xCoord(other.xCoord), yCoord(other.yCoord), isInfinity(other.isInfinity), curveParams(other.curveParams) {}
+    eccp_t(eccp_t const& other) : xCoord(other.xCoord), yCoord(other.yCoord), isInfinity(other.isInfinity), curveParams(other.curveParams) {}
 
 
     //?======================================================
@@ -123,11 +123,18 @@ public:
      * @param other The eccp_t to compare with this point.
      * @return True if the points are equal (both x and y coordinates match), false otherwise.
      */
-    bool operator==(const eccp_t& other) const {
+    bool operator==(eccp_t const& other) const {
         if (isInfinity && other.isInfinity) return true;
         if (isInfinity || other.isInfinity) return false;
         return (xCoord == other.xCoord) && (yCoord == other.yCoord) && (zCoord == other.zCoord);
     }
+
+
+
+    eccp_t operator-(eccp_t const& other) const {
+        return (*this) + (-other);
+    }
+
 
     /**
      * @brief Overloads the + operator for adding two eccp_ts.
@@ -147,14 +154,14 @@ public:
      * @param other The eccp_t to add to this point.
      * @return eccp_t representing the sum of this point and the other point.
      */
-    eccp_t operator+(const eccp_t& other) const {
+    eccp_t operator+(eccp_t const& other) const {
         if (this->isInfinity) return other;
         if (other.isInfinity) return *this;
         if (*this == -other) return eccp_t();
         if (*this == other) { return this->doublePoint(); }
 
         //
-        bigint_t lambda = (other.yCoord - yCoord) * (inv(other.xCoord - xCoord, curveParams.p));
+        bigint_t lambda = (other.yCoord - yCoord) * (bmath::inv(other.xCoord - xCoord, curveParams.p));
         bigint_t x3 = (lambda * lambda - xCoord - other.xCoord) % curveParams.p;
         bigint_t y3 = (lambda * (xCoord - x3) - yCoord) % curveParams.p;
         return eccp_t(x3, y3);
@@ -190,7 +197,7 @@ public:
      * @return eccp_t resulting from the scalar multiplication of this point by the scalar.
      */
     eccp_t operator*(const bigint_t& scalar) const {
-        if (scalar.isZero() || this->isInfinity) { return eccp_t(); }
+        if (scalar == 0 || this->isInfinity) { return eccp_t(); }
         eccp_t result;
         eccp_t point = *this;
 
@@ -210,7 +217,7 @@ public:
      * @param other The eccp_t to assign.
      * @return Reference to this eccp_t after assignment.
      */
-    eccp_t& operator=(const eccp_t& other) {
+    eccp_t& operator=(eccp_t const& other) {
         if (this != &other) {
             xCoord = other.xCoord;
             yCoord = other.yCoord;
@@ -226,7 +233,7 @@ public:
     //? Operations
 
     //
-    static eccp_t fromAffine(const affine_t &pt);
+    //static eccp_t fromAffine(const affine_t &pt);
 
     //
     affine_t toAffine() const;
@@ -296,17 +303,94 @@ public:
 
     // Парсинг точки из hex‑строки (поддерживается как сжатый, так и несжатый формат).
     // Для сжатого формата: 33 байта (первый байт – 0x02 или 0x03, далее 32 байта x).
-    static eccp_t fromHex(const std::string &hexStr);
-    static eccp_t fromBytes(const bytes_t &bytes);
-    static std::string n2h(const bigint_t &num);
+    //static eccp_t fromHex(const std::string &hexStr);
+    //static eccp_t fromBytes(const bytes_t &bytes);
+    //static std::string n2h(const bigint_t &num);
 
     //
     //bytes_t toRawBytes(bool isCompressed = true) const; // deprecated method
     bytes_t toBytes(bool isCompressed = true) const;
+    void toBytes(uint8_t* output, bool isCompressed = true) const;
+    std::string toHex(bool isCompressed) const;
 
     //
-    eccp_t::toBytes(uint8_t* output, bool isCompressed = true);
     eccp_t assertValidity() const;
+
+
+
+
+
+    //
+    static eccp_t fromAffine(const affine_t &pt) {
+        if(pt.x == 0 && pt.y == 0) return eccp_t(0, 1, 0);
+        return eccp_t(pt.x, pt.y, 1);
+    }
+
+    //?======================================================
+    //? HEX and bytes ops
+
+    //
+    static eccp_t fromBytes(const bytes_t& bytes) {
+        size_t len = bytes.size();
+        if (len != 33 && len != 65) throw std::runtime_error("Invalid point bytes length");
+
+        // get first 32-bytes
+        bytes_t xb(bytes.begin() + 1, bytes.begin() + 1 + 32);
+        bigint_t x = hex::b2n(xb);
+        
+        //
+        auto curveParams = GetCurveParameters();
+
+        // compressed
+        if (len == 33) {
+            if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point bytes invalid: x not FE");
+            bigint_t lambda = bmath::mod(bmath::curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
+            bigint_t y      = bmath::squareRootBI(lambda);
+            bool isYOdd     = (y & 1) == 1;
+            bool headOdd    = (xb[0] & 1) == 1;
+            if(isYOdd != headOdd) y = bmath::mod(-y, curveParams.p);
+            return eccp_t(x, y, 1).assertValidity();
+        }
+
+        // uncompressed
+        if (len == 65 && bytes[0] == 0x04) {
+            bytes_t xB(bytes.begin() + 1     , bytes.begin() + 1 + 32);
+            bytes_t yB(bytes.begin() + 1 + 32, bytes.end()           );
+            bigint_t xVal = hex::b2n(xB);
+            bigint_t yVal = hex::b2n(yB);
+            return eccp_t(xVal, yVal, 1).assertValidity();
+        }
+
+        //
+        throw std::runtime_error("Point invalid: not on curve");
+    }
+
+    //
+    static eccp_t fromHex(const std::string &hexStr) {
+        bytes_t hex = hex::hexToBytes(hexStr);
+        return fromBytes(hex);
+    }
+
+    //?======================================================
+    //? Curves definitions
+
+    //
+    static const CurveParameters GetCurveParameters() {
+        static CurveParameters staticCurveParams;
+        static bool initialized = false;
+        if (!initialized) {
+            eccp_t temp;
+            temp.setCurveParameters();
+            temp.isInfinity=false;
+            staticCurveParams = temp.curveParams;
+            initialized = true;
+        }
+        return staticCurveParams;
+    }
+
+
+
+
 
     //
     bool isInfinity;
@@ -330,4 +414,5 @@ private:
      */
     void setCurveParameters();
 };
+
 #endif // ECC_HPP
