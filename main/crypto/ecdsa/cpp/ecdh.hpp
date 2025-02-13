@@ -1,8 +1,9 @@
 #ifndef ECDH_HPP
 #define ECDH_HPP
 
-#include "ecc.hpp" 
-#include "bigint.hpp"
+//
+#include "../../ecc/ecc.hpp"
+//#include "bigint.hpp"
 
 /**
  * @file ecdh.hpp

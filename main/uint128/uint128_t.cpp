@@ -7,17 +7,9 @@
 const uint128_t uint128_0(0);
 const uint128_t uint128_1(1);
 
-uint128_t::uint128_t(const std::string & s, uint8_t base) {
-    init(s.c_str(), s.size(), base);
-}
-
-uint128_t::uint128_t(const char *s, const std::size_t len, uint8_t base) {
-    init(s, len, base);
-}
-
-uint128_t::uint128_t(const bool & b)
-    : uint128_t((uint8_t) b)
-{}
+uint128_t::uint128_t(const std::string & s, uint8_t base) { init(s.c_str(), s.size(), base); }
+uint128_t::uint128_t(const char *s, const std::size_t len, uint8_t base) { init(s, len, base); }
+uint128_t::uint128_t(const bool & b) : uint128_t((uint8_t) b) {}
 
 void uint128_t::init(const char *s, std::size_t len, uint8_t base) {
     if ((s == NULL) || !len || (s[0] == '\x00')){
@@ -581,14 +573,8 @@ uint128_t operator>>(const int64_t & lhs, const uint128_t & rhs){
 }
 
 std::ostream & operator<<(std::ostream & stream, const uint128_t & rhs){
-    if (stream.flags() & stream.oct){
-        stream << rhs.str(8);
-    }
-    else if (stream.flags() & stream.dec){
-        stream << rhs.str(10);
-    }
-    else if (stream.flags() & stream.hex){
-        stream << rhs.str(16);
-    }
+    if (stream.flags() & stream.oct) { stream << rhs.str(8); } else
+    if (stream.flags() & stream.dec) { stream << rhs.str(10); } else
+    if (stream.flags() & stream.hex) { stream << rhs.str(16); }
     return stream;
 }

@@ -45,8 +45,7 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
         "lsrs    %[v], %[v], #16\n\t"
         "adds    %[x], %[u]\n\t"
         "adcs    %[y], %[v]\n\t"
-        : [x] "+l" (x), [y] "+l" (y),
-          [u] "=&l" (tmp1), [v] "=&l" (tmp2), [w] "=&l" (tmp3)
+        : [x] "+l" (x), [y] "+l" (y), [u] "=&l" (tmp1), [v] "=&l" (tmp2), [w] "=&l" (tmp3)
         :
         : "cc"
     );

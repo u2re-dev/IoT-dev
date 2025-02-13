@@ -1,10 +1,8 @@
 
 #pragma once
 
-//////////////////////////////////////////////////////////
-// 2. Вспомогательные функции для hex‑строк и байтовых массивов
-//////////////////////////////////////////////////////////
-namespace HexUtil {
+//
+namespace hex {
 
     // Функция для преобразования hex-строки в ByteArray.
     /*inline ByteArray hexToBytes(const std::string& hex) {
@@ -68,4 +66,4 @@ namespace HexUtil {
         return ByteArray(str.begin(), str.end());
     }
 
-} // namespace HexUtil
+}

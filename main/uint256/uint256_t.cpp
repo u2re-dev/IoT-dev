@@ -9,17 +9,9 @@ const uint256_t uint256_0(0);
 const uint256_t uint256_1(1);
 const uint256_t uint256_max(uint128_t((uint64_t) -1, (uint64_t) -1), uint128_t((uint64_t) -1, (uint64_t) -1));
 
-uint256_t::uint256_t(const std::string & s, uint8_t base) {
-    init_from_base(s.c_str(), base);
-}
-
-uint256_t::uint256_t(const char * s, uint8_t base) {
-    init_from_base(s, base);
-}
-
-uint256_t::uint256_t(const bool & b)
-    : uint256_t((uint8_t) b)
-{}
+uint256_t::uint256_t(const std::string & s, uint8_t base) { init_from_base(s.c_str(), base); }
+uint256_t::uint256_t(const char * s, uint8_t base) { init_from_base(s, base); }
+uint256_t::uint256_t(const bool & b) : uint256_t((uint8_t) b) {}
 
 void uint256_t::init_from_base(const char * s, uint8_t base) {
     *this = 0;
@@ -173,24 +165,12 @@ uint256_t uint256_t::operator>>(const uint128_t & rhs) const{
 
 uint256_t uint256_t::operator>>(const uint256_t & rhs) const{
     const uint128_t shift = rhs.LOWER;
-    if (((bool) rhs.UPPER) | (shift >= uint128_256)){
-        return uint256_0;
-    }
-    else if (shift == uint128_128){
-        return uint256_t(UPPER);
-    }
-    else if (shift == uint128_0){
-        return *this;
-    }
-    else if (shift < uint128_128){
-        return uint256_t(UPPER >> shift, (UPPER << (uint128_128 - shift)) + (LOWER >> shift));
-    }
-    else if ((uint128_256 > shift) && (shift > uint128_128)){
-        return uint256_t(UPPER >> (shift - uint128_128));
-    }
-    else{
-        return uint256_0;
-    }
+    if (((bool) rhs.UPPER) | (shift >= uint128_256)) { return uint256_0;  } else
+    if (shift == uint128_128) { return uint256_t(UPPER); } else
+    if (shift == uint128_0)   { return *this; } else
+    if (shift <  uint128_128) { return uint256_t(UPPER >> shift, (UPPER << (uint128_128 - shift)) + (LOWER >> shift)); } else
+    if ((uint128_256 > shift) && (shift > uint128_128)) { return uint256_t(UPPER >> (shift - uint128_128)); } else
+    { return uint256_0; }
 }
 
 uint256_t & uint256_t::operator>>=(const uint128_t & shift){
@@ -243,12 +223,8 @@ bool uint256_t::operator>(const uint128_t & rhs) const{
 }
 
 bool uint256_t::operator>(const uint256_t & rhs) const{
-    if (UPPER == rhs.UPPER){
-        return (LOWER > rhs.LOWER);
-    }
-    if (UPPER > rhs.UPPER){
-        return true;
-    }
+    if (UPPER == rhs.UPPER) { return (LOWER > rhs.LOWER); }
+    if (UPPER >  rhs.UPPER) { return true; }
     return false;
 }
 
@@ -257,12 +233,8 @@ bool uint256_t::operator<(const uint128_t & rhs) const{
 }
 
 bool uint256_t::operator<(const uint256_t & rhs) const{
-    if (UPPER == rhs.UPPER){
-        return (LOWER < rhs.LOWER);
-    }
-    if (UPPER < rhs.UPPER){
-        return true;
-    }
+    if (UPPER == rhs.UPPER) { return (LOWER < rhs.LOWER); }
+    if (UPPER  < rhs.UPPER) { return true; }
     return false;
 }
 
@@ -353,10 +325,7 @@ uint256_t uint256_t::operator*(const uint256_t & rhs) const{
     first64  += uint128_t(products[3][3].lower());
 
     // combines the values, taking care of carry over
-    return uint256_t(first64 << uint128_64, uint128_0) +
-           uint256_t(third64.upper(), third64 << uint128_64) +
-           uint256_t(second64, uint128_0) +
-           uint256_t(fourth64);
+    return uint256_t(first64 << uint128_64, uint128_0) + uint256_t(third64.upper(), third64 << uint128_64) + uint256_t(second64, uint128_0) + uint256_t(fourth64);
 }
 
 uint256_t & uint256_t::operator*=(const uint128_t & rhs){
@@ -722,14 +691,8 @@ uint128_t & operator%=(uint128_t & lhs, const uint256_t & rhs){
 }
 
 std::ostream & operator<<(std::ostream & stream, const uint256_t & rhs){
-    if (stream.flags() & stream.oct){
-        stream << rhs.str(8);
-    }
-    else if (stream.flags() & stream.dec){
-        stream << rhs.str(10);
-    }
-    else if (stream.flags() & stream.hex){
-        stream << rhs.str(16);
-    }
+    if (stream.flags() & stream.oct) { stream << rhs.str(8);  } else
+    if (stream.flags() & stream.dec) { stream << rhs.str(10); } else
+    if (stream.flags() & stream.hex) { stream << rhs.str(16); }
     return stream;
 }

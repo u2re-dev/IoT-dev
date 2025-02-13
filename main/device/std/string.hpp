@@ -1,7 +1,7 @@
 #pragma once
 
 //
-#include "./std.hpp"
+#include "./types.hpp"
 
 //
 #ifdef USE_ARDUINO
@@ -24,7 +24,7 @@ class _StringWrite_ {
     std::atomic<char *> _chars_;
     std::atomic<size_t> _length_;
 
-public: 
+public:
     _StringWrite_() = delete;
 
     explicit _StringWrite_(_StringWrite_ const& _str_) {
@@ -48,7 +48,6 @@ public:
     }
 
 
-    
     char const& operator[] (int index) const {
         return ((char const*)_chars_)[index];
     }
@@ -96,7 +95,7 @@ class _StringView_ {
     std::atomic<char const*> _chars_;
     std::atomic<size_t> _length_;
 
-public: 
+public:
     _StringView_(_StringView_ const& _str_) {
         _chars_ = _str_.bytes();
         _length_ = _str_.length();
@@ -163,7 +162,7 @@ class _String_ {
     char _chars_[MAX_STRING_LENGTH];
     std::atomic<size_t> _length_;
 
-public: 
+public:
     _String_() {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         _length_ = 0u;
@@ -173,7 +172,7 @@ public:
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         memcpy((void*)_chars_, _str_.bytes(), _length_ = std::min(_str_.length(), MAX_STRING_LENGTH));
     }
-    
+
     _String_(char const* _str_) {
         bzero((void*)_chars_, MAX_STRING_LENGTH);
         memcpy((void*)_chars_, _str_, _length_ = std::min(strlen(_str_), MAX_STRING_LENGTH));

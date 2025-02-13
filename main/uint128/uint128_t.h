@@ -5,4 +5,3 @@
 #define UINT128_T_EXTERN _UINT128_T_IMPORT
 #include "uint128_t.include"
 #endif
-

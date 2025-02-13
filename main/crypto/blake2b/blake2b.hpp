@@ -1,6 +1,7 @@
 #ifndef BLAKE2B_HPP
 #define BLAKE2B_HPP
 
+//
 #include <array>
 #include <vector>
 #include <cstdint>
@@ -18,7 +19,7 @@ class BLAKE2b {
 public:
     /**
      * @brief Constructs a BLAKE2b hash object with optional hash length and key.
-     * 
+     *
      * @param cbHashLen Desired length of the hash output in bytes. Default is 64 bytes.
      * @param Key Optional key for keyed hashing. Empty vector means no key is used.
      */
@@ -26,7 +27,7 @@ public:
 
     /**
      * @brief Computes the BLAKE2b hash of the input message.
-     * 
+     *
      * @param M The input message to hash.
      * @return A vector containing the hash of the input message.
      */
@@ -36,7 +37,7 @@ private:
     static const std::array<uint64_t, 8> IV;
     static const std::array<std::array<uint8_t, 16>, 12> SIGMA;
 
-    
+
     std::array<uint64_t, 8> h; ///< Internal state.
     uint64_t t_low = 0, t_high = 0; ///< Counter (t) for the number of bytes hashed.
     uint8_t cbHashLen; ///< Desired length of the hash output.
@@ -44,14 +45,14 @@ private:
 
     /**
      * @brief Initializes the hash state with the optional key.
-     * 
+     *
      * @param Key The key used for keyed hashing. Empty vector means no key is used.
      */
     void initialize(const std::vector<uint8_t>& Key);
 
     /**
      * @brief Compresses a single 128-byte block of the message.
-     * 
+     *
      * @param block Pointer to the 128-byte block to compress.
      * @param isLastBlock Indicates if this is the last block of the message.
      */
@@ -59,7 +60,7 @@ private:
 
     /**
      * @brief Updates the hash state with a portion of the message.
-     * 
+     *
      * @param data Pointer to the message data to hash.
      * @param len Length of the message data in bytes.
      */
@@ -67,7 +68,7 @@ private:
 
     /**
      * @brief Finalizes the hash computation and produces the hash output.
-     * 
+     *
      * @param out Reference to a vector where the hash output will be stored.
      */
     void finalize(std::vector<uint8_t>& out);

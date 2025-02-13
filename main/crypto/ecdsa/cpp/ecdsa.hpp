@@ -2,7 +2,7 @@
 #define ECDSA_HPP
 
 #include "ecdh.hpp"
-#include "blake2b.hpp"
+#include "../../blake2b/blake2b.hpp"
 #include <utility>
 
 /**
