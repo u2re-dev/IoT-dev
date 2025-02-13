@@ -1,3 +1,4 @@
+#ifdef ENABLE_ECC_M
 
 /**********************************************************************
  *
@@ -54,3 +55,4 @@ cleanup:
     zeroize(s, sizeof s);
     return ret;
 }
+#endif

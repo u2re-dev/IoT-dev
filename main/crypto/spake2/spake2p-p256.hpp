@@ -1,13 +1,19 @@
-// =====================================================================
-// Структура, которая будет возвращаться в computeSecretAndVerifiers
+#pragma once
+
+//
 struct SecretAndVerifiers {
     ByteArray Ke;  // Ключ Ke (обычно 16 байт)
     ByteArray hAY; // HMAC от Y с ключом KcA (например, 16 байт)
     ByteArray hBX; // HMAC от X с ключом KcB (например, 16 байт)
 };
 
-// =====================================================================
-// Основной класс SPake2p. Он инкапсулирует всю логику протокола.
+//
+struct PbkdfParameters {
+    uint32_t iterations;
+    ByteArray salt;
+};
+
+//
 class Spake2p {
 public:
     // Фабричные статические методы.

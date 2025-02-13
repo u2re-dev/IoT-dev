@@ -1,31 +1,61 @@
 #pragma once
+#ifdef ENABLE_ECC_M
+
+//
 #include <array>
 #include <cstdint>
 #include <cstring>
+
+//
 #include <stdexcept>
 #include <string>
 #include <sstream>
+
+//
 #include <iomanip>
 #include <vector>
 
-// Для простоты определим типы для 256‐битового и 288‐битового числа как:
-using U256 = std::array<uint32_t, 8>;
-using U288 = std::array<uint32_t, 9>;
+//
+using U256  = std::array<uint32_t, 8>;
+using U288  = std::array<uint32_t, 9>;
 using Bytes = std::vector<uint8_t>;
 
-// Функция zeroize – гарантированное обнуление памяти (не оптимизируется компилятором)
-inline void zeroize(void* d, size_t n) {
-    volatile uint8_t* p = reinterpret_cast<volatile uint8_t*>(d);
-    while(n--) *p++ = 0;
-}
+//
+struct m256_mod {
+    U256 m;   // модуль (например, p или n)
+    U256 R2;  // R^2 mod m, где R = 2^256
+    uint32_t ni; // -m^-1 mod 2^32
+};
+
+//
+struct AffinePoint {
+    U256 x;
+    U256 y;
+};
+
+//
+struct JacobianPoint {
+    U256 X;
+    U256 Y;
+    U256 Z;
+};
+
+//
+static const m256_mod p256_p = {
+    { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000001, 0xFFFFFFFF },
+    { 0x00000003, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFB, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0x00000004 },
+    0x00000001
+};
+
+//
+static const m256_mod p256_n = {
+    { 0xFC632551, 0xF3B9CAC2, 0xA7179E84, 0xBCE6FAAD, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF },
+    { 0xBE79EEA2, 0x83244C95, 0x49BD6FA6, 0x4699799C, 0x2B6BEC59, 0x2845B239, 0xF3D95620, 0x66E12D94 },
+    0xEE00BC4F
+};
 
 //
 namespace p256_m {
-
-    //─────────────────────────────────────────────────────────────
-    // 1. Операции над 256‐битовыми числами (представленными массивом из 8 uint32_t, limbs в порядке LSF)
-    //─────────────────────────────────────────────────────────────
-
     // Установить U256 в значение x (где x < 2^32)
     inline void u256_set32(U256 &z, uint32_t x) {
         z[0] = x;
@@ -137,30 +167,7 @@ namespace p256_m {
         }
     }
 
-    //─────────────────────────────────────────────────────────────
-    // 5. Montgomery операции
-    // Структура, содержащая параметры для Montgomery-арифметики:
-    struct m256_mod {
-        U256 m;   // модуль (например, p или n)
-        U256 R2;  // R^2 mod m, где R = 2^256
-        uint32_t ni; // -m^-1 mod 2^32
-    };
 
-    // Для удобства определим модуль для кривой P-256 (поля) и для порядка n
-    static const m256_mod p256_p = {
-        /* mod m: представлено в виде 8-limb (LSF first) – значения взяты из C-кода */
-        /* Обратите внимание на порядок limbs – здесь мы используем тот же порядок, что и в u256_from_bytes */
-        { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000001, 0xFFFFFFFF },
-        { 0x00000003, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFB, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0x00000004 },
-        0x00000001
-    };
-
-    //
-    static const m256_mod p256_n = {
-        { 0xFC632551, 0xF3B9CAC2, 0xA7179E84, 0xBCE6FAAD, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF },
-        { 0xBE79EEA2, 0x83244C95, 0x49BD6FA6, 0x4699799C, 0x2B6BEC59, 0x2845B239, 0xF3D95620, 0x66E12D94 },
-        0xEE00BC4F
-    };
 
     // Функция Montgomery-умножения: вычисляет z = (x*y)/R mod m,
     // где входные значения x,y заданы в Montgomery-представлении, а результат также.
@@ -197,9 +204,9 @@ namespace p256_m {
         m256_mul(z, z, one, mod);
     }
 
-    //─────────────────────────────────────────────────────────────
-    // 6. Функции получения/экспорта модульных чисел из байтов
-    // Импорт числа из 32 байтов в U256 и перевод в Montgomery-область (возвращает 0, если число в диапазоне [0, m)).
+
+
+    //
     inline int m256_from_bytes(U256 &z, const uint8_t p[32], const m256_mod &mod) {
         u256_from_bytes(z, p);
         U256 t;
@@ -210,6 +217,7 @@ namespace p256_m {
         return 0;
     }
 
+    //
     inline void m256_to_bytes(uint8_t p[32], const U256 &z, const m256_mod &mod) {
         U256 zi;
         u256_cmov(zi, z, 1); // копирование
@@ -217,57 +225,5 @@ namespace p256_m {
         u256_to_bytes(p, zi);
     }
 
-    //─────────────────────────────────────────────────────────────
-    // Дополнительные функции (точечная арифметика, скалярное умножение, ECDH/ECDSA)
-    // Здесь приведены только прототипы и основные идеи. Полная реализация требует портирования
-    // всех вспомогательных функций из исходного C-кода (point_double, point_add, scalar_mult и т.д.).
-    //
-    // Например, можно оформить класс для работы с точками кривой P-256:
-    struct AffinePoint {
-        U256 x;
-        U256 y;
-    };
-
-    struct JacobianPoint {
-        U256 X;
-        U256 Y;
-        U256 Z;
-    };
-
-    // Прототип для преобразования точек из Якобианских координат в аффинные:
-    inline AffinePoint point_to_affine(const JacobianPoint &P) {
-        // Если Z == 0, трактуем как точку в бесконечности (возвращаем (0,0)).
-        if(u256_diff(P.Z) == 0)
-            return {{0}, {0}};
-        U256 zInv = P.Z;
-        zInv = P256_m::m256_inv(zInv, zInv, p256_p); // здесь нужно реализовать инверсию (не приведена полностью)
-        // Далее X_affine = X * zInv^2, Y_affine = Y * zInv^3, выполняются Montgomery умножения.
-        AffinePoint A;
-        // Реализуйте умножение с вызовом m256_mul и m256_done.
-        return A;
-    }
-
-    // Прототип скалярного умножения: R = s*P (P в аффинном виде)
-    // Функция scalar_mult(...) следует портировать по аналогии с исходным кодом.
-    inline void scalar_mult(U256 &rx, U256 &ry,
-                            const U256 &px, const U256 &py,
-                            const U256 &s) {
-        // Реализуйте алгоритм лестницы для умножения точки на скаляр.
-        // Для демонстрации оставляем заглушку.
-        rx = px; ry = py;
-    }
-
-    //─────────────────────────────────────────────────────────────
-    // Дальнейшие функции для работы с ECDH/ECDSA (импорт/экспорт точек, генерация ключей,
-    // ECDSA-сигнатуры и верификация) можно реализовать аналогичным образом, используя функции
-    // выше и дописывая защиту, zeroize и преобразования в Montgomery-форму.
-    //
-    // Обратите внимание, что реализация таких функций требует обеспечения защиты секретных данных,
-    // константно-временной арифметики и корректной работы при экспорте/импорте байтовых представлений.
-    //─────────────────────────────────────────────────────────────
-
-} // namespace p256_m
-
-
-
-// конец p256_m.hpp
+}
+#endif

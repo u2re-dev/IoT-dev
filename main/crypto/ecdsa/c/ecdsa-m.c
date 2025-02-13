@@ -1,3 +1,5 @@
+#ifdef ENABLE_ECC_M
+
 /**********************************************************************
  *
  * ECDSA
@@ -202,3 +204,4 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
 
     return P256_INVALID_SIGNATURE;
 }
+#endif

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef ECC_HPP
 #define ECC_HPP
 
@@ -324,5 +325,4 @@ private:
 
 //
 using ECCPoint = Ecc_Point;
-
 #endif // ECC_HPP

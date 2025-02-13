@@ -8,6 +8,17 @@ namespace bmath {
         //return a % m; // доработайте обработку отрицательных значений, если необходимо.
     //}
 
+    //
+    inline void zeroize(void* d, size_t n) {
+        volatile uint8_t* p = reinterpret_cast<volatile uint8_t*>(d);
+        while(n--) *p++ = 0;
+    }
+
+    //
+    inline BigInt curve(BigInt x, BigIntB B, BigIntB P) {
+        return std::mod(std::mod(x * x, P) * x + B);
+    };
+
     // Возвращает положительный остаток от деления dividend на divisor.
     template<typename T = BigInt>
     inline T mod(const T dividend, const T divisor) {

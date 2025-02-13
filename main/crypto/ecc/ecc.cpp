@@ -58,11 +58,6 @@ static Ecc_Point Ecc_Point::fromAffine(const AffinePoint &pt) {
 //? HEX and bytes ops
 
 //
-static BigInt curve(BigInt x, BigIntB B, BigIntB P) {
-    return std::mod(std::mod(x * x, P) * x + B);
-};
-
-//
 static Ecc_Point Ecc_Point::fromHex(const std::string &hexStr) {
     Bytes hex = HexUtil::hexToBytes(hexStr);
     size_t len = hex.size();
@@ -74,7 +69,7 @@ static Ecc_Point Ecc_Point::fromHex(const std::string &hexStr) {
     // Для сжатого представления определяем y через sqrt(x^3+7) с учетом четности.
     if (len == 33) {
         if (x <= 0 || x >= curveParams.p) throw std::runtime_error("Point hex invalid: x not FE");
-        BigInt lambda = bmath::mod(curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
+        BigInt lambda = bmath::mod(bmath::curve(x, curveParams.b, curveParams.p), curveParams.p); // вычисляем x^3+7 mod P
         BigInt y = bmath::squareRootBI(lambda);
         bool isYOdd = (y & 1) == 1;
         bool headOdd = (hex[0] & 1) == 1; // если префикс 0x03 – нечётное, 0x02 – чётное
