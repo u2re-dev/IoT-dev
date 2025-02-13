@@ -1,3 +1,4 @@
+#ifdef ECC_TEST
 #include "ecdh.hpp"
 #include "blake2b.hpp"
 #include "ecdsa.hpp"
@@ -18,8 +19,8 @@ void ecdh_test() {
     publicKeyB.print();  // Print Party B's public key
 
     // Compute shared secrets
-    Ecc_Point sharedSecretA = ECDH::computeSharedSecret(privateKeyA, publicKeyB);
-    Ecc_Point sharedSecretB = ECDH::computeSharedSecret(privateKeyB, publicKeyA);
+    eccp_t sharedSecretA = ECDH::computeSharedSecret(privateKeyA, publicKeyB);
+    eccp_t sharedSecretB = ECDH::computeSharedSecret(privateKeyB, publicKeyA);
 
     // Print shared secrets to verify they are the same
     std::cout << "Shared Secret (Computed by Party A): ";
@@ -77,3 +78,4 @@ int main(){
     test_ecdsa();
     return 0;
 }
+#endif

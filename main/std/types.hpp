@@ -22,9 +22,12 @@
 #include <cstdint>
 
 //
-using BigInt    = uint256_t;
-using ByteArray = std::vector<uint8_t>;
-using Bytes     = ByteArray;
+#include "./uint128/uint128_t.h"
+#include "./uint256/uint256_t.h"
 
 //
-struct AffinePoint { BigInt x; BigInt y; };
+using bigint_t = uint256_t;
+using bytes_t  = std::vector<uint8_t>;
+
+//
+struct affine_t { bigint_t x; bigint_t y; };

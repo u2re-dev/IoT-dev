@@ -1,47 +1,50 @@
 #pragma once
 
 //
+#include "../../std/types.hpp"
+
+//
 #ifdef ENABLE_PAKE_STATE
 struct SpakeKeys {
-    std::array<unsigned char, 32> M;
-    std::array<unsigned char, 32> N;
-    std::array<unsigned char, 32> L;
-    std::array<unsigned char, 32> h_K;
-    std::array<unsigned char, 32> h_L;
+    std::array<uint8_t, 32> M;
+    std::array<uint8_t, 32> N;
+    std::array<uint8_t, 32> L;
+    std::array<uint8_t, 32> h_K;
+    std::array<uint8_t, 32> h_L;
 };
 
 //
 struct SpakeValidators {
-    std::array<unsigned char, 32> client_validator;
-    std::array<unsigned char, 32> server_validator;
+    std::array<uint8_t, 32> client_validator;
+    std::array<uint8_t, 32> server_validator;
 };
 
 //
 struct SharedKeys {
-    std::array<unsigned char, crypto_spake_SHAREDKEYBYTES> client_sk;
-    std::array<unsigned char, crypto_spake_SHAREDKEYBYTES> server_sk;
+    std::array<uint8_t, crypto_spake_SHAREDKEYBYTES> client_sk;
+    std::array<uint8_t, crypto_spake_SHAREDKEYBYTES> server_sk;
 };
 
 //
 struct ClientState {
-    std::array<unsigned char, 32> h_K;
-    std::array<unsigned char, 32> h_L;
-    std::array<unsigned char, 32> N;
-    std::array<unsigned char, 32> x; // secret scalar
-    std::array<unsigned char, 32> X; // public
+    std::array<uint8_t, 32> h_K;
+    std::array<uint8_t, 32> h_L;
+    std::array<uint8_t, 32> N;
+    std::array<uint8_t, 32> x; // secret scalar
+    std::array<uint8_t, 32> X; // public
 };
 
 //
 struct ServerState {
     SharedKeys shared_keys;
-    std::array<unsigned char, 32> server_validator;
+    std::array<uint8_t, 32> server_validator;
 };
 
 //
-static int crypto_spake_server_store(unsigned char stored_data[crypto_spake_STOREDBYTES], const char *passwd, unsigned long long passwdlen, unsigned long long opslimit, size_t memlimit)
+static int crypto_spake_server_store(uint8_t stored_data[crypto_spake_STOREDBYTES], const char *passwd, unsigned long long passwdlen, unsigned long long opslimit, size_t memlimit)
 {
     SpakeKeys keys;
-    unsigned char salt[crypto_pwhash_SALTBYTES];
+    uint8_t salt[crypto_pwhash_SALTBYTES];
     size_t pos = 0;
 
     //

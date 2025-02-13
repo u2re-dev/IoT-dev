@@ -6,16 +6,16 @@
 
 //
 namespace ECDH {
-    std::pair<Ecc_Point, BigInt> generateKeyPair() {
-        const CurveParameters& curveParams = Ecc_Point::GetCurveParameters();
-        BigInt privateKey = BigInt::generateRandom(256) % (curveParams.n - (static_cast<unsigned long int>(1))) + (static_cast<unsigned long int>(1));
-        Ecc_Point publicKey;
-        publicKey= Ecc_Point(curveParams.Gx, curveParams.Gy);
+    std::pair<eccp_t, bigint_t> generateKeyPair() {
+        const CurveParameters& curveParams = eccp_t::GetCurveParameters();
+        bigint_t privateKey = bigint_t::generateRandom(256) % (curveParams.n - (static_cast<unsigned long int>(1))) + (static_cast<unsigned long int>(1));
+        eccp_t publicKey;
+        publicKey= eccp_t(curveParams.Gx, curveParams.Gy);
         publicKey = publicKey * privateKey;  // Scalar multiplication
         return {publicKey, privateKey};
     }
 
-    Ecc_Point computeSharedSecret(const BigInt& privateKey, const Ecc_Point& otherPublicKey) {
+    eccp_t computeSharedSecret(const bigint_t& privateKey, const eccp_t& otherPublicKey) {
         return otherPublicKey * privateKey;
     }
 }

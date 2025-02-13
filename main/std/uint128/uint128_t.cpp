@@ -1,55 +1,40 @@
 #include "uint128_t.build"
 
+//
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 
+//
 const uint128_t uint128_0(0);
 const uint128_t uint128_1(1);
 
+//
 uint128_t::uint128_t(const std::string & s, uint8_t base) { init(s.c_str(), s.size(), base); }
 uint128_t::uint128_t(const char *s, const std::size_t len, uint8_t base) { init(s, len, base); }
 uint128_t::uint128_t(const bool & b) : uint128_t((uint8_t) b) {}
 
+//
 void uint128_t::init(const char *s, std::size_t len, uint8_t base) {
-    if ((s == NULL) || !len || (s[0] == '\x00')){
-        LOWER = UPPER = 0;
-        return;
-    }
+    if ((s == NULL) || !len || (s[0] == '\x00')) { LOWER = UPPER = 0; return; }
 
-    while (*s && len && std::isspace(*s)) {
-        ++s;
-        len--;
-    }
+    //
+    while (*s && len && std::isspace(*s)) { ++s; len--; }
 
     // no prefixes
     switch (base) {
-        case 16:
-            _init_hex(s, len);
-            break;
-        case 10:
-            _init_dec(s, len);
-            break;
-        case 8:
-            _init_oct(s, len);
-            break;
-        case 2:
-            _init_bin(s, len);
-            break;
-        default:
-            // should probably throw error here
-            break;
+        case 16: _init_hex(s, len); break;
+        case 10: _init_dec(s, len); break;
+        case 8 : _init_oct(s, len); break;
+        case 2 : _init_bin(s, len); break;
+        default: break; // should probably throw error here
     }
 }
 
 void uint128_t::_init_hex(const char *s, std::size_t len) {
     // 2**128 = 0x100000000000000000000000000000000.
     static const std::size_t MAX_LEN = 32;
-
-    LOWER = UPPER = 0;
-    if (!s || !len) {
-        return;
-    }
+    LOWER = UPPER = 0; if (!s || !len) { return; }
 
     const std::size_t max_len = std::min(len, MAX_LEN);
     const std::size_t starting_index = (MAX_LEN < len)?(len - MAX_LEN):0;
@@ -90,9 +75,7 @@ void uint128_t::_init_oct(const char *s, std::size_t len){
     static const std::size_t MAX_LEN = 43;
 
     LOWER = UPPER = 0;
-    if (!s || !len) {
-        return;
-    }
+    if (!s || !len) { return; }
 
     const std::size_t max_len = std::min(len, MAX_LEN);
     const std::size_t starting_index = (MAX_LEN < len)?(len - MAX_LEN):0;
@@ -109,9 +92,7 @@ void uint128_t::_init_bin(const char *s, std::size_t len){
     static const std::size_t MAX_LEN = 128;
 
     LOWER = UPPER = 0;
-    if (!s || !len) {
-        return;
-    }
+    if (!s || !len) { return; }
 
     const std::size_t max_len = std::min(len, MAX_LEN);
     const std::size_t starting_index = (MAX_LEN < len)?(len - MAX_LEN):0;
@@ -193,56 +174,30 @@ uint128_t uint128_t::operator~() const{
 
 uint128_t uint128_t::operator<<(const uint128_t & rhs) const{
     const uint64_t shift = rhs.LOWER;
-    if (((bool) rhs.UPPER) || (shift >= 128)){
-        return uint128_0;
-    }
-    else if (shift == 64){
-        return uint128_t(LOWER, 0);
-    }
-    else if (shift == 0){
-        return *this;
-    }
-    else if (shift < 64){
-        return uint128_t((UPPER << shift) + (LOWER >> (64 - shift)), LOWER << shift);
-    }
-    else if ((128 > shift) && (shift > 64)){
-        return uint128_t(LOWER << (shift - 64), 0);
-    }
-    else{
-        return uint128_0;
-    }
+    if (((bool) rhs.UPPER) || (shift >= 128)) { return uint128_0; } else 
+    if (shift == 64) { return uint128_t(LOWER, 0); } else 
+    if (shift == 0 ) { return *this; } else 
+    if (shift <  64) { return uint128_t((UPPER << shift) + (LOWER >> (64 - shift)), LOWER << shift); } else 
+    if ((128 > shift) && (shift > 64)) { return uint128_t(LOWER << (shift - 64), 0); } else
+    { return uint128_0; }
 }
 
 uint128_t & uint128_t::operator<<=(const uint128_t & rhs){
-    *this = *this << rhs;
-    return *this;
+    *this = *this << rhs; return *this;
 }
 
 uint128_t uint128_t::operator>>(const uint128_t & rhs) const{
     const uint64_t shift = rhs.LOWER;
-    if (((bool) rhs.UPPER) || (shift >= 128)){
-        return uint128_0;
-    }
-    else if (shift == 64){
-        return uint128_t(0, UPPER);
-    }
-    else if (shift == 0){
-        return *this;
-    }
-    else if (shift < 64){
-        return uint128_t(UPPER >> shift, (UPPER << (64 - shift)) + (LOWER >> shift));
-    }
-    else if ((128 > shift) && (shift > 64)){
-        return uint128_t(0, (UPPER >> (shift - 64)));
-    }
-    else{
-        return uint128_0;
-    }
+    if (((bool) rhs.UPPER) || (shift >= 128)) { return uint128_0; } else 
+    if (shift == 64) { return uint128_t(0, UPPER); } else 
+    if (shift == 0 ) { return *this; } else 
+    if (shift <  64) { return uint128_t(UPPER >> shift, (UPPER << (64 - shift)) + (LOWER >> shift)); } else 
+    if ((128 > shift) && (shift > 64)) { return uint128_t(0, (UPPER >> (shift - 64))); } else
+    { return uint128_0; }
 }
 
 uint128_t & uint128_t::operator>>=(const uint128_t & rhs){
-    *this = *this >> rhs;
-    return *this;
+    *this = *this >> rhs; return *this;
 }
 
 bool uint128_t::operator!() const{
@@ -302,8 +257,7 @@ uint128_t uint128_t::operator-(const uint128_t & rhs) const{
 }
 
 uint128_t & uint128_t::operator-=(const uint128_t & rhs){
-    *this = *this - rhs;
-    return *this;
+    *this = *this - rhs; return *this;
 }
 
 uint128_t uint128_t::operator*(const uint128_t & rhs) const{
@@ -353,8 +307,7 @@ uint128_t uint128_t::operator*(const uint128_t & rhs) const{
 }
 
 uint128_t & uint128_t::operator*=(const uint128_t & rhs){
-    *this = *this * rhs;
-    return *this;
+    *this = *this * rhs; return *this;
 }
 
 void uint128_t::ConvertToVector(std::vector<uint8_t> & ret, const uint64_t & val) const {
@@ -375,29 +328,18 @@ void uint128_t::export_bits(std::vector<uint8_t> &ret) const {
 
 std::pair <uint128_t, uint128_t> uint128_t::divmod(const uint128_t & lhs, const uint128_t & rhs) const{
     // Save some calculations /////////////////////
-    if (rhs == uint128_0){
-        throw std::domain_error("Error: division or modulus by 0");
-    }
-    else if (rhs == uint128_1){
-        return std::pair <uint128_t, uint128_t> (lhs, uint128_0);
-    }
-    else if (lhs == rhs){
-        return std::pair <uint128_t, uint128_t> (uint128_1, uint128_0);
-    }
-    else if ((lhs == uint128_0) || (lhs < rhs)){
-        return std::pair <uint128_t, uint128_t> (uint128_0, lhs);
-    }
+    if (rhs == uint128_0) { throw std::domain_error("Error: division or modulus by 0"); } else 
+    if (rhs == uint128_1) { return std::pair <uint128_t, uint128_t> (lhs, uint128_0); } else 
+    if (lhs == rhs)       { return std::pair <uint128_t, uint128_t> (uint128_1, uint128_0); } else 
+    if ((lhs == uint128_0) || (lhs < rhs)) { return std::pair <uint128_t, uint128_t> (uint128_0, lhs); }
 
     std::pair <uint128_t, uint128_t> qr (uint128_0, uint128_0);
     for(uint8_t x = lhs.bits(); x > 0; x--){
         qr.first  <<= uint128_1;
         qr.second <<= uint128_1;
 
-        if ((lhs >> (x - 1U)) & 1){
-            ++qr.second;
-        }
-
-        if (qr.second >= rhs){
+        if ((lhs >> (x - 1U)) & 1) { ++qr.second; }
+        if (qr.second >= rhs) {
             qr.second -= rhs;
             ++qr.first;
         }
@@ -410,8 +352,7 @@ uint128_t uint128_t::operator/(const uint128_t & rhs) const{
 }
 
 uint128_t & uint128_t::operator/=(const uint128_t & rhs){
-    *this = *this / rhs;
-    return *this;
+    *this = *this / rhs; return *this;
 }
 
 uint128_t uint128_t::operator%(const uint128_t & rhs) const{
@@ -419,8 +360,7 @@ uint128_t uint128_t::operator%(const uint128_t & rhs) const{
 }
 
 uint128_t & uint128_t::operator%=(const uint128_t & rhs){
-    *this = *this % rhs;
-    return *this;
+    *this = *this % rhs; return *this;
 }
 
 uint128_t & uint128_t::operator++(){
@@ -428,9 +368,7 @@ uint128_t & uint128_t::operator++(){
 }
 
 uint128_t uint128_t::operator++(int){
-    uint128_t temp(*this);
-    ++*this;
-    return temp;
+    uint128_t temp(*this); ++*this; return temp;
 }
 
 uint128_t & uint128_t::operator--(){
@@ -438,9 +376,7 @@ uint128_t & uint128_t::operator--(){
 }
 
 uint128_t uint128_t::operator--(int){
-    uint128_t temp(*this);
-    --*this;
-    return temp;
+    uint128_t temp(*this); --*this; return temp;
 }
 
 uint128_t uint128_t::operator+() const{
@@ -451,50 +387,34 @@ uint128_t uint128_t::operator-() const{
     return ~*this + uint128_1;
 }
 
-const uint64_t & uint128_t::upper() const{
-    return UPPER;
-}
-
-const uint64_t & uint128_t::lower() const{
-    return LOWER;
-}
+const uint64_t & uint128_t::upper() const{ return UPPER; }
+const uint64_t & uint128_t::lower() const{ return LOWER; }
 
 uint8_t uint128_t::bits() const{
     uint8_t out = 0;
-    if (UPPER){
-        out = 64;
-        uint64_t up = UPPER;
-        while (up){
-            up >>= 1;
-            out++;
-        }
-    }
-    else{
+    if (UPPER) {
+        out = 64; uint64_t up = UPPER;
+        while (up) { up >>= 1; out++; }
+    } else
+    {
         uint64_t low = LOWER;
-        while (low){
-            low >>= 1;
-            out++;
-        }
+        while (low) { low >>= 1; out++; }
     }
     return out;
 }
 
-std::string uint128_t::str(uint8_t base, const unsigned int & len) const{
-    if ((base < 2) || (base > 16)){
-        throw std::invalid_argument("Base must be in the range [2, 16]");
-    }
+std::string uint128_t::str(uint8_t base, const unsigned int & len) const {
+    if ((base < 2) || (base > 16)) { throw std::invalid_argument("Base must be in the range [2, 16]"); }
     std::string out = "";
-    if (!(*this)){
-        out = "0";
-    }
-    else{
+    if (!(*this)) { out = "0"; } else
+    {
         std::pair <uint128_t, uint128_t> qr(*this, uint128_0);
         do{
             qr = divmod(qr.first, base);
             out = "0123456789abcdef"[(uint8_t) qr.second] + out;
         } while (qr.first);
     }
-    if (out.size() < len){
+    if (out.size() < len) {
         out = std::string(len - out.size(), '0') + out;
     }
     return out;

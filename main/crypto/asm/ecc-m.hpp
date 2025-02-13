@@ -18,7 +18,7 @@
 //
 using U256  = std::array<uint32_t, 8>;
 using U288  = std::array<uint32_t, 9>;
-using Bytes = std::vector<uint8_t>;
+using bytes_t = std::vector<uint8_t>;
 
 //
 struct m256_mod {
@@ -28,13 +28,13 @@ struct m256_mod {
 };
 
 //
-struct AffinePoint {
+struct affine_t {
     U256 x;
     U256 y;
 };
 
 //
-struct JacobianPoint {
+struct jacp_t {
     U256 X;
     U256 Y;
     U256 Z;

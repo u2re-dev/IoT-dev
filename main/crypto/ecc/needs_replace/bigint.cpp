@@ -6,160 +6,160 @@
 #include <iostream>
 
 // Default Constructor
-BigInt::BigInt() {
+bigint_t::bigint_t() {
     mpz_init(value);
 }
 
 // Construct from unsigned long int
-BigInt::BigInt(unsigned long int val) {
+bigint_t::bigint_t(unsigned long int val) {
     mpz_init_set_ui(value, val);
 }
 
 // Construct from signed long int
-BigInt::BigInt(signed long int val) {
+bigint_t::bigint_t(signed long int val) {
     mpz_init_set_si(value, val);
 }
 
 // Construct from string
-BigInt::BigInt(const std::string &val, int base) {
+bigint_t::bigint_t(const std::string &val, int base) {
     if (mpz_init_set_str(value, val.c_str(), base) == -1) {
         throw std::invalid_argument("Invalid number string.");
     }
 }
 
 // Copy Constructor
-BigInt::BigInt(const BigInt &other) {
+bigint_t::bigint_t(const bigint_t &other) {
     mpz_init_set(value, other.value);
 }
 
 // Construct from mpz_t
-BigInt::BigInt(mpz_t bi) {
+bigint_t::bigint_t(mpz_t bi) {
     mpz_init_set(value, bi);
 }
 
 // Destructor
-BigInt::~BigInt() {
+bigint_t::~bigint_t() {
     mpz_clear(value);
 }
 
 // Arithmetic Operations
-BigInt BigInt::operator+(const BigInt &other) const {
-    BigInt result;
+bigint_t bigint_t::operator+(const bigint_t &other) const {
+    bigint_t result;
     mpz_add(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::operator-(const BigInt &other) const {
-    BigInt result;
+bigint_t bigint_t::operator-(const bigint_t &other) const {
+    bigint_t result;
     mpz_sub(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::operator*(const BigInt &other) const {
-    BigInt result;
+bigint_t bigint_t::operator*(const bigint_t &other) const {
+    bigint_t result;
     mpz_mul(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::operator/(const BigInt &other) const {
-    BigInt result;
+bigint_t bigint_t::operator/(const bigint_t &other) const {
+    bigint_t result;
     mpz_fdiv_q(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::operator%(const BigInt &other) const {
-    BigInt result;
+bigint_t bigint_t::operator%(const bigint_t &other) const {
+    bigint_t result;
     mpz_mod(result.value, value, other.value);
     return result;
 }
 
 // Assignment Operations
-BigInt& BigInt::operator=(const BigInt &other) {
+bigint_t& bigint_t::operator=(const bigint_t &other) {
     mpz_set(value, other.value);
     return *this;
 }
 
-BigInt& BigInt::operator+=(const BigInt &other) {
+bigint_t& bigint_t::operator+=(const bigint_t &other) {
     mpz_add(value, value, other.value);
     return *this;
 }
 
-BigInt& BigInt::operator-=(const BigInt &other) {
+bigint_t& bigint_t::operator-=(const bigint_t &other) {
     mpz_sub(value, value, other.value);
     return *this;
 }
 
-BigInt& BigInt::operator*=(const BigInt &other) {
+bigint_t& bigint_t::operator*=(const bigint_t &other) {
     mpz_mul(value, value, other.value);
     return *this;
 }
 
-BigInt& BigInt::operator/=(const BigInt &other) {
+bigint_t& bigint_t::operator/=(const bigint_t &other) {
     mpz_fdiv_q(value, value, other.value);
     return *this;
 }
 
-BigInt& BigInt::operator%=(const BigInt &other) {
+bigint_t& bigint_t::operator%=(const bigint_t &other) {
     mpz_mod(value, value, other.value);
     return *this;
 }
 
 // Comparison Operations
-bool BigInt::operator==(const BigInt &other) const {
+bool bigint_t::operator==(const bigint_t &other) const {
     return mpz_cmp(value, other.value) == 0;
 }
 
-bool BigInt::operator!=(const BigInt &other) const {
+bool bigint_t::operator!=(const bigint_t &other) const {
     return !(*this == other);
 }
 
-bool BigInt::operator<(const BigInt &other) const {
+bool bigint_t::operator<(const bigint_t &other) const {
     return mpz_cmp(value, other.value) < 0;
 }
 
-bool BigInt::operator<=(const BigInt &other) const {
+bool bigint_t::operator<=(const bigint_t &other) const {
     return mpz_cmp(value, other.value) <= 0;
 }
 
-bool BigInt::operator>(const BigInt &other) const {
+bool bigint_t::operator>(const bigint_t &other) const {
     return mpz_cmp(value, other.value) > 0;
 }
 
-bool BigInt::operator>=(const BigInt &other) const {
+bool bigint_t::operator>=(const bigint_t &other) const {
     return mpz_cmp(value, other.value) >= 0;
 }
 
 // Utility Functions
-std::string BigInt::toString(int base) const {
+std::string bigint_t::toString(int base) const {
     char* str = mpz_get_str(nullptr, base, value);
     std::string result(str);
     free(str);
     return result;
 }
 
-size_t BigInt::bitSize() const {
+size_t bigint_t::bitSize() const {
     return mpz_sizeinbase(value, 2);
 }
 
-bool BigInt::isZero() const {
+bool bigint_t::isZero() const {
     return mpz_cmp_ui(value, 0) == 0;
 }
 
-void BigInt::print() const {
+void bigint_t::print() const {
     mpz_out_str(stdout, 10, value);
     printf("\n");
 }
 
-void BigInt::negate() {
+void bigint_t::negate() {
     mpz_neg(value, value);
 }
 
-bool BigInt::invert(const BigInt& modulus) {
+bool bigint_t::invert(const bigint_t& modulus) {
     return mpz_invert(value, value, modulus.value) != 0;
 }
 
-BigInt BigInt::modInverse(const BigInt& modulus) const {
-    BigInt inverse;
+bigint_t bigint_t::modInverse(const bigint_t& modulus) const {
+    bigint_t inverse;
     if (mpz_invert(inverse.value, value, modulus.value) != 0) {
         return inverse;
     } else {
@@ -169,59 +169,59 @@ BigInt BigInt::modInverse(const BigInt& modulus) const {
 
 
 // Primality Testing
-int BigInt::isPrime(int provable) const {
+int bigint_t::isPrime(int provable) const {
     return mpz_probab_prime_p(value, provable);
 }
 
 // Next Prime
-BigInt BigInt::nextPrime(const BigInt& startAt, int provable) {
-    BigInt result;
+bigint_t bigint_t::nextPrime(const bigint_t& startAt, int provable) {
+    bigint_t result;
     mpz_nextprime(result.value, startAt.value);
     return result;
 }
 
 // Bitwise Operations
-BigInt BigInt::bitwiseAnd(const BigInt& other) const {
-    BigInt result;
+bigint_t bigint_t::bitwiseAnd(const bigint_t& other) const {
+    bigint_t result;
     mpz_and(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::bitwiseIor(const BigInt& other) const {
-    BigInt result;
+bigint_t bigint_t::bitwiseIor(const bigint_t& other) const {
+    bigint_t result;
     mpz_ior(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::bitwiseXor(const BigInt& other) const {
-    BigInt result;
+bigint_t bigint_t::bitwiseXor(const bigint_t& other) const {
+    bigint_t result;
     mpz_xor(result.value, value, other.value);
     return result;
 }
 
-BigInt BigInt::bitwiseComplement() const {
-    BigInt result;
+bigint_t bigint_t::bitwiseComplement() const {
+    bigint_t result;
     mpz_com(result.value, value);
     return result;
 }
 
-BigInt BigInt::leftShift(unsigned long int shiftBy) const {
-    BigInt result;
+bigint_t bigint_t::leftShift(unsigned long int shiftBy) const {
+    bigint_t result;
     mpz_mul_2exp(result.value, value, shiftBy);
     return result;
 }
 
-BigInt BigInt::rightShift(unsigned long int shiftBy) const {
-    BigInt result;
+bigint_t bigint_t::rightShift(unsigned long int shiftBy) const {
+    bigint_t result;
     mpz_fdiv_q_2exp(result.value, value, shiftBy);
     return result;
 }
 
-bool BigInt::isNegative() const {
+bool bigint_t::isNegative() const {
     return mpz_sgn(value) < 0;
 }
 
-void BigInt::printAbsolute() const {
+void bigint_t::printAbsolute() const {
     mpz_t absValue;
     mpz_init(absValue);
     mpz_abs(absValue, value);
@@ -229,22 +229,22 @@ void BigInt::printAbsolute() const {
     mpz_clear(absValue);
 }
 
-void BigInt::addByte(unsigned char byte) {
+void bigint_t::addByte(unsigned char byte) {
     mpz_mul_2exp(value, value, 8);
     mpz_add_ui(value, value, byte);
 }
 
-BigInt BigInt::generateRandom(size_t numBits) {
-    BigInt randNum;
-    size_t numBytes = (numBits + 7) / 8;
+bigint_t bigint_t::generateRandom(size_t numBits) {
+    bigint_t randNum;
+    size_t numbytes_t = (numBits + 7) / 8;
 
     #if defined(_WIN32) || defined(_WIN64)
     // std:: cout <<" Entering here \n";
     HCRYPTPROV hProvider = 0;
-    BYTE* buffer = new BYTE[numBytes];
+    BYTE* buffer = new BYTE[numbytes_t];
     if (CryptAcquireContext(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-        CryptGenRandom(hProvider, numBytes, buffer);
-        mpz_import(randNum.value, numBytes, 1, sizeof(buffer[0]), 0, 0, buffer);
+        CryptGenRandom(hProvider, numbytes_t, buffer);
+        mpz_import(randNum.value, numbytes_t, 1, sizeof(buffer[0]), 0, 0, buffer);
         CryptReleaseContext(hProvider, 0);
     }
     delete[] buffer;
@@ -252,9 +252,9 @@ BigInt BigInt::generateRandom(size_t numBits) {
     #elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd != -1) {
-        char* buffer = new char[numBytes];
-        read(fd, buffer, numBytes);
-        mpz_import(randNum.value, numBytes, 1, sizeof(buffer[0]), 0, 0, buffer);
+        char* buffer = new char[numbytes_t];
+        read(fd, buffer, numbytes_t);
+        mpz_import(randNum.value, numbytes_t, 1, sizeof(buffer[0]), 0, 0, buffer);
         close(fd);
         delete[] buffer;
     }
@@ -271,19 +271,19 @@ BigInt BigInt::generateRandom(size_t numBits) {
 }
 
 
-BigInt stringToBigInt(const std::string& str) {
-    BigInt result;
+bigint_t stringTobigint_t(const std::string& str) {
+    bigint_t result;
     for (unsigned char c : str) {
         result.addByte(c);
     }
     return result;
 }
 
-std::string bigIntToString(const BigInt& bigint) {
+std::string bigIntToString(const bigint_t& bigint) {
     std::string result;
-    BigInt current = bigint;
-    BigInt zero(static_cast<unsigned long int>(0));
-    const BigInt byteSize(static_cast<unsigned long int>(256));
+    bigint_t current = bigint;
+    bigint_t zero(static_cast<unsigned long int>(0));
+    const bigint_t byteSize(static_cast<unsigned long int>(256));
 
     while (current > zero) {
         try {
