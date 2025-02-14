@@ -12,7 +12,8 @@ class mpi_t {
         mpi_t(int  a = 0) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(long a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(uint a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
-        mpi_t(bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
+        mpi_t( bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
+        
 
         //
         mpi_t(mbedtls_mpi const& mpi) : mpi_() { mbedtls_mpi_init(&mpi_); mbedtls_mpi_copy(&mpi_, &mpi); }
@@ -32,12 +33,16 @@ class mpi_t {
         }
 
 
+        // bigint convertion and construction
+        mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_read_binary(&mpi_, (uint8_t*)&a, sizeof(a))); }
+        operator bigint_t() const { bigint_t x; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return to_little_endian(x); }
+        mpi_t& operator=(bigint_t const& a) { return vid(mbedtls_mpi_read_binary(&mpi_, (uint8_t*)&a, sizeof(a))); }
+
+
         // assign-ops
         mpi_t& operator=( int  const& a) { return vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t& operator=(uint  const& a) { return vid(mbedtls_mpi_lset(&mpi_, long(a))); }
         mpi_t& operator=(mpi_t const& a) { return vid(mbedtls_mpi_copy(&mpi_, a)); }
-
-
 
 
         // uint-based

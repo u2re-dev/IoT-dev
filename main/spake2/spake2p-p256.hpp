@@ -98,37 +98,25 @@ public:
         return w0w1L;
     }
 
-    ecp_t computeX() {
-        X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0);
-        return X_;//.toBytes();
-    }
-
-    ecp_t computeY() {
-        Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0);
-        return Y_;//.toBytes();
-    }
-
-
-
-
-
-
+    //
+    bytes_t computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return X_.toBytes(); }
+    bytes_t computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_.toBytes(); }
     
     // to-server (X and L from client), aka. by Y
-    SecretAndVerifiers computeSecretAndVerifiersFromX( ecp_t X, /*const bytes_t& bL*/ bytes_t const& L) const {
+    SecretAndVerifiers computeSecretAndVerifiersFromX( bytes_t const& bX, bytes_t const& L) const {
         ecp_t Lp = ecp_t(group_).loadBytes(L);
-        //ecp_t X  = ecp_t(group_).loadBytes(bX);
-        ecp_t Br = X - ecp_t(group_).getM() * base_.w0;
+        ecp_t X  = ecp_t(group_).loadBytes(bX);
+        ecp_t Br = X  - ecp_t(group_).getM() * base_.w0;
         ecp_t Z  = Br * base_.random;
         ecp_t V  = Lp * base_.random;
         return computeSecretAndVerifiers(X, Y_, Z, V);
     }
 
     // to-client (Y and w1 from server), aka. by X
-    SecretAndVerifiers computeSecretAndVerifiersFromY( ecp_t Y, /*const bytes_t& w1b*/ bytes_t const& w1b) const {
+    SecretAndVerifiers computeSecretAndVerifiersFromY( bytes_t const& bY, bigint_t const& w1b) const {
         mpi_t w1 = mpi_t(w1b);
-        //ecp_t Y  = ecp_t(group_).loadBytes(bY);
-        ecp_t Br = Y - ecp_t(group_).getN() * base_.w0;
+        ecp_t Y  = ecp_t(group_).loadBytes(bY);
+        ecp_t Br = Y  - ecp_t(group_).getN() * base_.w0;
         ecp_t Z  = Br * base_.random;
         ecp_t V  = Br * base_.w1;
         return computeSecretAndVerifiers(X_, Y, Z, V);
@@ -207,8 +195,8 @@ private:
         return (ecp_t(group, group.G) * w1);
     }
 
-    ecp_t X_;
-    ecp_t Y_;
+    //
+    union { ecp_t X_, Y_; };
     mbedtls_ecp_group group_;
     bytes_t context_;
     W0W1L base_;

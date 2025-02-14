@@ -27,13 +27,14 @@
 #include <cinttypes>
 
 //
-//#include "../bigint/intx.hpp"
+#include "../spake2/bigint/intx.hpp"
 
 //
 using bytes_t  = std::vector<uint8_t>;
 using byte_t   = uint8_t;
 using node_id  = uint64_t;
 using group_id = uint16_t;
+using bigint_t = intx::uint256;
 
 //
 inline bytes_t concat(const std::initializer_list<bytes_t>& arrays) {
