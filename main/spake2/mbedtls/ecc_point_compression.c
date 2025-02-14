@@ -49,7 +49,7 @@ int mbedtls_ecp_decompress(
     MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &x, &x));
 
     // r = x^2 + a
-    if (grp->A.p == NULL) {
+    if (mbedtls_ecp_group_a_is_minus_3(grp)) {
         // Special case where a is -3
         MBEDTLS_MPI_CHK(mbedtls_mpi_sub_int(&r, &r, 3));
     } else {

@@ -4,6 +4,8 @@
 #include <mbedtls/hkdf.h>
 #include <mbedtls/pkcs5.h>
 #include <mbedtls/sha256.h>
+#include <mbedtls/bignum.h>
+#include <mbedtls/ecp.h>
 #include "../../std/types.hpp"
 
 //
@@ -65,22 +67,5 @@ namespace crypto {
         bytes_t out = bytes_t(32);
         mbedtls_sha256_finish_ret(&ctx, out.data());
         return out;
-    };
-
-    //! TODO: needs more better random
-    bigint_t getRandomBigint(size_t numbytes_t, const bigint_t& order) {
-        std::random_device rd;
-        std::mt19937_64 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis;
-
-        //
-        bigint_t rand = 
-            (bigint_t(dis(gen)) << 0 ) | 
-            (bigint_t(dis(gen)) << 8 ) | 
-            (bigint_t(dis(gen)) << 16) | 
-            (bigint_t(dis(gen)) << 24);
-        
-        //
-        return rand;
     };
 }
