@@ -13,9 +13,14 @@ namespace crypto {
 
         mbedtls_md_context_t ctx;
         mbedtls_md_init(&ctx);
+
+        //
+        const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+        mbedtls_md_setup(&ctx, inf, 1);
         mbedtls_pkcs5_pbkdf2_hmac(&ctx, input.data(), input.size(), salt.data(), salt.size(), iterations, outputLength, output.data());
         mbedtls_md_free(&ctx);
 
+        //
         return output;
     };
 
@@ -63,17 +68,17 @@ namespace crypto {
     };
 
     //! TODO: needs more better random
-    bigint_t getRandomBigint(size_t numbytes_t, const uint256_t& order) {
+    bigint_t getRandomBigint(size_t numbytes_t, const bigint_t& order) {
         std::random_device rd;
         std::mt19937_64 gen(rd());
         std::uniform_int_distribution<uint64_t> dis;
 
         //
-        uint256_t rand = 
-            (uint256_t(dis(gen)) << 0 ) | 
-            (uint256_t(dis(gen)) << 8 ) | 
-            (uint256_t(dis(gen)) << 16) | 
-            (uint256_t(dis(gen)) << 24);
+        bigint_t rand = 
+            (bigint_t(dis(gen)) << 0 ) | 
+            (bigint_t(dis(gen)) << 8 ) | 
+            (bigint_t(dis(gen)) << 16) | 
+            (bigint_t(dis(gen)) << 24);
         
         //
         return rand;

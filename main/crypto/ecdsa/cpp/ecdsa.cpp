@@ -7,7 +7,7 @@
 
 //
 std::pair<bigint_t, bigint_t> ECDSA::sign(const bigint_t& privateKey, const std::vector<uint8_t>& message) {
-    const CurveParameters& curveParams = eccp_t::GetCurveParameters();
+    const CurveParameters& curveParams = eccp_t::getCurveParameters();
     // 1. Generate a random number k.
     bigint_t k= bigint_t::generateRandom(256) % (curveParams.n - (static_cast<unsigned long int>(1))) + (static_cast<unsigned long int>(1));
 
@@ -23,7 +23,7 @@ std::pair<bigint_t, bigint_t> ECDSA::sign(const bigint_t& privateKey, const std:
     BLAKE2b blake2b(64);
     auto hash = blake2b.hash(std::vector<uint8_t>(message.begin(), message.end()));
 
-    std::string hashStr= bytesToHex(hash);
+    std::string hashStr= b2h(hash);
     bigint_t hsh(hashStr, 16);
 
     bigint_t s= (hsh + r * privateKey) * k.modInverse(curveParams.n);
@@ -35,7 +35,7 @@ std::pair<bigint_t, bigint_t> ECDSA::sign(const bigint_t& privateKey, const std:
 
 //
 bool ECDSA::verify(const eccp_t& publicKey, const std::vector<uint8_t>& message, const std::pair<bigint_t, bigint_t>& signature) {
-    const CurveParameters& curveParams = eccp_t::GetCurveParameters();
+    const CurveParameters& curveParams = eccp_t::getCurveParameters();
 
     // 1. Extract r and s from the signature.
     bigint_t r = signature.first;
@@ -47,7 +47,7 @@ bool ECDSA::verify(const eccp_t& publicKey, const std::vector<uint8_t>& message,
     // Hash the message
     BLAKE2b blake2b(64);
     auto hash = blake2b.hash(std::vector<uint8_t>(message.begin(), message.end()));
-    std::string hashStr = bytesToHex(hash);
+    std::string hashStr = b2h(hash);
     bigint_t hashedMessage(hashStr, 16);
 
     // 3. Compute u1 = hash * w mod n and u2 = r * w mod n.

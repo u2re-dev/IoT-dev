@@ -27,18 +27,13 @@
 #include <cinttypes>
 
 //
-#include "./uint128/uint128_t.h"
-#include "./uint256/uint256_t.h"
+//#include "../bigint/intx.hpp"
 
 //
-using bigint_t = uint256_t;
 using bytes_t  = std::vector<uint8_t>;
 using byte_t   = uint8_t;
 using node_id  = uint64_t;
 using group_id = uint16_t;
-
-//
-struct affine_t { bigint_t x; bigint_t y; };
 
 //
 inline bytes_t concat(const std::initializer_list<bytes_t>& arrays) {

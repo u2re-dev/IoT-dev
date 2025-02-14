@@ -7,7 +7,7 @@
 //
 namespace ECDH {
     std::pair<eccp_t, bigint_t> generateKeyPair() {
-        const CurveParameters& curveParams = eccp_t::GetCurveParameters();
+        const CurveParameters& curveParams = eccp_t::getCurveParameters();
         bigint_t privateKey = bigint_t::generateRandom(256) % (curveParams.n - (static_cast<unsigned long int>(1))) + (static_cast<unsigned long int>(1));
         eccp_t publicKey;
         publicKey= eccp_t(curveParams.Gx, curveParams.Gy);
