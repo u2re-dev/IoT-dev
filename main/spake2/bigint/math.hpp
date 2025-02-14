@@ -1,7 +1,7 @@
 #pragma once
 #include "../std/types.hpp"
 #include "./intx.hpp"
-#include "hex.hpp"
+#include "../../std/hex.hpp"
 
 //
 using bigint_t = intx::uint<256>;

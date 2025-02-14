@@ -2,10 +2,17 @@
 #define C62DECF5_6D6A_4958_93B8_383B9AB3753A
 
 //
-#include "../crypto.hpp"
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/error.h>
-#include "../../../mbedtls/ecc_point_compression.h"
+#include <mbedtls/hkdf.h>
+#include <mbedtls/pkcs5.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/bignum.h>
+#include <mbedtls/ecp.h>
+#include <mbedtls/ecjpake.h>
+
+//
+#include "../mbedtls/ecc_point_compression.h"
 
 //
 void checkMbedtlsError(int ret, const std::string& message) {
