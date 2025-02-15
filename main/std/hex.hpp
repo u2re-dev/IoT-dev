@@ -11,6 +11,23 @@ namespace hex {
     }
 
     //
+    /*inline std::string b2h(uint8_t const* bytes, size_t len) {
+        std::ostringstream oss;
+        for (int i = len - 1; i >= 0; i--) { // Обратный цикл
+            oss << std::hex << std::setw(2) << std::setfill('0') << (int)bytes[i];
+        }
+        return oss.str();
+    }*/
+
+    //
+    inline std::string b2h(uint8_t const* bytes, size_t len) {
+        std::ostringstream oss;
+        //for (auto b : bytes) oss << std::hex << std::setw(2) << std::setfill('0') << (int)b;
+        for (uint i=0;i<len;i++) (oss << std::hex << std::setw(2) << std::setfill('0') << (int)bytes[i]);
+        return oss.str();
+    }
+
+    //
     inline std::string b2h(const bytes_t& bytes) {
         std::ostringstream oss;
         for (auto b : bytes) oss << std::hex << std::setw(2) << std::setfill('0') << (int)b;
