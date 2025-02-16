@@ -1,10 +1,11 @@
-#include "./PacketCodec.hpp"
-#include "../core/Utils.hpp"
-#include "../core/Types.hpp"
+#include "../message/Consts.hpp"
+#include "../message/Message.hpp"
+#include "../message/Enums.hpp"
+#include "../diagnostic/Diagnostic.hpp"
 
 //
-inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
-    DecodedPacketHeader header{};
+PacketHeader MessageCodec::decodePacketHeader(DataReader& reader) {
+    PacketHeader header{};
     uint8_t flags   = reader.readUInt8();
     uint8_t version = (flags & VersionMask) >> 4;
 
@@ -25,7 +26,7 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
     //
     if (hasSN) header.sourceNodeId = reader.readUInt64();
     if (hasDN) header.destNodeId   = reader.readUInt64();
-    if (hasDG) header.destGroupId  = static_cast<GroupId>(reader.readUInt16());
+    if (hasDG) header.destGroupId  = static_cast<uint16_t>(reader.readUInt16());
 
     //
     uint8_t sessionTypeVal = header.securityFlags & 0b00000011;
@@ -34,7 +35,7 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
         throw UnexpectedDataError("Unsupported session type " + std::to_string(sessionTypeVal));
 
     //
-    header.sessionType              = static_cast<SessionType>(sessionTypeVal);
+    header.sessionType              = static_cast<uint8_t>(sessionTypeVal);
     header.hasPrivacyEnhancements   = (header.securityFlags & HasPrivacyEnhancements) != 0;
     header.isControlMessage         = (header.securityFlags & IsControlMessage)       != 0;
     header.hasMessageExtensions     = (header.securityFlags & HasMessageExtension)    != 0;
@@ -48,7 +49,7 @@ inline DecodedPacketHeader PacketCodec::decodePacketHeader(DataReader& reader) {
 }
 
 //
-inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
+bytes_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
     DataWriter writer;
 
     //
@@ -69,27 +70,33 @@ inline ByteArray PacketCodec::encodePacketHeader(const PacketHeader& ph) {
     if (ph.destGroupId)  writer.writeUInt16(ph.destGroupId);
 
     //
-    return writer.toByteArray();
+    return writer.toBytes();
 }
 
 
 
 //
-inline DecodedPacket PacketCodec::decodePacket(const ByteArray& data) {
-    DataReader reader(data);
-    DecodedPacketHeader header = decodePacketHeader(reader);
-
-    //
-    DecodedPacket dp;
-    dp.header             = header;
-    dp.messageExtension   = header.hasMessageExtensions ? reader.readByteArray(reader.readUInt16()) : ByteArray{};
-    dp.applicationPayload = reader.remainingBytes();
+Message MessageCodec::decodeMessage(DataReader& reader) {
+    Message dp;
+    dp.header             = decodePacketHeader(reader);;
+    dp.messageExtension   = dp.header.hasMessageExtensions ? reader.readByteArray(reader.readUInt16()) : bytes_t{};
+    dp.rawPayload         = reader.remainingBytes();
     return dp;
 }
 
 //
-inline ByteArray PacketCodec::encodePacket(const Packet& packet) {
-    if (packet.messageExtension.size() || packet.header.hasMessageExtensions) 
-        throw NotImplementedError("Message extensions not supported when encoding a packet.");
-    return Bytes::concat({encodePacketHeader(packet.header), packet.applicationPayload});
+bytes_t MessageCodec::encodeMessage(Message const& packet) {
+    if (packet.messageExtension.size() || packet.header.hasMessageExtensions)  throw NotImplementedError("Message extensions not supported when encoding a packet.");
+    return concat({encodePacketHeader(packet.header), packet.rawPayload});
 }
+
+/*
+//
+bytes_t MessageCodec::encodeMessage(Message const& msg) {
+    DataWriter writer;
+    writer.writeBytes(encodePacketHeader(msg.header));
+    // TODO: support writing of extensions
+    writer.writeBytes(encodePayload(msg.decodedPayload));
+    return writer.toBytes();
+}
+*/

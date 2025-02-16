@@ -1,8 +1,9 @@
 #pragma once
 
 //
-#include "../core/STD.hpp"
+//#include "../../../std/types.hpp"
 #include "../message/Message.hpp"
+#include <sstream>
 
 //
 struct NotImplementedError : public std::logic_error   { using std::logic_error::logic_error; };
@@ -21,6 +22,7 @@ namespace Diagnostic {
         return std::string("{ reqAck: ") + (reqAck ? "true" : "false") + ", dup: " + (duplicate ? "true" : "false") + " }";
     }
 
+    inline MsgTypeInfo mapProtocolAndMessageType(uint32_t protocolId, uint8_t messageType);
     inline std::string dict(const std::vector<std::pair<std::string, std::string>>& entries) {
         std::ostringstream oss;
         oss << "{ ";

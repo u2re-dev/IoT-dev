@@ -1,24 +1,57 @@
 #pragma once
 
 //
-#include "../core/STD.hpp"
-#include "../core/Consts.hpp"
-#include "../core/Types.hpp"
-#include "../packet/PacketCodec.hpp"
-#include "../payload/PayloadCodec.hpp"
+#include "../../../std/types.hpp"
 
 //
-enum class SessionType : uint8_t {
-    Unicast = 0,
-    Group   = 1,
+enum PacketHeaderFlag : uint8_t {
+    HasDestNodeId   = 0b00000001,
+    HasDestGroupId  = 0b00000010,
+    HasSourceNodeId = 0b00000100,
+    Reserved        = 0b00001000,
+    VersionMask     = 0b11110000,
 };
 
 //
-enum SecurityFlag : uint8_t {
-    HasPrivacyEnhancements = 0b10000000,
-    IsControlMessage       = 0b01000000,
-    HasMessageExtension    = 0b00100000,
+struct PacketHeader {
+    uint32_t    messageId;
+    uint16_t    sessionId;
+    uint16_t    destGroupId;
+    uint64_t    sourceNodeId;
+    uint64_t    destNodeId;
+    uint8_t     sessionType;
+    uint8_t     securityFlags;
+
+    //
+    bool hasPrivacyEnhancements;
+    bool isControlMessage;
+    bool hasMessageExtensions;
 };
+
+//
+enum PayloadHeaderFlag : uint8_t {
+    IsInitiatorMessage = 0b00000001,
+    IsAckMessage       = 0b00000010,
+    RequiresAck        = 0b00000100,
+    HasSecureExtension = 0b00001000,
+    HasVendorId        = 0b00010000,
+};
+
+//
+struct PayloadHeader {
+    uint16_t exchangeId;
+    uint32_t protocolId;
+    uint32_t ackedMessageId;
+    uint16_t    vendorId;
+
+    //
+    uint8_t messageType;
+    bool isInitiatorMessage;
+    bool requiresAck;
+    bool hasSecuredExtension;
+};
+
+
 
 //
 struct SecureMessageType {
@@ -35,16 +68,20 @@ struct MessageType {
 };
 
 //
-struct Message {
-    PacketHeader packetHeader;
-    PayloadHeader payloadHeader;
-    ByteArray securityExtension;
-    ByteArray payload;
+struct Payload {
+    PayloadHeader header;
+    bytes_t payload;
+    bytes_t securityExtension;
 };
 
 //
-struct DecodedMessage : public Message {
-    DecodedPacketHeader packetHeader;
+struct Message {
+    PacketHeader header;
+    Payload decodedPayload;
+
+    //
+    bytes_t messageExtension;
+    bytes_t rawPayload;
 };
 
 //
@@ -54,12 +91,19 @@ struct MsgTypeInfo {
 };
 
 //
-inline MsgTypeInfo mapProtocolAndMessageType(uint32_t protocolId, uint8_t messageType) {
-    std::string msgTypeHex = Diagnostic::hex(messageType);
-    std::string type = Diagnostic::hex(protocolId) + "/" + msgTypeHex;
-    if (protocolId == SECURE_CHANNEL_PROTOCOL_ID)
-        { return { type, "SC/" + SecureMessageType::toString(messageType) }; }
-    else if (protocolId == INTERACTION_PROTOCOL_ID)
-        { return { type, "I/" + MessageType::toString(messageType) }; }
-    return { type, "" };
-}
+struct MessageCodec {
+    static Message decodeMessage(DataReader& packet);
+    static bytes_t encodeMessage(const Message& message);
+    static Message buildMessage(PacketHeader const& header, Payload const& payload);
+
+    //
+    static bytes_t encodePayload(Payload const& payload);
+    static Payload decodePayload(DataReader& data);
+private:
+    static PacketHeader decodePacketHeader(DataReader& reader);
+    static bytes_t encodePacketHeader(const PacketHeader& ph);
+
+    //
+    static PayloadHeader decodePayloadHeader(DataReader& reader);
+    static bytes_t encodePayloadHeader(const PayloadHeader& ph);
+};
