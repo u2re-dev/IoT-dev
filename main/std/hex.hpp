@@ -1,6 +1,8 @@
 
 #pragma once
 #include "types.hpp"
+#include <sstream>
+#include <iomanip>
 
 //
 namespace hex {

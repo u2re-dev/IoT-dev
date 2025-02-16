@@ -1,22 +1,9 @@
 #pragma once
 
 // C++ libs
-#include <optional>
-#include <string>
-#include <array>
 #include <stdexcept>
-#include <sstream>
-#include <concepts>
-#include <string>
 #include <vector>
-#include <iomanip>
-#include <iostream>
-#include <utility>
-#include <functional>
-#include <atomic>
-#include <thread>
-#include <tuple>
-#include <random>
+
 
 // C-libs
 #include <cmath>
@@ -24,7 +11,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
-#include <cinttypes>
 
 //
 #include "../spake2/bigint/intx.hpp"
@@ -102,9 +88,9 @@ private:
     }
 
     //
-    const byte_t* begin = nullptr;
-    const byte_t* ptr   = nullptr;
-    const byte_t* end   = nullptr;
+    byte_t const* begin = nullptr;
+    byte_t const* ptr   = nullptr;
+    byte_t const* end   = nullptr;
 };
 
 //
@@ -145,8 +131,7 @@ private: bytes_t data;
 //
 class DataWriterLL {
 public:
-    DataWriterLL(uint8_t* buffer, size_t bufferSize) :
-    ptr(buffer), data(buffer), capacity(bufferSize) {};
+    DataWriterLL(uint8_t* buffer, size_t bufferSize) : data(buffer), ptr(buffer), capacity(bufferSize) {};
 
     inline void writeUInt8(uint8_t value) {
         ensureCapacity(1);
@@ -189,7 +174,7 @@ private:
 
     // Проверяет, достаточно ли места в буфере для записи
     void ensureCapacity(size_t additionalBytes) {
-        if (capacity && ((ptr - data) > (capacity))) {
+        if (capacity && ((ptr - data) > (additionalBytes))) {
             throw std::runtime_error("Buffer overflow: not enough space in the buffer");
         }
     }
