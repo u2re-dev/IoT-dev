@@ -1,56 +1,24 @@
 #pragma once
 
+//
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <list>
 #include <queue>
 #include <utility>
 #include <vector>
+#include <cstring>
+
+//
+#include "./data.hpp"
 
 //
 namespace tlvcpp
 {
-    //
-    struct value_reader {
-        intptr_t reamin_size = 0;
-        size_t offset = 0;
-        uint8_t const* memory = nullptr;
-
-        //
-        value_reader(uint8_t const* data = nullptr, size_t size = 0) : memory(data), reamin_size(size) {}
-
-        //
-        bool checkMemory(size_t size = 1) const {
-            return (reamin_size >= intptr_t(size));
-        }
-
-        //
-        int32_t readI32() { return *(int32_t*)readBytes(4); }
-        int16_t readI16() { return *(int16_t*)readBytes(2); }
-        int8_t readI8 () { return *(int8_t *)readBytes(1); }
-
-        //
-        uint32_t readU32() { return *(uint32_t*)readBytes(4); }
-        uint16_t readU16() { return *(uint16_t*)readBytes(2); }
-        uint8_t readU8 () { return *(uint8_t *)readBytes(1); }
-
-        //
-        uint8_t const* readBytes(size_t size) {
-            if (reamin_size < intptr_t(size)) {
-                throw std::runtime_error("Remain memory exceeded");
-                return nullptr;
-            }
-            reamin_size -= size;
-            auto ptr = memory + offset;
-            offset += size;
-            return ptr;
-        }
-    };
 
     //
     template <typename T>
@@ -267,11 +235,12 @@ namespace tlvcpp
             return other.is_child_of(*this);
         }
 
-        bool serialize(std::vector<uint8_t> &buffer, size_t *bytes_written = nullptr) const;
+        //
+        bool serialize(data_writer &buffer) const;
 
         //
         bool deserialize(uint8_t const* buffer, const size_t size);
-        bool deserialize(value_reader& reader); 
+        bool deserialize(data_reader& reader); 
         bool deserialize(std::vector<uint8_t> const& buffer);
 
         void dump(const size_t &indentation = 0, std::ostream &stream = std::cout) const

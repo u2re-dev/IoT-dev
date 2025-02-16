@@ -5,8 +5,8 @@
 #include <iomanip>
 
 //
-#include "limits"
-#include "./std/hexdump.h"
+//#include "limits"
+//#include "./std/hexdump.h"
 #include "./std/stream_guard.h"
 
 //
@@ -72,7 +72,7 @@ namespace tlvcpp
     //
     bool operator==(const tlv &tlv, const tag_t &tag) { return tlv.m_tag == tag; }
 
-    //
+    // TODO: implement support hexdump support
     std::ostream &operator<<(std::ostream &stream, const tlv &tlv)
     {
         const auto width = static_cast<size_t>(stream.width());
