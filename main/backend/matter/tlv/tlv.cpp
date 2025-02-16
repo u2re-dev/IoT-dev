@@ -41,7 +41,8 @@ namespace tlvcpp
         {
             m_value = new uint8_t[m_length];
 
-            std::memcpy(m_value, value, m_length);
+            // fix issue
+            if (value) std::memcpy(m_value, value, m_length);
         }
     }
 

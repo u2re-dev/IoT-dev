@@ -5,9 +5,10 @@
 
 namespace tlvcpp
 {
-    using tag_t = uint32_t;
-    using length_t = uint32_t;
-    using value_t = uint8_t;
+    using type_t   = uint8_t;  // TODO: add into tlv field
+    using tag_t    = uint32_t; //
+    using length_t = uint32_t; // TODO: add real length field value (for arrays, etc.)
+    using value_t  = uint8_t;
     using tag_parser = const char *(*)(const tag_t);
 
     void set_tag_parser(tag_parser parser);
@@ -39,8 +40,10 @@ namespace tlvcpp
         const value_t *value() const { return m_value; }
 
     private:
-        tag_t m_tag = 0;
-        length_t m_length = 0;
+        // TODO: add type and real_length field
+        tag_t m_tag = 0; length_t m_length = 0; // tag-specific (classic)
+
+        // TODO: make primitive or booleans available
         value_t *m_value = nullptr;
     };
 }
