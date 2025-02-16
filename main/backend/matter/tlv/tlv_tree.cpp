@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <cstring>
 
+//
 #include "./tlv_tree.h"
 
+//
 namespace tlvcpp
 {
     namespace TLV {
@@ -33,147 +35,95 @@ namespace tlvcpp
     //
     static length_t length_of_tag(const tag_t tag)
     {
-        union
-        {
-            tag_t tag;
-            uint8_t byte[sizeof(tag_t)];
-        } tag_bytes;
-
+        union { tag_t tag; uint8_t byte[sizeof(tag_t)]; } tag_bytes;
         tag_bytes.tag = tag;
-
         length_t length = 1;
-
-        while (tag_bytes.byte[length])
-        {
+        while (tag_bytes.byte[length]) {
             length++;
-
-            if (length > sizeof(tag_t))
-            {
-                length = sizeof(tag_t);
-
-                break;
-            }
+            if (length > sizeof(tag_t)) { length = sizeof(tag_t); break; }
         }
-
         return length;
     }
 
+    //
     static length_t length_of_length(const length_t length)
     {
         length_t length_of_length = 1;
-
-        if (length < 128)
-            return length_of_length;
-
-        union
-        {
-            length_t length;
-            uint8_t byte[sizeof(length_t)];
-        } length_bytes;
-
+        if (length < 128) return length_of_length;
+        union { length_t length; uint8_t byte[sizeof(length_t)]; } length_bytes;
         length_bytes.length = length;
-
-        while (length_bytes.byte[length_of_length])
-        {
-            length_of_length++;
-
-            if (length_of_length > sizeof(length_t))
-            {
-                length_of_length = sizeof(length_t);
-
-                break;
-            }
-        }
-
+        while (length_bytes.byte[length_of_length]) { length_of_length++; if (length_of_length > sizeof(length_t)) { length_of_length = sizeof(length_t); break; } }
         return length_of_length + 1;
     }
 
+    //
     static length_t node_length_recursive(const tlv_tree_node &node)
     {
+        /*
         const tlvcpp::tlv &tlv = node.data();
-        length_t size = 0;
+        length_t size = 0; size += length_of_tag(tlv.tag());
 
-        size += length_of_tag(tlv.tag());
-
-        if (tag_is_primitive(tlv.tag()))
-            size += tlv.length();
-        else
+        //
+        if (tag_is_primitive(tlv.tag())) size += tlv.length(); else
             for (const auto &child : node.children())
                 size += node_length_recursive(child);
 
         size += length_of_length(size);
-
-        return size;
+        return size;*/
+        return 0;
     }
 
+    //
     static length_t node_length(const tlv_tree_node &node)
     {
+        /*
         const tlvcpp::tlv &tlv = node.data();
-
-        if (tag_is_primitive(tlv.tag()))
-            return tlv.length();
+        if (tag_is_primitive(tlv.tag())) return tlv.length();
 
         length_t size = 0;
-
         for (const auto &child : node.children())
             size += node_length_recursive(child);
 
-        return size;
+        return size;*/
+        return 0;
     }
 
+    //
     static bool serialize_tag(const tag_t tag, std::vector<uint8_t> &buffer)
     {
-        if (!tag)
-            return false;
-
+        if (!tag) return false;
         length_t length = length_of_tag(tag);
 
-        union
-        {
-            tag_t tag;
-            uint8_t byte[sizeof(tag_t)];
-        } tag_bytes;
-
+        union { tag_t tag; uint8_t byte[sizeof(tag_t)]; } tag_bytes;
         tag_bytes.tag = tag;
 
-        for (size_t i = length - 1; i != static_cast<std::size_t>(-1); i--)
+        for (size_t i = length - 1; i != static_cast<std::size_t>(-1); i--) {
             buffer.push_back(tag_bytes.byte[i]);
+        }
 
         return true;
     }
 
+    //
     static bool serialize_length(const length_t length, std::vector<uint8_t> &buffer)
     {
-        if (length < 0b01111111)
-        {
-            buffer.push_back(static_cast<uint8_t>(length));
+        if (length < 0b01111111) { buffer.push_back(static_cast<uint8_t>(length)); return true; }
 
-            return true;
-        }
-
-        union
-        {
-            length_t length;
-            uint8_t byte[sizeof(length_t)];
-        } length_bytes;
-
+        //
+        union { length_t length; uint8_t byte[sizeof(length_t)]; } length_bytes;
         length_bytes.length = length;
 
+        //
         uint8_t length_of_length = sizeof(length_t);
-
         for (size_t i = sizeof(length_t) - 1; i != static_cast<std::size_t>(-1); i--)
-            if (!length_bytes.byte[i])
-                length_of_length--;
-            else
-                break;
+            if (!length_bytes.byte[i]) length_of_length--; else break;
 
-        if (length_of_length > sizeof(length_t))
-            return false;
-
+        //
+        if (length_of_length > sizeof(length_t)) return false;
         buffer.push_back(length_of_length | 0b10000000);
 
+        //
         size_t byte_index = length_of_length - 1;
-
         while (byte_index != static_cast<std::size_t>(-1))
             buffer.push_back(length_bytes.byte[byte_index--]);
 
@@ -191,22 +141,18 @@ namespace tlvcpp
     static bool serialize_recursive(const tlv_tree_node &node, std::vector<uint8_t> &buffer)
     {
         const tlvcpp::tlv &tlv = node.data();
+        if (!serialize_tag(tlv.tag(), buffer)) return false;
+        if (!serialize_length(node_length(node), buffer)) return false;
 
-        if (!serialize_tag(tlv.tag(), buffer))
-            return false;
-
-        if (!serialize_length(node_length(node), buffer))
-            return false;
-
+        //
         if (tag_is_primitive(tlv.tag()))
         {
-            if (!serialize_value(tlv.value(), tlv.length(), buffer))
-                return false;
-        }
-        else
+            //if (!serialize_value(tlv.value(), tlv.length(), buffer))
+                //return false;
+        } else {
             for (const auto &child : node.children())
-                if (!serialize_recursive(child, buffer))
-                    return false;
+                if (!serialize_recursive(child, buffer)) return false;
+        }
 
         return true;
     }
@@ -215,20 +161,13 @@ namespace tlvcpp
     bool tree_node<tlvcpp::tlv>::serialize(std::vector<uint8_t> &buffer, size_t *bytes_written) const
     {
         const auto size = buffer.size();
-
-        if (data().tag())
-        {
-            if (!serialize_recursive(*this, buffer))
-                return false;
-        }
-        else
+        if (data().tag()) {
+            if (!serialize_recursive(*this, buffer)) return false;
+        } else {
             for (const auto &child : children())
-                if (!serialize_recursive(child, buffer))
-                    return false;
-
-        if (bytes_written)
-            *bytes_written = buffer.size() - size;
-
+                if (!serialize_recursive(child, buffer)) return false;
+        }
+        if (bytes_written) *bytes_written = buffer.size() - size;
         return true;
     }
 
@@ -237,48 +176,32 @@ namespace tlvcpp
 
     // ========== MATTER DESERIALIZATION =======
 
-    //
-    static bool deserialize_tag(const uint8_t *&buffer, size_t &remaining_size, 
-          type_t &type,
-           tag_t &tag,
-        length_t &length, 
-        uint8_t *& value
-    )
+    static bool deserialize_tag( value_reader& reader, tlv& value )
     {
-        if (!remaining_size) return false;
+        if (!reader.checkMemory()) return false;
 
         //
-        tag_t _tag = *buffer++; remaining_size--; length++;
+        tag_t _tag = reader.readU8();
         if (!_tag) return false;
 
         // get simple-type of tag
-        type = _tag & 0b00011111;
+        value.type(_tag & 0b00011111);
 
         // is really simple type i.e. classic TLV?
-        if ((_tag ^ type) <= 0b00011111)
-        {   //
-            tag = type;
-            //buffer++; remaining_size--; length++; // needs this line or not?
-            if (type == 0x18) { return false; }; // means parse end
-            value = nullptr; return true;
-        }
+        if ((_tag ^ value.type()) <= 0b00011111) { value.tag(value.type()); return (value.type() == 0x18) ? false : true; }
 
         // matter tags always complex...
-        tag = *buffer++; remaining_size--; // use seq. number as tag-name
-        if (!remaining_size) return false;
+        value.tag(reader.readU8());
+        if (!reader.checkMemory()) return false;
 
         //
-        switch (type)
+        switch (value.type())
         {
             // parsing structure END-TAG
             case 0x18: return false;
 
             // due of 0x15 may be primitive tag...
-            case TLV::Constants::Type::STRUCTURE:
-                //length++; buffer++; remaining_size--; // needs this line or not?
-                value = nullptr; return true;
-
-            //
+            case TLV::Constants::Type::STRUCTURE: return true;
             case TLV::Constants::Type::UTF8_STRING:
 
             //
@@ -286,88 +209,76 @@ namespace tlvcpp
             case TLV::Constants::Type::PATH:
             case TLV::Constants::Type::BYTE_STRING: {
                 //
-                uint8_t next_byte = *buffer++; remaining_size --;
-                length_t add_len  = 0;
-                if (!(next_byte & 0b10000000)) add_len = next_byte; // simple length value
+                uint8_t next_byte = reader.readU8();
+                length_t add_len  = 0; if (!(next_byte & 0b10000000)) add_len = next_byte; // simple length value
 
                 // long length value
-                while ((next_byte & 0b10000000) && remaining_size > 0)
+                while ((next_byte & 0b10000000) && reader.checkMemory())
                 {   // reconstruct length
                     add_len   = (add_len << 7) | (next_byte & 0b01111111);
-                    next_byte = *buffer++; remaining_size --; length++;
+                    next_byte = reader.readU8();
                 }
-                if (remaining_size == 0) return false;
+                if (!reader.checkMemory()) return false;
 
                 //
-                value = (uint8_t*)(buffer); // TODO: payload length i.e. `add_len`
-                length += add_len; buffer += add_len; remaining_size -= add_len; // just skip those bytes
+                value.setBytes((uint8_t const*)reader.readBytes(add_len), add_len);
                 return true;
             }; 
 
             case TLV::Constants::Type::UNSIGNED_INTEGER:
-                if (remaining_size < 1) return false;
-                value = (uint8_t*)(buffer);
-                length += 1; buffer += 1; remaining_size -= 1;
+                value = reader.readU8();
                 return true;
 
             case TLV::Constants::Type::INT16:
-                if (remaining_size < 2) return false;
-                value = (uint8_t*)(buffer);
-                length += 2; buffer += 2; remaining_size -= 2;
+                reader.checkMemory(2);
+                value = reader.readU16();
                 return true;
 
             case TLV::Constants::Type::SIGNED_INTEGER:
             case TLV::Constants::Type::FLOATING_POINT_NUMBER:
-                if (remaining_size < 4) return false;
-                value = (uint8_t*)(buffer);
-                length += 4; buffer += 4; remaining_size -= 4;
+                reader.checkMemory(4);
+                value = reader.readU16();
                 return true;
 
             case TLV::Constants::Type::BOOLEAN:
-                value = nullptr; // TODO: set value as true
+                value = true; // TODO: set value as true
                 return true;
 
             case TLV::Constants::Type::NULL_TYPE:
-                value = nullptr;
                 return true;
 
             default: // may be classic TLV (may be broken or currupted)
-                while (remaining_size > 0 && (_tag & 0b10000000)) {
-                    _tag = (_tag << 8) | (*buffer++); remaining_size--; length++;
+                while (reader.checkMemory() && (_tag & 0b10000000)) {
+                    _tag = (_tag << 8) | reader.readU8();
                 };
-                _tag &= 0b00011111; tag = _tag; if (remaining_size == 0) return false;
+                _tag &= 0b00011111; value.tag(_tag);
+                return reader.checkMemory();
         }
         return false;
     }
 
     //
-    static bool deserialize_recursive(const uint8_t *&buffer, size_t &remaining_size, tlv_tree_node &node)
+    static bool deserialize_recursive(value_reader& reader, tlv_tree_node &node, intptr_t level = 0)
     {
-        while (remaining_size)
+        while (reader.checkMemory())
         {
-            tag_t tag = 0; length_t length = 0; type_t type = 0;
-            uint8_t* value = nullptr;
-
-            //
-            if (!deserialize_tag(buffer, remaining_size, type, tag, length, value)) return false;
-            if (remaining_size == 0) return false;
+            tlv value{ 0 };
+            if (!deserialize_tag(reader, value)) return false;
+            if (!reader.checkMemory()) return false;
 
             //! unfixable issue: type 0x15 should be `node` itself!
             //! if use such trick, will no visible 0x15 tag-name at all
-            auto &child = type == 0x15 ? node : (node.add_child(tag, length, value));
-            if (!(type == 0x15 ? deserialize_recursive(buffer, remaining_size, child) : true)) return false;
+            auto &child = (value.type() == 0x15 && level == 0) ? node : node.add_child(value);
+            if (!(value.type() == 0x15 ? deserialize_recursive(reader, child, level+1) : true)) return false;
         }
 
         return true;
     }
 
     template <>
-    bool tree_node<tlvcpp::tlv>::deserialize(const uint8_t *buffer, const size_t size)
+    bool tree_node<tlvcpp::tlv>::deserialize(value_reader& reader)
     {
-        size_t remaining_size = size;
-
-        if (!deserialize_recursive(buffer, remaining_size, *this))
-            return false;
+        if (!deserialize_recursive(reader, *this)) return false;
 
         if (this->data().tag() == 0 && children().size() == 1)
             *this = std::move(children().front());
@@ -376,8 +287,13 @@ namespace tlvcpp
     }
 
     template <>
-    bool tree_node<tlvcpp::tlv>::deserialize(const std::vector<uint8_t> &buffer)
-    {
+    bool tree_node<tlvcpp::tlv>::deserialize(uint8_t const* data, size_t size) {
+        auto reader = value_reader(data, size);
+        return deserialize(reader);
+    }
+
+    template <>
+    bool tree_node<tlvcpp::tlv>::deserialize(std::vector<uint8_t> const& buffer){
         return deserialize(buffer.data(), buffer.size());
     }
 }

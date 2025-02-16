@@ -2,6 +2,7 @@
 
 #include "./tlv.h"
 #include "./std/tree.h"
+#include <stdexcept>
 
 namespace tlvcpp
 {
