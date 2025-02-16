@@ -1,19 +1,14 @@
 #pragma once
 
+//
 namespace tlvcpp
 {
     template <typename T>
     class stream_guard
     {
     public:
-        stream_guard(T &stream) : m_stream(stream),
-                                  m_flags(stream.flags()),
-                                  m_width(stream.width()),
-                                  m_precision(stream.precision()),
-                                  m_fill(stream.fill()) {}
-
-        ~stream_guard()
-        {
+        stream_guard(T &stream) : m_stream(stream), m_flags(stream.flags()), m_width(stream.width()), m_precision(stream.precision()), m_fill(stream.fill()) {}
+        ~stream_guard() {
             m_stream.flags(m_flags);
             m_stream.width(m_width);
             m_stream.precision(m_precision);

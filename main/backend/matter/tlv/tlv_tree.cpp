@@ -3,9 +3,12 @@
 
 //
 #include "./tlv.h"
-#include "./std/tree.h"
-#include "./serialize.hpp"
-#include "./deserialize.hpp"
+//#include "./std/tree.h"
+
+//
+#include "./parts/data.hpp"
+#include "./parts/serialize.hpp"
+#include "./parts/deserialize.hpp"
 
 //
 namespace tlvcpp
@@ -27,12 +30,9 @@ namespace tlvcpp
     bool tree_node<tlvcpp::tlv>::deserialize(data_reader& reader)
     {
         if (!deserialize_recursive(reader, *this)) return false;
-        if (this->data().tag() == 0 && children().size() == 1)
-            *this = std::move(children().front());
+        if (this->data().tag() == 0 && children().size() == 1) *this = std::move(children().front());
         return true;
     }
-
-
 
     template <>
     bool tree_node<tlvcpp::tlv>::deserialize(uint8_t const* data, size_t size) {
