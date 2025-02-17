@@ -4,7 +4,7 @@
 #include "../diagnostic/Diagnostic.hpp"
 
 //
-PacketHeader MessageCodec::decodePacketHeader(DataReader& reader) {
+PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
     PacketHeader header{};
     uint8_t flags   = reader.readUInt8();
     uint8_t version = (flags & VersionMask) >> 4;
@@ -49,8 +49,8 @@ PacketHeader MessageCodec::decodePacketHeader(DataReader& reader) {
 }
 
 //
-bytes_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
-    DataWriter writer;
+writer_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
+    writer_t writer;
 
     //
     uint8_t flags = (HEADER_VERSION << 4) |
@@ -70,13 +70,13 @@ bytes_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
     if (ph.destGroupId)  writer.writeUInt16(ph.destGroupId);
 
     //
-    return writer.toBytes();
+    return writer;
 }
 
 
 
 //
-Message MessageCodec::decodeMessage(DataReader& reader) {
+Message MessageCodec::decodeMessage(reader_t& reader) {
     Message dp;
     dp.header             = decodePacketHeader(reader);;
     dp.messageExtension   = dp.header.hasMessageExtensions ? reader.readByteArray(reader.readUInt16()) : bytes_t{};
@@ -86,7 +86,7 @@ Message MessageCodec::decodeMessage(DataReader& reader) {
 
 //
 bytes_t MessageCodec::encodeMessage(Message const& packet) {
-    if (packet.messageExtension.size() || packet.header.hasMessageExtensions)  throw NotImplementedError("Message extensions not supported when encoding a packet.");
+    if (packet.messageExtension->size() || packet.header.hasMessageExtensions)  throw NotImplementedError("Message extensions not supported when encoding a packet.");
     return concat({encodePacketHeader(packet.header), packet.rawPayload});
 }
 

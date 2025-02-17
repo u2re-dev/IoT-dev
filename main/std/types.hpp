@@ -4,36 +4,42 @@
 #include <stdexcept>
 #include <vector>
 
-
 // C-libs
 #include <cmath>
 #include <cstring>
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
+#include <memory>
 
 //
 #include "../spake2p/bigint/intx.hpp"
 
 //
-using bytes_t  = std::vector<uint8_t>;
 using byte_t   = uint8_t;
+using bytes_t  = std::shared_ptr<std::vector<byte_t>>;
 using node_id  = uint64_t;
 using group_id = uint16_t;
 using bigint_t = intx::uint256;
 
 //
+template<typename... Args>
+inline bytes_t make_bytes(Args... args) {
+    return std::make_shared<std::vector<byte_t>>(args...);
+}
+
+//
 inline bytes_t concat(const std::initializer_list<bytes_t>& arrays) {
-    bytes_t result;
-    for (const auto& arr : arrays) result.insert(result.end(), arr.begin(), arr.end());
+    bytes_t result = make_bytes();
+    for (const auto& arr : arrays) result->insert(result->end(), arr->begin(), arr->end());
     return result;
 }
 
 //
-class DataReader {
+class reader_t {
 public:
-    inline DataReader(bytes_t const& data_) : begin(data_.data()), ptr(data_.data()), end(data_.data() + data_.size()) {}
-    inline DataReader(uint8_t const* data_) : begin(data_), ptr(data_), end(nullptr) {}
+    inline reader_t(bytes_t const& data_) : begin(data_->data()), ptr(data_->data()), end(data_->data() + data_->size()) {}
+    inline reader_t(uint8_t const* data_) : begin(data_), ptr(data_), end(nullptr) {}
 
 
     inline uint8_t readUInt8() {
@@ -73,13 +79,18 @@ public:
 
     inline bytes_t readByteArray(size_t length) {
         checkSize(length);
-        bytes_t buf(ptr, ptr + length);
+        bytes_t buf = make_bytes(ptr, ptr + length);
         ptr += length;
         return buf;
     }
 
     inline bytes_t remainingBytes() const {
-        return bytes_t(ptr, end);
+        return make_bytes(ptr, end);
+    }
+
+    //
+    inline operator bytes_t() const {
+        return make_bytes(begin, end);
     }
 
 private:
@@ -94,42 +105,48 @@ private:
 };
 
 //
-class DataWriter {
+class writer_t {
 public:
     operator bytes_t&() { return data; };
     operator bytes_t const&() const { return data; };
 
+    //
+    writer_t() : data(make_bytes()) {}
+    writer_t(bytes_t const& exists) : data(exists) {}
+
+    //
     inline void writeUInt8(uint8_t value) {
-        data.push_back(value);
+        data->push_back(value);
     }
 
+    //
     inline void writeUInt16(uint16_t value) {
-        data.push_back(static_cast<byte_t>(value & 0xff));
-        data.push_back(static_cast<byte_t>((value >> 8) & 0xff));
+        data->push_back(static_cast<byte_t>(value & 0xff));
+        data->push_back(static_cast<byte_t>((value >> 8) & 0xff));
     }
 
     inline void writeUInt32(uint32_t value) {
         for (size_t i = 0; i < 4; ++i) {
-            data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
+            data->push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
     inline void writeUInt64(uint64_t value) {
         for (size_t i = 0; i < 8; ++i) {
-            data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
+            data->push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
     inline void writeBigint(const bigint_t& val) {
         for (size_t i = 0; i < 8; ++i) {
-            data.push_back(byte_t((val >> (8*i)) & 0xff));
+            data->push_back(byte_t((val >> (8*i)) & 0xff));
         }
     }
 
     // TODO: better method for writing bytes
     inline void writeBytes(const bytes_t& val) {
-        for (size_t i = 0; i < val.size(); ++i) {
-            data.push_back(val[i]);
+        for (size_t i = 0; i < val->size(); ++i) {
+            data->push_back((*val)[i]);
         }
     }
 
@@ -141,9 +158,9 @@ private: bytes_t data;
 };
 
 //
-class DataWriterLL {
+class writer_l {
 public:
-    DataWriterLL(uint8_t* buffer, size_t bufferSize) : data(buffer), ptr(buffer), capacity(bufferSize) {};
+    writer_l(uint8_t* buffer, size_t bufferSize) : data(buffer), ptr(buffer), capacity(bufferSize) {};
 
     inline void writeUInt8(uint8_t value) {
         ensureCapacity(1);
@@ -166,6 +183,12 @@ public:
         ensureCapacity(8);
         for (int i = 0; i < 8; ++i)
             { *ptr = static_cast<uint8_t>((value >> (8 * i)) & 0xff); ptr++; };
+    }
+
+    inline void writeBytes(bytes_t const& arr) {
+        ensureCapacity(arr->size());
+        memcpy(ptr, arr->data(), arr->size());
+        ptr += arr->size();
     }
 
     inline void writeBytes(const uint8_t* arr, size_t length) {

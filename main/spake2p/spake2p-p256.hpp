@@ -64,12 +64,13 @@ public:
     Spake2p(const bytes_t& context, const W0W1L& base) : context_(context), base_(base) { 
         mbedtls_ecp_group_init(&group_); 
         mbedtls_ecp_group_load(&group_, MBEDTLS_ECP_DP_SECP256R1);
+        //context_ = make_bytes();
     }
 
     //
     static W0W1L computeW0W1L(const PbkdfParameters& pbkdfParameters, uint32_t pin) {
         auto ws = crypto::pbkdf2(pinToBytes(pin), pbkdfParameters.salt, pbkdfParameters.iterations, PBKDF2_OUTLEN);
-        if (ws.size() < PBKDF2_OUTLEN) { throw std::runtime_error("PBKDF2: not enough length"); }
+        if (ws->size() < PBKDF2_OUTLEN) { throw std::runtime_error("PBKDF2: not enough length"); }
 
         // TODO: use single group instead of recreating group
         mbedtls_ecp_group group; mbedtls_ecp_group_init(&group);
@@ -77,8 +78,8 @@ public:
 
         //
         W0W1L w0w1L = {};
-        w0w1L.w0 = mpi_t(ws.data(), CRYPTO_W_SIZE_BYTES) % group.N;
-        w0w1L.w1 = mpi_t(ws.data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES) % group.N;
+        w0w1L.w0 = mpi_t(ws->data(), CRYPTO_W_SIZE_BYTES) % group.N;
+        w0w1L.w1 = mpi_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES) % group.N;
         w0w1L.L  = computeLPoint(group, w0w1L.w1);
         w0w1L.random = mpi_t().random();
         w0w1L.params = pbkdfParameters;
@@ -144,7 +145,7 @@ private:
 
     //
     bigint_t computeTranscriptHash(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
-        DataWriter writer; writer.writeBytes(context_);
+        writer_t writer; writer.writeBytes(context_);
         writer.writeBigint(bigint_t(0));
 
         // N and M write
@@ -164,8 +165,8 @@ private:
 
     //
     static bytes_t pinToBytes(uint32_t pin) {
-        bytes_t pinBytes(4);
-        memcpy(pinBytes.data(), &pin, sizeof(pin));
+        bytes_t pinBytes = make_bytes(4);
+        memcpy(pinBytes->data(), &pin, sizeof(pin));
         return pinBytes;
     }
 

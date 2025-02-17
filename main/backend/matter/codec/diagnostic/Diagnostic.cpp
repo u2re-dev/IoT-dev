@@ -28,7 +28,7 @@ std::string Diagnostic::messageDiagnostics(const Message& message, const std::st
         { "type", info.type },
         { "acked", payload.header.ackedMessageId ? std::to_string(payload.header.ackedMessageId) : "N/A" },
         { "msgFlags", Diagnostic::asFlags(payload.header.requiresAck, duplicate) },
-        { "size", !payload.payload.empty() ? std::to_string(payload.payload.size()) : "0" }
+        { "size", !payload.payload->empty() ? std::to_string(payload.payload->size()) : "0" }
     };
     return Diagnostic::dict(diag);
 }

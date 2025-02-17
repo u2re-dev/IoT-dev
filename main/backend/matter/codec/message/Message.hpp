@@ -92,18 +92,18 @@ struct MsgTypeInfo {
 
 //
 struct MessageCodec {
-    static Message decodeMessage(DataReader& packet);
+    static Message decodeMessage(reader_t& packet);
     static bytes_t encodeMessage(const Message& message);
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
 
     //
     static bytes_t encodePayload(Payload const& payload);
-    static Payload decodePayload(DataReader& data);
+    static Payload decodePayload(reader_t& data);
 private:
-    static PacketHeader decodePacketHeader(DataReader& reader);
-    static bytes_t encodePacketHeader(const PacketHeader& ph);
+    static PacketHeader decodePacketHeader(reader_t& reader);
+    static writer_t encodePacketHeader(const PacketHeader& ph);
 
     //
-    static PayloadHeader decodePayloadHeader(DataReader& reader);
-    static bytes_t encodePayloadHeader(const PayloadHeader& ph);
+    static PayloadHeader decodePayloadHeader(reader_t& reader);
+    static writer_t encodePayloadHeader(const PayloadHeader& ph);
 };

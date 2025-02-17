@@ -11,6 +11,7 @@
 //
 #include "./mpi.hpp"
 #include "./misc.hpp"
+#include "std/types.hpp"
 
 //
 class ecp_t {
@@ -102,15 +103,15 @@ public:
     
     //
     bytes_t toBytes(bool compressed = false) const {
-        bytes_t buffer(65); size_t len = 65;
-        checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buffer.data(), buffer.size()), "Failed to write point to bytes");
+        size_t len = 65; bytes_t buffer = make_bytes(len);
+        checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buffer->data(), buffer->size()), "Failed to write point to bytes");
         return buffer;
     }
 
     
     //
     ecp_t& loadBytes(bytes_t const& data ) { 
-        return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data.data(), data.size()), "bytes loading failed"); 
+        return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data->data(), data->size()), "bytes loading failed"); 
     }
     ecp_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
 
@@ -119,11 +120,11 @@ public:
     //
     ecp_t& getM() {
         bytes_t bt = hex::h2b("02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f");
-        bytes_t xy(65); size_t oLen = 65;
+        size_t oLen = 65; bytes_t xy = make_bytes(oLen);
 
         //
-        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt.data(), bt.size(), xy.data(), &oLen, xy.size()), "Failed to decompress M point" );
-        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy.data(), xy.size()), "Failed to read M point" );
+        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), xy->data(), &oLen, xy->size()), "Failed to decompress M point" );
+        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy->data(), xy->size()), "Failed to read M point" );
 
         //
         return *this;
@@ -132,11 +133,11 @@ public:
     //
     ecp_t& getN() {
         bytes_t bt = hex::h2b("03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49");
-        bytes_t xy(65); size_t oLen = 65;
+        size_t oLen = 65; bytes_t xy = make_bytes(oLen);
 
         //
-        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt.data(), bt.size(), xy.data(), &oLen, xy.size()), "Failed to decompress N point" );
-        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy.data(), xy.size()), "Failed to read N point" );
+        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), xy->data(), &oLen, xy->size()), "Failed to decompress N point" );
+        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy->data(), xy->size()), "Failed to read N point" );
 
         //
         return *this;

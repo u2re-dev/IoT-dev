@@ -1,11 +1,11 @@
 Special Packets...:
 
  Review Case:
-[04] [0000] [00]  [95d2 640d]  [85b43e0a 0e9dbc6d]  [03] [10] [d7 44] [00 00]  [58 55] [12 04]   #type 1
-[04] [0000] [00]  [9cdf 9b09]  [f340aae8 20c68b08]  [03] [10] [4c e0] [00 00]  [54 55] [12 04]   #type 1
+[04] [0000] [00]  [95d2 640d]  [85b43e0a 0e9dbc6d]  [03] [10] [d7 44] [00 00] [58 55] [12 04]   #type 1
+[04] [0000] [00]  [9cdf 9b09]  [f340aae8 20c68b08]  [03] [10] [4c e0] [00 00] [54 55] [12 04]   #type 1
 
  Other Case:
-[01] [0000] [00]  [8b1d 2f00]  [f40ecd25 504d2a09]  [02] [10] [7a 4e] [00 00]  [43 bb] [7d 0e]   #type 2
+[01] [0000] [00]  [8b1d 2f00]  [f40ecd25 504d2a09]  [02] [10] [7a 4e] [00 00] [43 bb] [7d 0e]   #type 2
 
 <message>
 1-byte - message flags    (contains node-id, but not sure)

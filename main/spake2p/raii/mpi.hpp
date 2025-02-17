@@ -13,7 +13,7 @@ class mpi_t {
         mpi_t(int  a = 0) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(long a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(uint a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
-        mpi_t( bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
+        mpi_t(bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
         mpi_t(uint8_t const* a, size_t const& len) { mbedtls_mpi_init(&mpi_); loadBytes(a, len); }
 
         //
@@ -26,11 +26,11 @@ class mpi_t {
 
         //
         mpi_t& loadBytes(uint8_t const* a, size_t const& len) { return vid(mbedtls_mpi_read_binary(&mpi_, a, len), "bytes loading failed"); }
-        mpi_t& loadBytes(bytes_t const& data ) { return vid(mbedtls_mpi_read_binary(&mpi_, data.data(), data.size()), "bytes loading failed"); }
+        mpi_t& loadBytes(bytes_t const& data ) { return vid(mbedtls_mpi_read_binary(&mpi_, data->data(), data->size()), "bytes loading failed"); }
         mpi_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
         bytes_t toBytes() const {
-            bytes_t bytes(32); size_t len = 32;
-            mbedtls_mpi_write_binary(&mpi_, bytes.data(), bytes.size());
+            size_t len = 32; bytes_t bytes = make_bytes(len);
+            mbedtls_mpi_write_binary(&mpi_, bytes->data(), bytes->size());
             return bytes;
         }
 
@@ -166,7 +166,6 @@ class mpi_t {
             mbedtls_entropy_init(&entropy);
             int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, reinterpret_cast<const unsigned char*>(pers), strlen(pers));
             if (ret != 0) { throw std::runtime_error("Ошибка инициализации генератора случайных чисел"); }
-
 
             // generation random itself
             ret = mbedtls_mpi_fill_random(&mpi_, 32, mbedtls_ctr_drbg_random, &ctr_drbg);

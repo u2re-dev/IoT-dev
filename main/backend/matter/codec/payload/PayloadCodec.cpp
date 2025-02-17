@@ -6,8 +6,8 @@
 //#include "../core/Types.hpp"
 
 //
-bytes_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
-    DataWriter writer;
+writer_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
+    writer_t writer;
     uint16_t vendorId = static_cast<uint16_t>((ph.protocolId >> 16) & 0xffff);
     uint8_t flags = (ph.isInitiatorMessage ? IsInitiatorMessage : 0) |
                     (ph.ackedMessageId     ? IsAckMessage       : 0) |
@@ -18,11 +18,11 @@ bytes_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
     writer.writeUInt16(ph.exchangeId);
     if (vendorId != COMMON_VENDOR_ID) { writer.writeUInt32(ph.protocolId); } else { writer.writeUInt16(static_cast<uint16_t>(ph.protocolId)); };
     if (ph.ackedMessageId) writer.writeUInt32(ph.ackedMessageId);
-    return writer.toBytes();
+    return writer;
 }
 
 //
-PayloadHeader MessageCodec::decodePayloadHeader(DataReader& reader) {
+PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
     PayloadHeader ph{};
     uint8_t exchFlags = reader.readUInt8();
     bool isAck     = (exchFlags & IsAckMessage) != 0;
@@ -45,7 +45,7 @@ PayloadHeader MessageCodec::decodePayloadHeader(DataReader& reader) {
 
 
 // 
-Payload MessageCodec::decodePayload(DataReader& reader) {
+Payload MessageCodec::decodePayload(reader_t& reader) {
     PayloadHeader header = decodePayloadHeader(reader);
 
     //
@@ -58,7 +58,7 @@ Payload MessageCodec::decodePayload(DataReader& reader) {
 
 //
 bytes_t MessageCodec::encodePayload(Payload const& payload) {
-    bytes_t encodedPH = encodePayloadHeader(payload.header);
+    writer_t encodedPH = encodePayloadHeader(payload.header);
     return concat({encodedPH, payload.payload});
 }
 
