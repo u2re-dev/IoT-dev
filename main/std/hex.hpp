@@ -7,6 +7,11 @@
 //
 namespace hex {
     
+    inline bytes_t n2b(bigint_t const &x) {
+        bytes_t a(32); memcpy(a.data(), &x, 32);
+        return a;
+    }
+
     //
     inline bytes_t s2b(const std::string& str) {
         return bytes_t(str.begin(), str.end());

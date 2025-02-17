@@ -13,7 +13,7 @@
 #include <cstdint>
 
 //
-#include "../spake2/bigint/intx.hpp"
+#include "../spake2p/bigint/intx.hpp"
 
 //
 using bytes_t  = std::vector<uint8_t>;
@@ -106,19 +106,28 @@ public:
     }
 
     inline void writeUInt32(uint32_t value) {
-        for (int i = 0; i < 4; ++i) {
+        for (size_t i = 0; i < 4; ++i) {
             data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
     inline void writeUInt64(uint64_t value) {
-        for (int i = 0; i < 8; ++i) {
+        for (size_t i = 0; i < 8; ++i) {
             data.push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
-    inline void writeBytes(const bytes_t& arr) {
-        data.insert(data.end(), arr.begin(), arr.end());
+    inline void writeBigint(const bigint_t& val) {
+        for (size_t i = 0; i < 8; ++i) {
+            data.push_back(byte_t((val >> (8*i)) & 0xff));
+        }
+    }
+
+    // TODO: better method for writing bytes
+    inline void writeBytes(const bytes_t& val) {
+        for (size_t i = 0; i < val.size(); ++i) {
+            data.push_back(val[i]);
+        }
     }
 
     inline bytes_t toBytes() const {

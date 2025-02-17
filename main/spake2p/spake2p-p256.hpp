@@ -138,29 +138,28 @@ private:
         bytes_t info = hex::s2b("ConfirmationKeys");
 
         //
-        bytes_t transcript = computeTranscriptHash(X, Y, Z, V);
-        bigint_t Ka = *((bigint_t*)transcript.data() + 0), Ke = *((bigint_t*)transcript.data() + 16);
+        bigint_t transcript = computeTranscriptHash(X, Y, Z, V);
+        bigint_t Ka = *(bigint_t*)((uint8_t*)&transcript + 0),
+                 Ke = *(bigint_t*)((uint8_t*)&transcript + 16);
 
         //
-        bytes_t KcAB = crypto::hkdf(bytes_t((uint8_t*)&Ka, ((uint8_t*)&Ka)+32), bytes_t{}, info, 32);
-        bigint_t KcA = *((bigint_t*)KcAB.data() + 0), KcB = *((bigint_t*)KcAB.data() + 16);
+        bigint_t KcAB = crypto::hkdf(bytes_t((uint8_t*)&Ka, ((uint8_t*)&Ka)+32), bytes_t{}, info, 32);
+        bigint_t KcA = *(bigint_t*)((uint8_t*)&KcAB + 0), KcB = *(bigint_t*)((uint8_t*)&KcAB + 16); // TODO: use uint128_t
 
         //
         SecretAndVerifiers result = {};
         result.Ke = Ke;
 
-        // TODO: replace bytes_t to bigint_t (needs make shorter and direct code)
-        result.hAY = *((bigint_t*)  crypto::hmac(  bytes_t((uint8_t*)&KcA, ((uint8_t*)&KcA)+32), Y.toBytes()).data());
-        result.hBX = *((bigint_t*)  crypto::hmac(  bytes_t((uint8_t*)&KcB, ((uint8_t*)&KcB)+32), X.toBytes()).data());
+        //
+        result.hAY = crypto::hmac(KcA, Y.toBytes());
+        result.hBX = crypto::hmac(KcB, X.toBytes());
         return result;
     }
 
-    // TODO: return as bigint_t, not bytes_t
-    bytes_t computeTranscriptHash(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
+    //
+    bigint_t computeTranscriptHash(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
         DataWriter writer; writer.writeBytes(context_);
-
-        // TODO: add support writing 256-bit integer directly
-        auto zero = bigint_t(0); writer.writeBytes(bytes_t((uint8_t*)&zero, ((uint8_t*)&zero)+32));
+        writer.writeBigint(bigint_t(0));
 
         // N and M write
         writer.writeBytes(ecp_t(group_).getM().toBytes(false));
@@ -174,11 +173,8 @@ private:
 
         // writing w0 and compute hash
         writer.writeBytes(hex::n2b(base_.w0));
-
-        // TODO: directly use bigint_t
         return crypto::hash(writer.toBytes());
     }
-
 
     //
     static bytes_t pinToBytes(uint32_t pin) {
