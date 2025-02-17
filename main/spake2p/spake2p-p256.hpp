@@ -43,10 +43,10 @@ struct PbkdfParameters {
 
 //
 struct W0W1L {
+    ecp_t L;
     bigint_t w0;
     bigint_t w1;
     bigint_t random;
-    ecp_t L;
     PbkdfParameters params;
 };
 
@@ -90,10 +90,10 @@ public:
     }
 
     // aka. pA
-    uncomp_t computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return X_; }
+    uncomp_t computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return std::move(X_); }
 
     // aka. pB
-    uncomp_t computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_; }
+    uncomp_t computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return std::move(Y_); }
 
 
     // to-server (X and L from client), aka. by Y  aka. cA
@@ -103,7 +103,7 @@ public:
         ecp_t Br = X  - ecp_t(group_).getM() * base_.w0;
         ecp_t Z  = Br * base_.random;
         ecp_t V  = Lp * base_.random;
-        return computeSecretAndVerifiers(X, Y_, Z, V);
+        return std::move(computeSecretAndVerifiers(X, Y_, Z, V));
     }
 
     // to-client (Y and w1 from server), aka. by X,  aka. cB
@@ -113,7 +113,7 @@ public:
         ecp_t Br = Y  - ecp_t(group_).getN() * base_.w0;
         ecp_t Z  = Br * base_.random;
         ecp_t V  = Br * base_.w1;
-        return computeSecretAndVerifiers(X_, Y, Z, V);
+        return std::move(computeSecretAndVerifiers(X_, Y, Z, V));
     }
 
 
@@ -146,7 +146,7 @@ private:
     //
     bigint_t computeTranscriptHash(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
         writer_t writer; writer.writeBytes(context_);
-        writer.writeBigint(bigint_t(0));
+        writer.writeBigInt(bigint_t(0));
 
         // N and M write
         writer.writeBytes(ecp_t(group_).getM());

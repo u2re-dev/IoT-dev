@@ -126,25 +126,36 @@ public:
     }
 
     inline void writeUInt32(uint32_t value) {
+        data->reserve(4);
         for (size_t i = 0; i < 4; ++i) {
             data->push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
     inline void writeUInt64(uint64_t value) {
+        data->reserve(8);
         for (size_t i = 0; i < 8; ++i) {
             data->push_back(static_cast<byte_t>((value >> (8*i)) & 0xff));
         }
     }
 
-    inline void writeBigint(const bigint_t& val) {
-        for (size_t i = 0; i < 8; ++i) {
+    inline void writeUInt128(const intx::uint128& val) {
+        data->reserve(16);
+        for (size_t i = 0; i < 16; ++i) {
+            data->push_back(byte_t((val >> (8*i)) & 0xff));
+        }
+    }
+
+    inline void writeBigInt(const bigint_t& val) {
+        data->reserve(32);
+        for (size_t i = 0; i < 32; ++i) {
             data->push_back(byte_t((val >> (8*i)) & 0xff));
         }
     }
 
     // TODO: better method for writing bytes
     inline void writeBytes(const bytes_t& val) {
+        data->reserve(val->size());
         for (size_t i = 0; i < val->size(); ++i) {
             data->push_back((*val)[i]);
         }
