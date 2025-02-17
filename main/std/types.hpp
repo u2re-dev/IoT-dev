@@ -96,6 +96,9 @@ private:
 //
 class DataWriter {
 public:
+    operator bytes_t&() { return data; };
+    operator bytes_t const&() const { return data; };
+
     inline void writeUInt8(uint8_t value) {
         data.push_back(value);
     }

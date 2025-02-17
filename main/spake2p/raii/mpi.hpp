@@ -3,8 +3,9 @@
 
 //
 #include <mbedtls/ctr_drbg.h>
-#include "../crypto.hpp"
 #include "./misc.hpp"
+#include "../bigint/intx.hpp"
+#include "../../std/types.hpp"
 
 //
 class mpi_t {
@@ -13,7 +14,7 @@ class mpi_t {
         mpi_t(long a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(uint a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t( bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
-        
+        mpi_t(uint8_t const* a, size_t const& len) { mbedtls_mpi_init(&mpi_); loadBytes(a, len); }
 
         //
         mpi_t(mbedtls_mpi const& mpi) : mpi_() { mbedtls_mpi_init(&mpi_); mbedtls_mpi_copy(&mpi_, &mpi); }
@@ -24,6 +25,7 @@ class mpi_t {
         ~mpi_t() { mbedtls_mpi_free(&mpi_); }
 
         //
+        mpi_t& loadBytes(uint8_t const* a, size_t const& len) { return vid(mbedtls_mpi_read_binary(&mpi_, a, len), "bytes loading failed"); }
         mpi_t& loadBytes(bytes_t const& data ) { return vid(mbedtls_mpi_read_binary(&mpi_, data.data(), data.size()), "bytes loading failed"); }
         mpi_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
         bytes_t toBytes() const {

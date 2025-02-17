@@ -5,7 +5,6 @@
 #include <mbedtls/ctr_drbg.h>
 
 //
-#include "../crypto.hpp"
 #include "../mbedtls/ecc_point_compression.h"
 #include "../../std/hex.hpp"
 
@@ -33,6 +32,9 @@ public:
     //
     operator mbedtls_ecp_point*() { return &point_; }
     operator mbedtls_ecp_point const*() const { return &point_; }
+
+    // convert to uncompressed value
+    operator bytes_t() const { return toBytes(false); }
 
     //
     ecp_t operator -() { return neg(); }
