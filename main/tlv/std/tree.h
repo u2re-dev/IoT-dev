@@ -13,7 +13,7 @@
 #include <cstring>
 
 //
-#include "../parts/data.hpp"
+#include "../../std/types.hpp"
 //#include "../tlv.h"
 
 //
@@ -61,12 +61,12 @@ namespace tlvcpp {
         bool is_parent_of(const tree_node &other) const { return other.is_child_of(*this); }
 
         //
-        bool serialize(data_writer &buffer) const;
+        bool deserialize(uint8_t const* buffer, const size_t size);
+        bool deserialize(std::vector<uint8_t> const& buffer);
 
         //
-        bool deserialize(uint8_t const* buffer, const size_t size);
-        bool deserialize(data_reader &reader);
-        bool deserialize(std::vector<uint8_t> const& buffer);
+        bool deserialize(reader_t &reader);
+        bool serialize(writer_t &buffer) const;
 
         //
         void dump(const size_t &indentation = 0, std::ostream &stream = std::cout) const { std::function<void(const tree_node &, size_t)> rec = [&](const tree_node &node, const size_t &indent) { stream << std::setw(static_cast<int>(indent) + 1) << node.m_data; for (auto const &child : node.m_children) rec(child, indent + 2); }; rec(*this, indentation); }

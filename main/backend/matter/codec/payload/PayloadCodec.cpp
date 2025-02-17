@@ -24,7 +24,7 @@ writer_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
 //
 PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
     PayloadHeader ph{};
-    uint8_t exchFlags = reader.readUInt8();
+    uint8_t exchFlags = reader.readByte();
     bool isAck     = (exchFlags & IsAckMessage) != 0;
     bool hasVendor = (exchFlags & HasVendorId ) != 0;
 
@@ -51,7 +51,7 @@ Payload MessageCodec::decodePayload(reader_t& reader) {
     //
     Payload msg;
     msg.header = header;
-    msg.securityExtension = msg.header.hasSecuredExtension  ? reader.readByteArray(reader.readUInt16()) : bytes_t{};
+    msg.securityExtension = msg.header.hasSecuredExtension  ? reader.readBytes(reader.readUInt16()) : bytes_t{};
     msg.payload = reader.remainingBytes();
     return msg;
 }

@@ -79,7 +79,7 @@ writer_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
 Message MessageCodec::decodeMessage(reader_t& reader) {
     Message dp;
     dp.header             = decodePacketHeader(reader);;
-    dp.messageExtension   = dp.header.hasMessageExtensions ? reader.readByteArray(reader.readUInt16()) : bytes_t{};
+    dp.messageExtension   = dp.header.hasMessageExtensions ? reader.readBytes(reader.readUInt16()) : bytes_t{};
     dp.rawPayload         = reader.remainingBytes();
     return dp;
 }

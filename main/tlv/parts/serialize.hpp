@@ -3,10 +3,12 @@
 
 //
 //#include "./std/tree.h"
-#include "./data.hpp"
 #include "./enums.hpp"
 #include "../tlv.h"
 #include "../tlv_tree.h"
+
+//
+#include "../../std/types.hpp"
 
 //
 namespace tlvcpp
@@ -14,7 +16,7 @@ namespace tlvcpp
     // ========== MATTER-SERIALIZATION! =======
     // TODO: partialy compatibility with classic TLV
 
-    static bool serialize_recursive(const tlv_tree_node& node, data_writer& writer, uintptr_t level = 0)
+    static bool serialize_recursive(const tlv_tree_node& node, writer_t& writer, uintptr_t level = 0)
     {
         auto& element = node.data();
         type_t type = element.type();
@@ -52,12 +54,12 @@ namespace tlvcpp
                 return true;
 
             case e_type::INT16:
-                writer.writeShort(static_cast<uint16_t>(element));
+                writer.writeUInt16(static_cast<uint16_t>(element));
                 return true;
 
             case e_type::SIGNED_INTEGER:
             case e_type::FLOATING_POINT_NUMBER:
-                writer.writeInt(static_cast<uint32_t>(element));
+                writer.writeUInt32(static_cast<uint32_t>(element));
                 return true;
 
             case e_type::BOOLEAN:

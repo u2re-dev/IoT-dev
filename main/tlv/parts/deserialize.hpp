@@ -2,7 +2,6 @@
 #define F209A449_A8CD_4B1F_BEDD_F1DA13D149BD
 
 //
-#include "./data.hpp"
 #include "./enums.hpp"
 #include "../tlv.h"
 #include "../tlv_tree.h"
@@ -11,17 +10,17 @@
 namespace tlvcpp
 {
     // ========== MATTER DESERIALIZATION ========
-    static bool deserialize_tag(data_reader& reader, tlv& value)
+    static bool deserialize_tag(reader_t& reader, tlv& value)
     {
         if (!reader.checkMemory()) return false;
-        tag_t rawTag = reader.readU8();
+        tag_t rawTag = reader.readByte();
 
         //
         value.type(rawTag & 0b00011111);
         bool isSimple = !(rawTag & 0b11100000);//(rawTag ^ value.type()) <= 0b00011111;
 
         // TODO: better definition
-        value.tag(isSimple ? 0 : reader.readU8());
+        value.tag(isSimple ? 0 : reader.readByte());
         if (!reader.checkMemory()) return false;
 
         //
@@ -36,7 +35,7 @@ namespace tlvcpp
             case e_type::BYTE_STRING:
             case e_type::UTF8_STRING:
             {
-                uint8_t next_byte = reader.readU8();
+                uint8_t next_byte = reader.readByte();
                 length_t length = 0;
 
                 //
@@ -44,27 +43,28 @@ namespace tlvcpp
                     length = next_byte;
                 } else {
                     while (next_byte & 0b10000000 && reader.checkMemory())
-                    { length = (length << 7) | (next_byte & 0b01111111); next_byte = reader.readU8(); }
+                    { length = (length << 7) | (next_byte & 0b01111111); next_byte = reader.readByte(); }
                 }
 
+                //
                 if (!reader.checkMemory()) return false;
-                value.setBytes(reinterpret_cast<const uint8_t*>(reader.readBytes(length)), length);
+                value.setBytes(reinterpret_cast<const uint8_t*>(reader.allocate(length)), length);
                 return true;
             }
 
             case e_type::UNSIGNED_INTEGER:
-                value = reader.readU8();
+                value = reader.readByte();
                 return true;
 
             case e_type::INT16:
                 if (!reader.checkMemory(2)) return false;
-                value = reader.readU16();
+                value = reader.readUInt16();
                 return true;
 
             case e_type::SIGNED_INTEGER:
             case e_type::FLOATING_POINT_NUMBER:
                 if (!reader.checkMemory(4)) return false;
-                value = reader.readU32();
+                value = reader.readUInt32();
                 return true;
 
             case e_type::BOOLEAN:
@@ -76,7 +76,7 @@ namespace tlvcpp
 
             default:
                 while (reader.checkMemory() && (rawTag & 0b10000000)) {
-                    rawTag = (rawTag << 8) | reader.readU8();
+                    rawTag = (rawTag << 8) | reader.readByte();
                 }
                 value.tag(rawTag & 0b00011111);
                 return reader.checkMemory();
@@ -85,7 +85,7 @@ namespace tlvcpp
     }
 
     //
-    static bool deserialize_recursive(data_reader& reader, tlv_tree_node& node, intptr_t level = 0) {
+    static bool deserialize_recursive(reader_t& reader, tlv_tree_node& node, intptr_t level = 0) {
         while (reader.checkMemory()) {
             tlv value{ 0 };
             if (!deserialize_tag(reader, value)) return false;
