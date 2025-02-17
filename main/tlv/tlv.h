@@ -30,19 +30,19 @@ namespace tlvcpp
     public:
         //
         tlv() {};
-        tlv(const tag_t& tag, size_t size = 0, const uint8_t* payload = nullptr, type_t type = 0) : m_tag(tag), m_size(size), m_payload(payload), m_type(type) {}
+        explicit tlv(const tag_t& tag, size_t size = 0, const uint8_t* payload = nullptr, type_t type = 0) : m_tag(tag), m_size(size), m_payload(payload), m_type(type) {}
 
         //
         tlv(const tag_t& tag, const char* str) : m_tag(tag), m_size(std::strlen(str)), m_payload(reinterpret_cast<const uint8_t*>(str)), m_type(e_type::UTF8_STRING) {}
         tlv(const tag_t& tag, const std::string& str) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())), m_type(e_type::UTF8_STRING) {}
 
         //
-        tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::UNSIGNED_INTEGER) {}
-        tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::INT16) {}
-        tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::SIGNED_INTEGER) {}
+        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::UNSIGNED_INTEGER) {}
+        explicit tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::INT16) {}
+        explicit tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::SIGNED_INTEGER) {}
 
         //
-        template <typename T>  tlv(const tag_t& tag, T&& value);
+        template <typename T> tlv(const tag_t& tag, T&& value);
 
         //
         tlv(const tlv& other);
@@ -54,8 +54,12 @@ namespace tlvcpp
         tlv& operator=(tlv&& other) noexcept;
 
         //
+        bool operator==(tag_t const& other) const { return (other == m_tag); };
+        bool operator==(tlv const& other) const { return (other.m_tag == m_tag); };
+        //bool operator==(uint const& other) const { return (other == m_tag); };
+
+        //
         friend std::ostream& operator<<(std::ostream& stream, const tlv& tlv_val);
-        friend bool operator==(const tlv& tlv_val, const tag_t& tag);
 
         //
         type_t& type() { return m_type; }

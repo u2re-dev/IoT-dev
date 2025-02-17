@@ -8,8 +8,9 @@
 #include <stdexcept>
 
 //
-namespace tlvcpp
-{
+namespace tlvcpp {
+
+    //
     struct data_writer {
         uint8_t* memory  = nullptr;
         uintptr_t offset = 0;
@@ -22,12 +23,12 @@ namespace tlvcpp
         data_writer(uint8_t* data = nullptr, size_t capacity = 0) : memory(data), offset(0), capacity(capacity) {};
 
         //
-        data_writer& writeByte(uint8_t const& a) { *(uint8_t*)memory = a; offset += 1; return *this; };
-        data_writer& writeShort(uint16_t const& a) { *(uint16_t*)memory = a; offset += 2; return *this; };
-        data_writer& writeInt(uint32_t const& a) { *(uint32_t*)memory = a; offset += 4; return *this; };
+        data_writer& writeByte ( uint8_t const& a) { if (memory) *( uint8_t*)(memory + offset) = a; offset += 1; return *this; };
+        data_writer& writeShort(uint16_t const& a) { if (memory) *(uint16_t*)(memory + offset) = a; offset += 2; return *this; };
+        data_writer& writeInt  (uint32_t const& a) { if (memory) *(uint32_t*)(memory + offset) = a; offset += 4; return *this; };
 
         //
-        data_writer& writeBytes(uint8_t const* a, size_t count) { memcpy(memory, a, count); offset += count; return *this; };
+        data_writer& writeBytes(uint8_t const* a, size_t count) { if (memory) memcpy(memory + offset, a, count); offset += count; return *this; };
     };
 
     //

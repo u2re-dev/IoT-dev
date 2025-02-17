@@ -42,9 +42,9 @@ struct PbkdfParameters {
 
 //
 struct W0W1L {
-    mpi_t w0;
-    mpi_t w1;
-    mpi_t random;
+    bigint_t w0;
+    bigint_t w1;
+    bigint_t random;
     ecp_t L;
 };
 
