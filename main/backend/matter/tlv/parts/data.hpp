@@ -37,7 +37,8 @@ namespace tlvcpp
         uint8_t const* memory = nullptr;
 
         //
-        data_reader(uint8_t const* data = nullptr, size_t size = 0) : memory(data), reamin_size(size) {}
+        data_reader(data_reader const& reader) : reamin_size(reader.reamin_size), offset(reader.offset), memory(reader.memory) {}
+        data_reader(uint8_t const* data = nullptr, size_t size = 0) : reamin_size(size), offset(0), memory(data) {}
 
         //
         bool checkMemory(size_t size = 1) const {

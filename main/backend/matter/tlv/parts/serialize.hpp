@@ -14,24 +14,27 @@ namespace tlvcpp
     // ========== MATTER-SERIALIZATION! =======
     // TODO: partialy compatibility with classic TLV
 
-    static bool serialize_recursive(const tlv_tree_node& node, data_writer& writer, intptr_t level = 0)
+    static bool serialize_recursive(const tlv_tree_node& node, data_writer& writer, uintptr_t level = 0)
     {
         auto& element = node.data();
         type_t type = element.type();
-        tag_t tag = element.tag();
+        tag_t tag   = element.tag();
 
-        bool isSimple = (level == 0);
-        writer.writeByte(!isSimple ? (type | 0b00100000) : type);
-        if (!isSimple) { writer.writeByte(tag); }
+        // also, don't write zero tags
+        if (type && type != 0x18) { // don't write anothing about such tag
+            bool isSimple = (level == 0); // TODO: better complex type definition
+            writer.writeByte(!isSimple ? (type | 0b00100000) : type);
+            if (!isSimple) { writer.writeByte(tag); }
+        };
 
+        //
         switch (type)
         {
+            case 0x18: return false; // skip that tag...
             case e_type::STRUCTURE:
-                // Рекурсивная сериализация дочерних элементов, завершающая тегом 0x18
                 for (const auto& child : node.children()) {
                     if (!serialize_recursive(child, writer, level + 1)) {
-                        writer.writeByte(0x18);
-                        return false;
+                        writer.writeByte(0x18); return true;
                     }
                 }
                 writer.writeByte(0x18);
