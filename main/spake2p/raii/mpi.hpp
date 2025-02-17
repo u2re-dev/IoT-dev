@@ -37,7 +37,7 @@ class mpi_t {
 
         // bigint convertion and construction
         mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_read_binary(&mpi_, (uint8_t*)&a, sizeof(a))); }
-        operator bigint_t() const { bigint_t x; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return to_little_endian(x); }
+        operator bigint_t() const { bigint_t x; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return intx::to_little_endian(x); }
         mpi_t& operator=(bigint_t const& a) { return vid(mbedtls_mpi_read_binary(&mpi_, (uint8_t*)&a, sizeof(a))); }
 
 

@@ -86,7 +86,7 @@ public:
 
         //
         mbedtls_ecp_group_free(&group);
-        return w0w1L;
+        return std::move(w0w1L);
     }
 
     // aka. pA
@@ -128,11 +128,11 @@ private:
         auto& info = context_;//hex::s2b("ConfirmationKeys");
 
         //
-        bigint_t transcript = computeTranscriptHash(X, Y, Z, V);
+        bigint_t&& transcript = computeTranscriptHash(X, Y, Z, V);
         intx::uint128& Ka = *(intx::uint128*)((uint8_t*)&transcript + 0), Ke = *(intx::uint128*)((uint8_t*)&transcript + 16);
 
         //
-        bigint_t KcAB = crypto::hkdf(&Ka, sizeof(Ka), base_.params.salt, info);
+        bigint_t&& KcAB = crypto::hkdf(&Ka, sizeof(Ka), base_.params.salt, info);
         intx::uint128& KcA = *(intx::uint128*)((uint8_t*)&KcAB + 0), KcB = *(intx::uint128*)((uint8_t*)&KcAB + 16);
 
         //
@@ -140,7 +140,7 @@ private:
         result.Ke = Ke;
         result.hAY = crypto::hmac(KcA, Y);
         result.hBX = crypto::hmac(KcB, X);
-        return result;
+        return std::move(result);
     }
 
     //
@@ -160,7 +160,7 @@ private:
 
         // writing w0 and compute hash
         writer.writeBytes(hex::n2b(base_.w0));
-        return crypto::hash(writer);
+        return std::move(crypto::hash(writer));
     }
 
     //
@@ -172,7 +172,7 @@ private:
 
     //
     static ecp_t computeLPoint(mbedtls_ecp_group const& group, mpi_t const& w1) {
-        return (ecp_t(group, group.G) * w1);
+        return std::move(ecp_t(group, group.G) * w1);
     }
 
 

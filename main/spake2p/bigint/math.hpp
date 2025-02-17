@@ -26,12 +26,12 @@ namespace bmath {
     }
 
     //
-    inline bigint_t curve(bigint_t x, bigint_t B, bigint_t P) {
+    inline bigint_t curve(bigint_t const& x, bigint_t const& B, bigint_t const& P) {
         return mod(mod(x * x, P) * x + B, P);
     };
 
     //
-    inline bigint_t inv(bigint_t num, bigint_t md) {
+    inline bigint_t inv(bigint_t const& num, bigint_t const& md) {
         if (num == 0 || md <= 0) throw std::runtime_error("no inverse");
         bigint_t a = mod(num, md), b = md;
         bigint_t x = 0, y = 1, u = 1, v = 0;

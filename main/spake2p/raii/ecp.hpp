@@ -90,17 +90,10 @@ public:
 
 
     //
-    ecp_t& zero() {
-        checkMbedtlsError(mbedtls_ecp_set_zero(&point_), "invalid point");
-        return *this;
-    }
+    ecp_t& zero() { checkMbedtlsError(mbedtls_ecp_set_zero(&point_), "invalid point"); return *this; }
+    ecp_t getG() { return ecp_t(group_, group_.G); }
 
-    //
-    ecp_t getG() {
-        return ecp_t(group_, group_.G);
-    }
 
-    
     //
     bytes_t toBytes(bool compressed = false) const {
         size_t len = 65; bytes_t buffer = make_bytes(len);
