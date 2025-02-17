@@ -99,7 +99,7 @@ public:
 
     
     //
-    bytes_t toBytes() const {
+    bytes_t toBytes(bool compressed = false) const {
         bytes_t buffer(65); size_t len = 65;
         checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buffer.data(), buffer.size()), "Failed to write point to bytes");
         return buffer;

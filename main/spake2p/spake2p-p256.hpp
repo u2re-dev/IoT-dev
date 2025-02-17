@@ -8,6 +8,7 @@
 //
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
+#include <iostream>
 
 //
 #include "./mbedtls/ecc_point_compression.h"
@@ -29,9 +30,9 @@ constexpr size_t PBKDF2_OUTLEN           = CRYPTO_W_SIZE_BYTES     * 2;
 
 //
 struct SecretAndVerifiers {
-    bytes_t Ke;
-    bytes_t hAY;
-    bytes_t hBX;
+    bigint_t Ke;
+    bigint_t hAY;
+    bigint_t hBX;
 };
 
 //
@@ -81,28 +82,31 @@ public:
         auto slice0 = bytes_t(ws.begin(), ws.begin() + CRYPTO_W_SIZE_BYTES);
         auto slice1 = bytes_t(ws.begin() + CRYPTO_W_SIZE_BYTES, ws.end());
 
-        //
-        mbedtls_ecp_group group;
-        mbedtls_ecp_group_init(&group);
+        // TODO: use single group instead of recreating group
+        mbedtls_ecp_group group; mbedtls_ecp_group_init(&group);
         checkMbedtlsError(mbedtls_ecp_group_load(&group, MBEDTLS_ECP_DP_SECP256R1), "ECC group load failed");
 
         //
         W0W1L w0w1L = {};
         w0w1L.w0 = mpi_t(slice0) % group.N;
         w0w1L.w1 = mpi_t(slice1) % group.N;
+        w0w1L.L  = computeLPoint(group, w0w1L.w1);
         w0w1L.random = mpi_t().random();
-        w0w1L.L = computeLPoint(group, w0w1L.w1);
-        
+
         //
         mbedtls_ecp_group_free(&group);
         return w0w1L;
     }
 
-    //
+
+    // aka. pA
     bytes_t computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return X_.toBytes(); }
+
+    // aka. pB
     bytes_t computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_.toBytes(); }
-    
-    // to-server (X and L from client), aka. by Y
+
+
+    // to-server (X and L from client), aka. by Y  aka. cA
     SecretAndVerifiers computeSecretAndVerifiersFromX( bytes_t const& bX, bytes_t const& L) const {
         ecp_t Lp = ecp_t(group_).loadBytes(L);
         ecp_t X  = ecp_t(group_).loadBytes(bX);
@@ -112,7 +116,7 @@ public:
         return computeSecretAndVerifiers(X, Y_, Z, V);
     }
 
-    // to-client (Y and w1 from server), aka. by X
+    // to-client (Y and w1 from server), aka. by X,  aka. cB
     SecretAndVerifiers computeSecretAndVerifiersFromY( bytes_t const& bY, bigint_t const& w1b) const {
         mpi_t w1 = mpi_t(w1b);
         ecp_t Y  = ecp_t(group_).loadBytes(bY);
@@ -126,62 +130,57 @@ public:
 
 private:
 
+    //
     SecretAndVerifiers computeSecretAndVerifiers( ecp_t X, ecp_t Y, ecp_t Z, ecp_t V) const {
-        print_point(X);
-        print_point(Y);
-        print_point(Z);
-        print_point(V);
-
-        /*
-        //
-        bytes_t    transcript    = computeTranscriptHash(X, Y, Z, V);
-        bytes_t Ka(transcript.begin()     , transcript.begin() + 16);
-        bytes_t Ke(transcript.begin() + 16, transcript.begin() + 32);
+        //print_point(X); print_point(Y); print_point(Z); print_point(V);
 
         //
         bytes_t info = hex::s2b("ConfirmationKeys");
-        bytes_t KcAB = crypto::hkdf(Ka, bytes_t{}, info, 32);
 
         //
-        bytes_t KcA(KcAB.begin()     , KcAB.begin() + 16);
-        bytes_t KcB(KcAB.begin() + 16, KcAB.end()       );*/
+        bytes_t transcript = computeTranscriptHash(X, Y, Z, V);
+        bigint_t Ka = *((bigint_t*)transcript.data() + 0), Ke = *((bigint_t*)transcript.data() + 16);
 
         //
-        SecretAndVerifiers result;
-        //result.Ke  = Ke;
-        //result.hAY = crypto::hmac(KcA, Y);
-        //result.hBX = crypto::hmac(KcB, X);
+        bytes_t KcAB = crypto::hkdf(bytes_t((uint8_t*)&Ka, ((uint8_t*)&Ka)+32), bytes_t{}, info, 32);
+        bigint_t KcA = *((bigint_t*)KcAB.data() + 0), KcB = *((bigint_t*)KcAB.data() + 16);
+
+        //
+        SecretAndVerifiers result = {};
+        result.Ke = Ke;
+
+        // TODO: replace bytes_t to bigint_t (needs make shorter and direct code)
+        result.hAY = *((bigint_t*)  crypto::hmac(  bytes_t((uint8_t*)&KcA, ((uint8_t*)&KcA)+32), Y.toBytes()).data());
+        result.hBX = *((bigint_t*)  crypto::hmac(  bytes_t((uint8_t*)&KcB, ((uint8_t*)&KcB)+32), X.toBytes()).data());
         return result;
     }
 
-    //
-    bytes_t computeTranscriptHash(const mbedtls_ecp_point& X, const mbedtls_ecp_point& Y, const mbedtls_ecp_point& Z, const mbedtls_ecp_point& V) const {
-        DataWriter writer;
-        writer.writeBytes(context_);
+    // TODO: return as bigint_t, not bytes_t
+    bytes_t computeTranscriptHash(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
+        DataWriter writer; writer.writeBytes(context_);
 
-        // ? required
-        writer.writeBytes(bytes_t{});
-        writer.writeBytes(bytes_t{});
+        // TODO: add support writing 256-bit integer directly
+        auto zero = bigint_t(0); writer.writeBytes(bytes_t((uint8_t*)&zero, ((uint8_t*)&zero)+32));
 
         // N and M write
-        //writer.writeBytes(eccp_t::getM().toBytes(false));
-        //writer.writeBytes(eccp_t::getM().toBytes(false));
+        writer.writeBytes(ecp_t(group_).getM().toBytes(false));
+        writer.writeBytes(ecp_t(group_).getN().toBytes(false));
 
         // X, Y, Z, V points
-        //writer.writeBytes(X);
-        //writer.writeBytes(Y);
-        //writer.writeBytes(Z);
-        //writer.writeBytes(V);
+        writer.writeBytes(X.toBytes(false)); // pA
+        writer.writeBytes( Y.toBytes(false)); // pB
+        writer.writeBytes( Z.toBytes(false));
+        writer.writeBytes(V.toBytes(false));
 
         // writing w0 and compute hash
-        //writer.writeBytes(hex::n2b_be(w0_, 32));
+        writer.writeBytes(hex::n2b(base_.w0));
+
+        // TODO: directly use bigint_t
         return crypto::hash(writer.toBytes());
     }
 
 
-
-
-    // Преобразование PIN в байты
+    //
     static bytes_t pinToBytes(uint32_t pin) {
         bytes_t pinBytes(4);
         for (size_t i = 0; i < 4; i++) {
@@ -190,16 +189,17 @@ private:
         return pinBytes;
     }
 
-    // Вычисление точки L = w1 * G
+    //
     static ecp_t computeLPoint(mbedtls_ecp_group const& group, mpi_t const& w1) {
         return (ecp_t(group, group.G) * w1);
     }
 
+
     //
     union { ecp_t X_, Y_; };
     mbedtls_ecp_group group_;
-    bytes_t context_;
-    W0W1L base_;
+    bytes_t context_ = {};
+    W0W1L base_ = {};
 };
 
-#endif /* D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE */
+#endif
