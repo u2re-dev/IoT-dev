@@ -13,9 +13,11 @@
 //
 namespace tlvcpp
 {
-    //
+    // arven-code (8+8 bits)
     using type_t   = uint8_t;
-    using tag_t    = uint32_t;
+    using tag_t    = uint8_t;
+
+    //
     using length_t = uint32_t;
 
     //
@@ -93,7 +95,11 @@ namespace tlvcpp
         operator const uint32_t&() const { return m_u32; }
 
     private:
+        // arven-code (8+8 bits)
+        type_t m_type = 0; 
         tag_t m_tag = 0;
+
+        // number value or size
         union {
             long m_value;
             size_t m_size;
@@ -102,8 +108,9 @@ namespace tlvcpp
             uint8_t  m_u8;
             bool     m_b;
         };
-        const uint8_t* m_payload = nullptr;
-        type_t m_type = 0;    
+
+        // additional byte-stream or string (char-set)
+        uint8_t const* m_payload = nullptr;
     };
 
 }
