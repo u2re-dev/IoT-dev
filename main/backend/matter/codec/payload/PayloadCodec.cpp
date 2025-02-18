@@ -56,7 +56,7 @@ Payload MessageCodec::decodePayload(reader_t& reader) {
 //
 bytes_t MessageCodec::encodePayload(Payload const& payload) {
     writer_t encodedPH = encodePayloadHeader(payload.header);
-    return concat({encodedPH, payload.payload});
+    return (payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes());
 }
 
 /*

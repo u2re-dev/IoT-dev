@@ -37,9 +37,9 @@ namespace tlvcpp
         tlv(const tag_t& tag, const std::string& str) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())), m_type(e_type::UTF8_STRING) {}
 
         //
-        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::UNSIGNED_INTEGER) {}
+        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::SIGNED_INTEGER) {}
         explicit tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::INT16) {}
-        explicit tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::SIGNED_INTEGER) {}
+        explicit tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::UNSIGNED_INTEGER) {}
 
         //
         template <typename T> tlv(const tag_t& tag, T&& value);

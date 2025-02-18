@@ -16,7 +16,7 @@
 
 //
 namespace crypto {
-    inline bytes_t pbkdf2(const bytes_t& input, const bytes_t& salt, uint32_t iterations, size_t outputLength = 32) {
+    inline bytes_t pbkdf2(const bytes_t& input, const bigint_t& salt, uint32_t iterations, size_t outputLength = 32) {
         bytes_t output = make_bytes(outputLength);
         mbedtls_md_context_t ctx;
         mbedtls_md_init(&ctx);
@@ -24,7 +24,7 @@ namespace crypto {
         //
         const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
         checkMbedtlsError(mbedtls_md_setup(&ctx, inf, 1), "pbkdf2 setup failed");
-        checkMbedtlsError(mbedtls_pkcs5_pbkdf2_hmac(&ctx, input->data(), input->size(), salt->data(), salt->size(), iterations, output->size(), output->data()), "pbkdf2 failed");
+        checkMbedtlsError(mbedtls_pkcs5_pbkdf2_hmac(&ctx, input->data(), input->size(), (uint8_t*)&salt, sizeof(salt), iterations, output->size(), output->data()), "pbkdf2 failed");
         mbedtls_md_free(&ctx);
 
         //
@@ -32,13 +32,13 @@ namespace crypto {
     };
 
     //
-    inline bigint_t hkdf(auto const* ikm, size_t const& ilen, const bytes_t& salt, const bytes_t& info) {
+    inline bigint_t hkdf(auto const* ikm, size_t const& ilen, const bigint_t& salt, const bytes_t& info) {
         bigint_t out = bigint_t(0);
 
         //
         mbedtls_md_context_t ctx; const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
         mbedtls_md_init(&ctx);
-        mbedtls_hkdf(inf, salt->data(), salt->size(), (uint8_t*)ikm, ilen, info->data(), info->size(), (uint8_t*)&out, sizeof(bigint_t));
+        mbedtls_hkdf(inf, (uint8_t*)&salt, sizeof(salt), (uint8_t*)ikm, ilen, info->data(), info->size(), (uint8_t*)&out, sizeof(bigint_t));
         mbedtls_md_free(&ctx);
         return std::move(out);
     };

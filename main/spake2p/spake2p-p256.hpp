@@ -37,8 +37,8 @@ struct SecretAndVerifiers {
 
 //
 struct PbkdfParameters {
-    uint32_t iterations;
-     bytes_t salt;
+    uint16_t iterations;
+    bigint_t salt;
 };
 
 //
@@ -65,6 +65,10 @@ public:
         mbedtls_ecp_group_init(&group_); 
         mbedtls_ecp_group_load(&group_, MBEDTLS_ECP_DP_SECP256R1);
         //context_ = make_bytes();
+    }
+
+    //
+    Spake2p(Spake2p const& another) : X_(another.X_), group_(another.group_), context_(another.context_), base_(another.base_) {
     }
 
     //
