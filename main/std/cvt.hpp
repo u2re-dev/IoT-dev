@@ -10,18 +10,18 @@ namespace mpc {
     // convert to uint256_t (bigint_t)
     bigint_t m2n(mbedtls_mpi const& mpi) {
         bigint_t x;
-        mbedtls_mpi_write_binary(&mpi, (uint8_t*)&x, sizeof(x));
-        return std::move(intx::to_little_endian(x));
+        mbedtls_mpi_write_binary_le(&mpi, (uint8_t*)&x, sizeof(x));
+        return std::move(x);
     }
 
     // create by RAII
     mpi_t n2m(bigint_t const& x) {
-        mpi_t mpi; mbedtls_mpi_read_binary(mpi, (uint8_t*)&x, sizeof(x)); return std::move(mpi);
+        mpi_t mpi; mbedtls_mpi_read_binary_le(mpi, (uint8_t*)&x, sizeof(x)); return std::move(mpi);
     }
 
     // use existing
     mbedtls_mpi& n2m(bigint_t const& x, mbedtls_mpi& mpi) {
-        mbedtls_mpi_read_binary(&mpi, (uint8_t*)&x, sizeof(x)); return mpi;
+        mbedtls_mpi_read_binary_le(&mpi, (uint8_t*)&x, sizeof(x)); return mpi;
     }
 }
 

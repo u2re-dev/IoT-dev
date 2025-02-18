@@ -32,13 +32,13 @@ namespace crypto {
     };
 
     //
-    inline bigint_t hkdf(auto const* ikm, size_t const& ilen, const bigint_t& salt, const bytes_t& info) {
+    inline bigint_t hkdf(auto const* ikm, const bytes_t& info) {
         bigint_t out = bigint_t(0);
 
         //
         mbedtls_md_context_t ctx; const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
         mbedtls_md_init(&ctx);
-        mbedtls_hkdf(inf, (uint8_t*)&salt, sizeof(salt), (uint8_t*)ikm, ilen, info->data(), info->size(), (uint8_t*)&out, sizeof(bigint_t));
+        checkMbedtlsError(mbedtls_hkdf(inf, nullptr, 0, (uint8_t*)ikm, sizeof(ikm), info->data(), info->size(), (uint8_t*)&out, sizeof(bigint_t)), "HKDF failed");
         mbedtls_md_free(&ctx);
         return std::move(out);
     };
@@ -59,14 +59,13 @@ namespace crypto {
 
     //
     inline bigint_t hash(const bytes_t& data) {
-        mbedtls_sha256_context ctx;
-        mbedtls_sha256_init(&ctx);
-        mbedtls_sha256_starts_ret(&ctx, 0);
-        mbedtls_sha256_update_ret(&ctx, data->data(), data->size());
-
-        //
         bigint_t out = bigint_t(0);
-        mbedtls_sha256_finish_ret(&ctx, (uint8_t*)&out);
+        mbedtls_md_context_t ctx;
+        mbedtls_md_init(&ctx);
+        mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+        mbedtls_md_hmac_starts(&ctx, data->data(), data->size());
+        mbedtls_md_hmac_finish(&ctx, (uint8_t*)&out); // write after payload
+        mbedtls_md_free(&ctx);
         return std::move(out);
     };
 }

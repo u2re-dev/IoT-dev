@@ -103,6 +103,9 @@ public:
 
     
     //
+    ecp_t& loadBytes(uint8_t const* data, size_t const& length) {
+        return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data, length), "bytes loading failed"); 
+    }
     ecp_t& loadBytes(bytes_t const& data ) { 
         return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data->data(), data->size()), "bytes loading failed"); 
     }
