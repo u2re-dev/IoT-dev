@@ -2,6 +2,7 @@
 
 //
 #include "../../../std/types.hpp"
+#include <optional>
 
 //
 enum PacketHeaderFlag : uint8_t {
@@ -16,9 +17,6 @@ enum PacketHeaderFlag : uint8_t {
 struct PacketHeader {
     uint32_t messageId      = 0;
     uint16_t sessionId      = 0;
-    uint16_t destGroupId    = 0;
-    uint64_t sourceNodeId   = 0;
-    uint64_t destNodeId     = 0;
     uint8_t  sessionType    = 0;
     uint8_t  securityFlags  = 0;
 
@@ -26,6 +24,11 @@ struct PacketHeader {
     bool hasPrivacyEnhancements = false;
     bool isControlMessage       = false;
     bool hasMessageExtensions   = false;
+
+    //
+    std::optional<uint16_t> destGroupId;
+    std::optional<uint64_t> sourceNodeId;
+    std::optional<uint64_t> destNodeId;
 };
 
 //

@@ -29,7 +29,7 @@ inline bytes_t make_bytes(Args... args) {
 }
 
 //
-inline bytes_t concat(const std::initializer_list<bytes_t>& arrays) {
+inline bytes_t concat(std::initializer_list<bytes_t> const& arrays) {
     bytes_t result = make_bytes();
     for (const auto& arr : arrays) result->insert(result->end(), arr->begin(), arr->end());
     return result;
@@ -242,6 +242,16 @@ public:
 
     //
     inline uintptr_t const& getSize() const { return offset; }
+
+    //
+    inline operator bytes_t() const {
+        return toBytes();
+    }
+
+    //
+    inline bytes_t toBytes() const {
+        return make_bytes(data, data + offset);
+    }
 
 private:
     uint8_t* data = nullptr;

@@ -54,9 +54,9 @@ writer_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
 
     //
     uint8_t flags = (HEADER_VERSION << 4) |
-                    (ph.destGroupId  ? HasDestGroupId  : 0) |
-                    (ph.destNodeId   ? HasDestNodeId   : 0) |
-                    (ph.sourceNodeId ? HasSourceNodeId : 0);
+                    (ph.destGroupId.has_value()  ? HasDestGroupId  : 0) |
+                    (ph.destNodeId.has_value()   ? HasDestNodeId   : 0) |
+                    (ph.sourceNodeId.has_value() ? HasSourceNodeId : 0);
 
     //
     writer.writeUInt8(flags);
@@ -65,9 +65,9 @@ writer_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
     writer.writeUInt32(ph.messageId);
 
     //
-    if (ph.sourceNodeId) writer.writeUInt64(ph.sourceNodeId);
-    if (ph.destNodeId)   writer.writeUInt64(ph.destNodeId);
-    if (ph.destGroupId)  writer.writeUInt16(ph.destGroupId);
+    if (ph.sourceNodeId.has_value()) writer.writeUInt64(ph.sourceNodeId.value());
+    if (ph.destNodeId.has_value())   writer.writeUInt64(ph.destNodeId.value());
+    if (ph.destGroupId.has_value())  writer.writeUInt16(ph.destGroupId.value());
 
     //
     return writer;
