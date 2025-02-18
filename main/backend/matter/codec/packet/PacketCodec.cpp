@@ -85,8 +85,9 @@ Message MessageCodec::decodeMessage(reader_t& reader) {
 }
 
 //
-bytes_t MessageCodec::encodeMessage(Message const& packet) {
-    if (packet.messageExtension->size() || packet.header.hasMessageExtensions)  throw NotImplementedError("Message extensions not supported when encoding a packet.");
+bytes_t MessageCodec::encodeMessage(Message& packet) {
+    if (packet.messageExtension && (packet.messageExtension->size() || packet.header.hasMessageExtensions)) throw NotImplementedError("Message extensions not supported when encoding a packet.");
+    if (!packet.rawPayload) packet.rawPayload = encodePayload(packet.decodedPayload);
     return concat({encodePacketHeader(packet.header), packet.rawPayload});
 }
 

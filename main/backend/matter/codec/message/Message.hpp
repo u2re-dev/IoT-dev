@@ -14,18 +14,18 @@ enum PacketHeaderFlag : uint8_t {
 
 //
 struct PacketHeader {
-    uint32_t    messageId;
-    uint16_t    sessionId;
-    uint16_t    destGroupId;
-    uint64_t    sourceNodeId;
-    uint64_t    destNodeId;
-    uint8_t     sessionType;
-    uint8_t     securityFlags;
+    uint32_t messageId      = 0;
+    uint16_t sessionId      = 0;
+    uint16_t destGroupId    = 0;
+    uint64_t sourceNodeId   = 0;
+    uint64_t destNodeId     = 0;
+    uint8_t  sessionType    = 0;
+    uint8_t  securityFlags  = 0;
 
     //
-    bool hasPrivacyEnhancements;
-    bool isControlMessage;
-    bool hasMessageExtensions;
+    bool hasPrivacyEnhancements = false;
+    bool isControlMessage       = false;
+    bool hasMessageExtensions   = false;
 };
 
 //
@@ -39,16 +39,16 @@ enum PayloadHeaderFlag : uint8_t {
 
 //
 struct PayloadHeader {
-    uint16_t exchangeId;
-    uint32_t protocolId;
-    uint32_t ackedMessageId;
-    uint16_t    vendorId;
+    uint16_t exchangeId     = 0;
+    uint32_t protocolId     = 0;
+    uint32_t ackedMessageId = 0;
+    uint16_t vendorId       = 0;
+     uint8_t messageType    = 0;
 
     //
-    uint8_t messageType;
-    bool isInitiatorMessage;
-    bool requiresAck;
-    bool hasSecuredExtension;
+    bool isInitiatorMessage  = false;
+    bool requiresAck         = false;
+    bool hasSecuredExtension = false;
 };
 
 
@@ -69,31 +69,31 @@ struct MessageType {
 
 //
 struct Payload {
-    PayloadHeader header;
-    bytes_t payload;
-    bytes_t securityExtension;
+    PayloadHeader header = {};
+    bytes_t payload = {};
+    bytes_t securityExtension = {};
 };
 
 //
 struct Message {
-    PacketHeader header;
-    Payload decodedPayload;
+    PacketHeader header = {};
+    Payload decodedPayload = {};
 
     //
-    bytes_t messageExtension;
-    bytes_t rawPayload;
+    bytes_t messageExtension = {};
+    bytes_t rawPayload = {};
 };
 
 //
 struct MsgTypeInfo {
-    std::string type;
-    std::string forType;
+    std::string type = "";
+    std::string forType = "";
 };
 
 //
 struct MessageCodec {
     static Message decodeMessage(reader_t& packet);
-    static bytes_t encodeMessage(const Message& message);
+    static bytes_t encodeMessage(Message& message);
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
 
     //

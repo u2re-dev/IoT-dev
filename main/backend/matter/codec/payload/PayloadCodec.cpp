@@ -46,11 +46,8 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 
 // 
 Payload MessageCodec::decodePayload(reader_t& reader) {
-    PayloadHeader header = decodePayloadHeader(reader);
-
-    //
-    Payload msg;
-    msg.header = header;
+    Payload msg {};
+    msg.header = decodePayloadHeader(reader);
     msg.securityExtension = msg.header.hasSecuredExtension  ? reader.readBytes(reader.readUInt16()) : bytes_t{};
     msg.payload = reader.remainingBytes();
     return msg;
