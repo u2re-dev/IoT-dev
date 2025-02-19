@@ -23,6 +23,13 @@ namespace mpc {
     mbedtls_mpi& n2m(bigint_t const& x, mbedtls_mpi& mpi) {
         mbedtls_mpi_read_binary(&mpi, (uint8_t*)&x, sizeof(x)); return mpi;
     }
+
+    //
+    std::string n2h(bigint_t const& I) {
+        bytes_t tmp = make_bytes(sizeof(I));
+        memcpy(tmp->data(), &I, sizeof(I));
+        return hex::b2h(tmp);
+    }
 }
 
 #endif /* BD88A99E_90E2_4652_B277_35E5B254A4D4 */

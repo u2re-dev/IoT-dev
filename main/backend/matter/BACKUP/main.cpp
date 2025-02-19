@@ -1,7 +1,7 @@
 //#include <arpa/inet.h>
 #include "./mdns.hpp"
 #include "./udp.hpp"
-#include "./matter.hpp"
+#include "./PASE.hpp"
 
 //
 #define ENABLE_MATTER_TEST //
@@ -12,33 +12,28 @@
 int main() {
     MDNS comission = {};
     UDP socket = {};
-    Matter matter = {};
-    matter.init();
-    
+    PASE pase = {};
+    pase.init();
+
     //
     comission.init();
     comission.service();
     comission.commit();
-    
+
     //
     socket.init();
     while (true) {
         auto resp = socket.handleRequest();
         if (resp) {
-            auto msg = matter.decodeUnencryptedMessage(resp);
-            auto req = matter.handlePAKERequest(msg.decodedPayload);
-            auto Xp  = matter.handlePAKE1(msg.decodedPayload);
+            auto msg = pase.decodeMessage(resp);
+            auto type = pase.handlePayload(msg.decodedPayload);
 
             //
-            if (req.has_value()) {
-                socket.sendResponse(matter.makeAckMessage(msg));
-                socket.sendResponse(matter.makePAKEResponse(msg));
-            }
-
-            //
-            if (Xp.has_value()) {
-                socket.sendResponse(matter.makeAckMessage(msg));
-                socket.sendResponse(matter.makePAKE2(msg));
+            if (type) { socket.sendResponse(pase.makeAckMessage(msg)); };
+            switch (type) {
+                case 0x20: socket.sendResponse(pase.makePASEResponse(msg)); break;
+                case 0x22: socket.sendResponse(pase.makePAKE2(msg)); break;
+                default: break;
             }
         }
     }
