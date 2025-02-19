@@ -26,15 +26,17 @@ class mpi_t {
         ~mpi_t() { mbedtls_mpi_free(&mpi_); }
 
         //
-        mpi_t& loadBytes(uint8_t const* a, size_t const& len) { return vid(mbedtls_mpi_read_binary_le(&mpi_, a, len), "bytes loading failed"); }
-        mpi_t& loadBytes(bytes_t const& data ) { return vid(mbedtls_mpi_read_binary_le(&mpi_, data->data(), data->size()), "bytes loading failed"); }
+        mpi_t& loadBytes(uint8_t const* a, size_t const& len) { return vid(mbedtls_mpi_read_binary(&mpi_, a, len), "bytes loading failed"); }
+        mpi_t& loadBytes(bytes_t const& data ) { return loadBytes(data->data(), data->size()); }
         mpi_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
-        bytes_t toBytes() const { size_t len = 32; bytes_t bytes = make_bytes(len); mbedtls_mpi_write_binary_le(&mpi_, bytes->data(), bytes->size()); return bytes; }
 
-        // bigint convertion and construction
-        mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_read_binary_le(&mpi_, (uint8_t*)&a, sizeof(a))); }
-        operator bigint_t() const { bigint_t x = 0; mbedtls_mpi_write_binary_le(&mpi_, (uint8_t*)&x, 32); return x; }
-        mpi_t& operator=(bigint_t const& a) { return vid(mbedtls_mpi_read_binary_le(&mpi_, (uint8_t*)&a, sizeof(a))); }
+        // bigint construction
+        bytes_t toBytes(size_t const& len = 32) const { bytes_t bytes = make_bytes(len); mbedtls_mpi_write_binary(&mpi_, bytes->data(), bytes->size()); return bytes; }
+        operator bigint_t() const { bigint_t x = 0; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return x; }
+
+        // construction from bigint
+        mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes((uint8_t const*)&a, sizeof(a)); }
+        mpi_t& operator=(bigint_t const& a) { return loadBytes((uint8_t const*)&a, sizeof(a)); }
 
 
         // assign-ops

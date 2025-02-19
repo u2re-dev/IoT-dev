@@ -53,7 +53,9 @@ namespace tlvcpp
             }
 
             case e_type::UNSIGNED_INTEGER:
+                if (!reader.checkMemory(1)) return false;
                 value = reader.readByte();
+                //value = reader.readByte();
                 return true;
 
             case e_type::INT16:

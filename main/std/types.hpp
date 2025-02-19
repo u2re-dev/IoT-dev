@@ -159,6 +159,14 @@ public:
         return *this;
     }
 
+    inline writer_t& writeBigIntBE(bigint_t const& val) {
+        data->reserve(32);
+        for (size_t i = 0; i < 32; ++i) {
+            data->push_back(byte_t((val >> (8*(31-i))) & 0xff));
+        }
+        return *this;
+    }
+
     inline writer_t& writeBigInt(bigint_t const& val) {
         data->reserve(32);
         for (size_t i = 0; i < 32; ++i) {
