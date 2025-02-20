@@ -38,6 +38,13 @@ struct RNG {
 };
 
 
+//
+struct SessionKeys {
+    intx::uint128 I2Rkeys;
+    intx::uint128 R2Ikeys;
+    intx::uint128 AttestationChallenge;
+};
+
 
 //
 class PASE {
@@ -48,9 +55,9 @@ public:
 
 
     //
-    inline Message decodeMessage(bytespan_t const& bytes) {
+    inline Message decodeMessage(bytespan_t const& bytes) const {
         auto reader  = reader_t(bytes);
-        auto message = MessageCodec::decodeMessage (reader);
+        auto message = MessageCodec::decodeMessage(reader);
         auto readerPayload = reader_t(message.rawPayload);
         message.decodedPayload = MessageCodec::decodePayload(readerPayload);
         return message;
@@ -77,9 +84,7 @@ public:
         auto hAY = *(bigint_t*)Xv.payload();
 
         //
-        if (hkdf.hAY != hAY) {
-            throw std::runtime_error("hAY not match in MAKE3 phase (received value)");
-        }
+        if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
 
         //
         return payload.header.messageType;
@@ -119,17 +124,10 @@ public:
 
 
 
-    //
-    inline bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0) {
-        Message outMsg    = makeResponse(request, 0x40, make_bytes(8));
-        *(uint16_t*)(outMsg.decodedPayload.payload->data()+0) = 0;
-        *(uint32_t*)(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
-        *(uint16_t*)(outMsg.decodedPayload.payload->data()+6) = status;
-        return MessageCodec::encodeMessage(outMsg);
-    }
+
 
     //
-    inline Message makeResponse(Message const& request, uint8_t messageType, bytespan_t const& payload = {}) {
+    inline Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {}) {
         Message outMsg = {};
         outMsg.header.messageId  = (counter++); ///- request.header.messageId;
         outMsg.header.sessionId  = request.header.sessionId;
@@ -142,14 +140,6 @@ public:
         outMsg.decodedPayload.payload = payload;
         return outMsg;//MessageCodec::encodeMessage(outMsg);
     }
-
-    //
-    inline bytespan_t makeAckMessage(Message const& request) {
-        Message outMsg = makeResponse(request, 0x10);
-        return MessageCodec::encodeMessage(outMsg);
-    }
-
-
 
     //
     inline bytespan_t makePAKE2(Message const& request) {
@@ -167,7 +157,7 @@ public:
 
         //
         writer_t respTLV; resp.serialize(respTLV);
-        Message outMsg = makeResponse(request, 0x23, respTLV);
+        Message outMsg = makeMessage(request, 0x23, respTLV);
         return MessageCodec::encodeMessage(outMsg);
     }
 
@@ -190,8 +180,36 @@ public:
 
         //
         writer_t respTLV; resp.serialize(respTLV); spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, respTLV));
-        Message outMsg = makeResponse(request, 0x21, respTLV);
+        Message outMsg = makeMessage(request, 0x21, respTLV);
         return MessageCodec::encodeMessage(outMsg);
+    }
+
+
+
+    //
+    inline bytespan_t makeAckMessage(Message const& request) {
+        Message outMsg = makeMessage(request, 0x10);
+        return MessageCodec::encodeMessage(outMsg);
+    }
+
+    //
+    inline bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0) {
+        Message outMsg = makeMessage(request, 0x40, make_bytes(8));
+        *(uint16_t*)(outMsg.decodedPayload.payload->data()+0) = 0;
+        *(uint32_t*)(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
+        *(uint16_t*)(outMsg.decodedPayload.payload->data()+6) = status;
+        return MessageCodec::encodeMessage(outMsg);
+    }
+
+    //
+    inline SessionKeys makeSessionKeys() const {
+        auto info = hex::s2b("SessionKeys");
+        auto keys = crypto::hkdf_len(hkdf.Ke, info);
+        return SessionKeys {
+            *(intx::uint128*)(keys->data()),
+            *(intx::uint128*)(keys->data() + 16),
+            *(intx::uint128*)(keys->data() + 32)
+        };
     }
 
 

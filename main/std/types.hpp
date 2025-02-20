@@ -12,10 +12,11 @@
 #include <cstdint>
 #include <memory>
 #include <span>
-#include <iostream>
 
 //
 #include "../spake2p/bigint/intx.hpp"
+
+
 
 //
 using byte_t   = uint8_t;
@@ -29,7 +30,6 @@ template<typename... Args>
 inline bytes_t make_bytes(Args... args) {
     return std::make_shared<std::vector<byte_t>>(args...);
 }
-
 
 
 

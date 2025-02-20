@@ -38,6 +38,23 @@ namespace crypto {
         return output;
     };
 
+
+    //
+    inline bytespan_t hkdf_len(auto const& ikm, const bytespan_t& info, size_t const& length = 48) {
+        auto out = make_bytes(length);
+        mbedtls_md_context_t ctx; const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+        mbedtls_md_init(&ctx); mbedtls_md_setup(&ctx, inf, 1);
+        checkMbedtlsError(mbedtls_hkdf(inf, 
+            nullptr, 0, 
+            (uint8_t*)&ikm, sizeof(ikm), 
+            info->data(), info->size(), 
+            out->data(), out->size()
+        ), "HKDF failed");
+        mbedtls_md_free(&ctx);
+        return out;
+    };
+
+
     //
     inline bigint_t hkdf(auto const& ikm, const bytespan_t& info) {
         bigint_t out = bigint_t(0);
