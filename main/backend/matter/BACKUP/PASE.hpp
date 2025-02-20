@@ -120,9 +120,11 @@ public:
 
 
     //
-    inline bytespan_t makeReportStatus(Message const& request, uint64_t const& status = 0) {
+    inline bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0) {
         Message outMsg    = makeResponse(request, 0x40, make_bytes(8));
-        *(uint64_t*)outMsg.decodedPayload.payload->data() = status;
+        *(uint16_t*)(outMsg.decodedPayload.payload->data()+0) = 0;
+        *(uint32_t*)(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
+        *(uint16_t*)(outMsg.decodedPayload.payload->data()+6) = status;
         return MessageCodec::encodeMessage(outMsg);
     }
 
