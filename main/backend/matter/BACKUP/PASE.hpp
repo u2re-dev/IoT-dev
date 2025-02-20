@@ -120,6 +120,13 @@ public:
 
 
     //
+    inline bytespan_t makeReportStatus(Message const& request, uint64_t const& status = 0) {
+        Message outMsg    = makeResponse(request, 0x40, make_bytes(8));
+        *(uint64_t*)outMsg.decodedPayload.payload->data() = status;
+        return MessageCodec::encodeMessage(outMsg);
+    }
+
+    //
     inline Message makeResponse(Message const& request, uint8_t messageType, bytespan_t const& payload = {}) {
         Message outMsg = {};
         outMsg.header.messageId  = (counter++); ///- request.header.messageId;
@@ -129,7 +136,7 @@ public:
         outMsg.decodedPayload.header.requiresAck = false;//true;
         outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
         outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
-        outMsg.decodedPayload.header.ackedMessageId  = request.header.messageId;
+        outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
         outMsg.decodedPayload.payload = payload;
         return outMsg;//MessageCodec::encodeMessage(outMsg);
     }

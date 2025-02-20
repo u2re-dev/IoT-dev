@@ -90,6 +90,7 @@ public:
     //
     inline ecp_t parseECP (uint8_t const* stream, size_t length) { return ecp_t(group_).loadBytes(stream, length); }
 
+
     // Client
     inline ecp_t& computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_; }
     inline HKDF_HMAC computeHKDFFromX( uncomp_t const& bX ) const {
