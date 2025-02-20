@@ -51,7 +51,7 @@ struct W0W1L {
 };
 
 //
-using uncomp_t = bytes_t;
+using uncomp_t = bytespan_t;
 
 //
 class Spake2p {
@@ -70,7 +70,7 @@ public:
     }
 
     //
-    static bigint_t computeContextHash(bytes_t const& req, bytes_t const& res) {
+    static bigint_t computeContextHash(bytespan_t const& req, bytespan_t const& res) {
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
         mbedtls_sha256_starts_ret(&ctx, 0);
@@ -91,32 +91,32 @@ public:
     inline ecp_t parseECP (uint8_t const* stream, size_t length) { return ecp_t(group_).loadBytes(stream, length); }
 
     // Client
-    inline uncomp_t computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return std::move(Y_); }
-    inline HKDF_HMAC computeSecretAndVerifiersFromX( uncomp_t const& bX ) const {
+    inline ecp_t& computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_; }
+    inline HKDF_HMAC computeHKDFFromX( uncomp_t const& bX ) const {
         ecp_t X  = ecp_t(group_, bX);
         ecp_t Lp = base_.L;
         ecp_t Br = X  - ecp_t(group_).getM() * base_.w0; // with foreign factor
         ecp_t Z  = Br * base_.random; // random factor crossed
         ecp_t V  = Lp * base_.random; // always Device-side factor (own)
-        return std::move(computeSecretAndVerifiers(X, Y_, Z, V));
+        return computeHKDF(X, Y_, Z, V);
     }
 
 
     // Initiator //!unused
-    inline uncomp_t computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return std::move(X_); }
-    inline HKDF_HMAC computeSecretAndVerifiersFromY( uncomp_t const& bY ) const {
+    inline ecp_t& computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return X_; }
+    inline HKDF_HMAC computeHKDFFromY( uncomp_t const& bY ) const {
         ecp_t Y  = ecp_t(group_, bY);
         ecp_t Br = Y  - ecp_t(group_).getN() * base_.w0; // with foreign factor
         ecp_t Z  = Br * base_.random; // random factor crossed
         ecp_t V  = Br * base_.w1;     // always Device-side factor (foreign)
-        return std::move(computeSecretAndVerifiers(X_, Y, Z, V));
+        return computeHKDF(X_, Y, Z, V);
     }
 
 
 private:
 
     //
-    inline HKDF_HMAC computeSecretAndVerifiers( ecp_t X, ecp_t Y, ecp_t Z, ecp_t V) const {
+    inline HKDF_HMAC computeHKDF( ecp_t X, ecp_t Y, ecp_t Z, ecp_t V) const {
         auto transcript = crypto::hash(computeTranscript(X, Y, Z, V));
         intx::uint128& Ka = *(intx::uint128*)((uint8_t*)&transcript + 0), Ke = *(intx::uint128*)((uint8_t*)&transcript + 16);
 
@@ -130,11 +130,15 @@ private:
         result.Ke  = Ke;
         result.hAY = crypto::hmac(KcA, Y);
         result.hBX = crypto::hmac(KcB, X);
+
+        //
+        std::cout << hex::b2h(hex::n2b(result.hAY)) << std::endl;
+
         return std::move(result);
     }
 
     //
-    inline bytes_t computeTranscript(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
+    inline bytespan_t computeTranscript(const ecp_t& X, const ecp_t& Y, const ecp_t& Z, const ecp_t& V) const {
         writer_t writer;
         writer.writeUInt64(32); writer.writeBigInt(context_);
         writer.writeUInt64(0); writer.writeUInt64(0); // identifiers
@@ -166,7 +170,10 @@ private:
 
         //
         W0W1L w0w1L = {};
-        w0w1L.w0 = mpi_t(make_bytes(ws->begin(), ws->begin() + CRYPTO_W_SIZE_BYTES)) % group.N, w0w1L.w1 = mpi_t(make_bytes(ws->begin() + CRYPTO_W_SIZE_BYTES, ws->begin() + PBKDF2_OUTLEN)) % group.N;
+        w0w1L.w0 = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N, 
+        w0w1L.w1 = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.N;
+
+        //
         w0w1L.L  = computeLPoint(group, w0w1L.w1);
         w0w1L.random = mpi_t().random() % group.P;
         return std::move(w0w1L);

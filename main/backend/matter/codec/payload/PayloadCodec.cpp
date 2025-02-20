@@ -48,25 +48,16 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 Payload MessageCodec::decodePayload(reader_t& reader) {
     Payload msg {};
     msg.header = decodePayloadHeader(reader);
-    msg.securityExtension = msg.header.hasSecuredExtension  ? reader.readBytes(reader.readUInt16()) : bytes_t{};
+    msg.securityExtension = msg.header.hasSecuredExtension  ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     msg.payload = reader.remainingBytes();
     return msg;
 }
 
 //
-bytes_t MessageCodec::encodePayload(Payload const& payload) {
+bytespan_t MessageCodec::encodePayload(Payload const& payload) {
     writer_t encodedPH = encodePayloadHeader(payload.header);
-    return (payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes());
+    return payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes();
 }
-
-/*
-Message const& message, Payload const& payload
-bytes_t secExt = {};
-    msg.packetHeader = packet.header;
-    msg.securityExtension = secExt;
-    if (payloadHeader.hasSecuredExtension) secExt = reader.readByteArray(reader.readUInt16());
-    
-*/
 
 //
 Message MessageCodec::buildMessage(PacketHeader const& header, Payload const& payload) {

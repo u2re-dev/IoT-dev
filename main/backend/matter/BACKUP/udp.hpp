@@ -41,7 +41,7 @@ public:
     }
 
     //
-    inline bytes_t handleRequest() {
+    inline bytespan_t handleRequest() {
         socklen_t client_len = sizeof(client_addr);
         size_t received = recvfrom(sockfd, buffer->data(), buffer->size() - 1, 0, (struct sockaddr*)&client_addr, &client_len);
 
@@ -50,11 +50,11 @@ public:
 
         //
         std::cout << "Received message: " << hex::b2h(buffer->data(), received) << std::endl;
-        return make_bytes(buffer->data(), buffer->data() + received);
+        return bytespan_t(buffer->data(), received);
     }
 
     //
-    inline bool sendResponse(bytes_t const& stream) {
+    inline bool sendResponse(bytespan_t const& stream) {
         std::cout << "Sending message: " << hex::b2h(stream) << std::endl;
         sendto(sockfd, stream->data(), stream->size(), 0, (struct sockaddr const *)&client_addr, sizeof(client_addr));
         return true;

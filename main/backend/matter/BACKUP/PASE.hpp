@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 #include <random>
+#include <stdexcept>
 
 //
 struct PBKDFParamRequest {
@@ -47,7 +48,7 @@ public:
 
 
     //
-    inline Message decodeMessage(bytes_t const& bytes) {
+    inline Message decodeMessage(bytespan_t const& bytes) {
         auto reader  = reader_t(bytes);
         auto message = MessageCodec::decodeMessage (reader);
         auto readerPayload = reader_t(message.rawPayload);
@@ -60,8 +61,27 @@ public:
         switch (payload.header.messageType) {
             case 0x20: return handlePASERequest(payload);
             case 0x22: return handlePAKE1(payload);
+            case 0x24: return handlePAKE3(payload);
             default: return 0;
         }
+        return payload.header.messageType;
+    }
+
+    //
+    inline uint8_t handlePAKE3(Payload const& payload) {
+        if (payload.header.messageType != 0x24) return 0;
+
+        //
+        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
+        auto Xv = tlv.find(tlvcpp::tag_t(01))->data();
+        auto hAY = *(bigint_t*)Xv.payload();
+
+        //
+        if (hkdf.hAY != hAY) {
+            throw std::runtime_error("hAY not match in MAKE3 phase (received value)");
+        }
+
+        //
         return payload.header.messageType;
     }
 
@@ -100,7 +120,7 @@ public:
 
 
     //
-    inline Message makeResponse(Message const& request, uint8_t messageType, bytes_t payload = {}) {
+    inline Message makeResponse(Message const& request, uint8_t messageType, bytespan_t const& payload = {}) {
         Message outMsg = {};
         outMsg.header.messageId  = (counter++); ///- request.header.messageId;
         outMsg.header.sessionId  = request.header.sessionId;
@@ -115,7 +135,7 @@ public:
     }
 
     //
-    inline bytes_t makeAckMessage(Message const& request) {
+    inline bytespan_t makeAckMessage(Message const& request) {
         Message outMsg = makeResponse(request, 0x10);
         return MessageCodec::encodeMessage(outMsg);
     }
@@ -123,18 +143,18 @@ public:
 
 
     //
-    inline bytes_t makePAKE2(Message const& request) {
+    inline bytespan_t makePAKE2(Message const& request) {
         if (request.decodedPayload.header.messageType != 0x22) return {};
 
         //
-        auto Y   = spake->computeY();
-        auto Ve = spake->computeSecretAndVerifiersFromX(X_);
+        bytespan_t Y  = spake->computeY();
+        hkdf = spake->computeHKDFFromX(X_);
 
         //
         auto resp = tlvcpp::tlv_tree_node{}; 
         resp.data() = tlvcpp::tlv(00,  0, nullptr, 0x15);
         resp.add_child(tlvcpp::tlv(01, 65, Y->data(), 0x10)); // send randoms
-        resp.add_child(tlvcpp::tlv(02, 32, (uint8_t*)&Ve.hBX, 0x10));
+        resp.add_child(tlvcpp::tlv(02, 32, (uint8_t*)&hkdf.hBX, 0x10));
 
         //
         writer_t respTLV; resp.serialize(respTLV);
@@ -143,11 +163,11 @@ public:
     }
 
     //
-    inline bytes_t makePASEResponse(Message const& request) {
+    inline bytespan_t makePASEResponse(Message const& request) {
         if (request.decodedPayload.header.messageType != 0x20) return {};
 
         //
-        auto rand = mpi_t().random();
+        bigint_t rand = mpi_t().random();
         auto resp = tlvcpp::tlv_tree_node{}; 
         resp.data() = tlvcpp::tlv(00,  0, nullptr, 0x15);
         resp.add_child(tlvcpp::tlv(01, 32, (uint8_t*)&req.rand, 0x10)); // send randoms
@@ -169,6 +189,7 @@ public:
 
     //
 private: //
+    HKDF_HMAC hkdf = {};
     PBKDFParameters params = {};
     PBKDFParamRequest req = {};
 

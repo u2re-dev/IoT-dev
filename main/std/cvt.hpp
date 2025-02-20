@@ -26,7 +26,7 @@ namespace mpc {
 
     //
     std::string n2h(bigint_t const& I) {
-        bytes_t tmp = make_bytes(sizeof(I));
+        auto tmp = make_bytes(sizeof(I));
         memcpy(tmp->data(), &I, sizeof(I));
         return hex::b2h(tmp);
     }

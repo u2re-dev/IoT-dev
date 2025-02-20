@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <cstdint>
 #include <memory>
+#include <span>
+#include <iostream>
 
 //
 #include "../spake2p/bigint/intx.hpp"
@@ -28,9 +30,100 @@ inline bytes_t make_bytes(Args... args) {
     return std::make_shared<std::vector<byte_t>>(args...);
 }
 
+
+
+
 //
-inline bytes_t concat(std::initializer_list<bytes_t> const& arrays) {
-    bytes_t result = make_bytes();
+class bytespan_t {
+public:
+    inline bytespan_t() : span_({}), holder_({}) {
+        //std::cerr << "WARNING: bytespan_t doesn't contain anything." << std::endl;
+    }
+
+    //
+    inline bytespan_t(bytes_t const& ptr, uintptr_t const& offset = 0) : holder_(ptr) {
+        span_ = std::span<uint8_t>(ptr->begin() + offset, ptr->end());
+    }
+
+    //
+    inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_) {
+        span_ = std::span<uint8_t>(span->begin() + offset, span->end());
+    }
+
+    //
+    inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0) : holder_({}) {
+        span_ = std::span<uint8_t>((uint8_t*)ptr, (uint8_t*)ptr + size);
+    }
+
+    //
+    inline std::span<uint8_t>* operator->() { return &span_; }
+    inline std::span<uint8_t> const* operator->() const { return &span_; }
+
+    //
+    inline operator bytes_t() const {
+        // if pointer of span is same, use same as holder, otherwise copy vector
+        return (span_.data() == holder_->data()) ? holder_ : make_bytes(span_.begin(), span_.end());
+    }
+
+    //
+    inline bytespan_t& operator=(bytes_t const& v) {
+        holder_ = v;
+        span_   = std::span<uint8_t>(v->begin(), v->end());
+        return *this;
+    }
+
+    //
+    inline bytespan_t& operator=(bytespan_t const& span) {
+        holder_ = span.holder_;
+        span_   = span.span_;
+        return *this;
+    }
+
+    //
+    inline byte_t& operator[](uintptr_t I) { return span_[I]; }
+    inline byte_t const& operator[](uintptr_t I) const { return span_[I]; }
+
+    //
+    inline int64_t const& readInt64(uintptr_t const& offset = 0) const { return *(int64_t const*)(span_.data() + offset); }
+    inline int32_t const& readInt32(uintptr_t const& offset = 0) const { return *(int32_t const*)(span_.data() + offset); }
+    inline int16_t const& readInt16(uintptr_t const& offset = 0) const { return *(int16_t const*)(span_.data() + offset); }
+    inline  int8_t const& readInt8 (uintptr_t const& offset = 0) const { return *( int8_t const*)(span_.data() + offset); }
+
+    //
+    inline bigint_t const& readBigInt(uintptr_t const& offset = 0) const { return *(bigint_t const*)(span_.data() + offset); }
+    inline intx::uint128 const& readUInt128(uintptr_t const& offset = 0) const { return *(intx::uint128 const*)(span_.data() + offset); }
+
+    //
+    inline uint64_t const& readUInt64(uintptr_t const& offset = 0) const { return *(uint64_t const*)(span_.data() + offset); }
+    inline uint32_t const& readUInt32(uintptr_t const& offset = 0) const { return *(uint32_t const*)(span_.data() + offset); }
+    inline uint16_t const& readUInt16(uintptr_t const& offset = 0) const { return *(uint16_t const*)(span_.data() + offset); }
+    inline  uint8_t const& readUInt8 (uintptr_t const& offset = 0) const { return *( uint8_t const*)(span_.data() + offset); }
+
+    //
+    inline byte_t const& readByte (uintptr_t const& offset = 0) const { return *( byte_t const*)(span_.data() + offset); }
+
+    //
+    inline operator bool() const { return span_.size() > 0; };
+    inline operator std::span<uint8_t> const&() const { return span_; };
+    inline operator std::span<uint8_t>&() { return span_; };
+
+    //
+    inline operator uint8_t const*() const { return span_.data(); };
+    inline operator uint8_t*() { return span_.data(); };
+
+    //
+    inline std::span<uint8_t> const& operator*() const { return span_; };
+    inline std::span<uint8_t>& operator*() { return span_; };
+
+
+private:
+    bytes_t holder_;
+    std::span<uint8_t> span_;
+};
+
+//
+inline bytes_t concat(std::initializer_list<bytespan_t> const& arrays) {
+    auto result = make_bytes();
     for (const auto& arr : arrays) result->insert(result->end(), arr->begin(), arr->end());
     return result;
 }
@@ -41,6 +134,7 @@ public:
     inline reader_t(reader_t const& reader) : offset(reader.offset), memory(reader.memory), capacity(reader.capacity) {}
     inline reader_t(uint8_t const* data = nullptr, size_t size = 0) : offset(0), memory(data), capacity(size) {}
     inline reader_t(bytes_t const& data_) : memory(data_->data()), capacity(data_->size()) {}
+    inline reader_t(bytespan_t const& data_) : memory(data_->data()), capacity(data_->size()) {}
 
     //
     inline bool checkMemory(size_t size = 1) const { return (capacity >= (size + offset)); }
@@ -72,21 +166,20 @@ public:
     }
 
     //
-    inline bytes_t readBytes(size_t length) {
+    inline bytespan_t readBytes(size_t length) {
         checkSize(length);
         auto bytes = allocate(length);
-        return make_bytes(bytes, bytes + length);
+        return bytespan_t(bytes,length);
     }
 
     //
-    inline bytes_t remainingBytes() const {
-        return make_bytes(memory + offset, memory + capacity);
+    inline bytespan_t remainingBytes() const {
+        return bytespan_t(memory + offset, capacity - offset);
     }
 
     //
-    inline operator bytes_t() const {
-        return make_bytes(memory, memory + offset);
-    }
+    inline operator bytespan_t() const { return bytespan_t(memory + offset, capacity - offset); };
+    inline operator bytes_t() const { return make_bytes(memory + offset, memory + capacity); }
 
 private:
     inline void checkSize(size_t n) const {
@@ -104,6 +197,7 @@ class writer_t {
 public:
     operator bytes_t&() { return data; };
     operator bytes_t const&() const { return data; };
+    operator bytespan_t() const { return bytespan_t(data); };
 
     //
     inline writer_t() : data(make_bytes()) {}
@@ -185,6 +279,15 @@ public:
     }
 
     // TODO: better method for writing bytes
+    inline writer_t& writeBytes(bytespan_t const& val) {
+        data->reserve(val->size());
+        for (size_t i = 0; i < val->size(); ++i) {
+            data->push_back(val[i]);
+        }
+        return *this;
+    }
+    
+    // TODO: better method for writing bytes
     inline writer_t& writeBytes(bytes_t const& val) {
         data->reserve(val->size());
         for (size_t i = 0; i < val->size(); ++i) {
@@ -234,6 +337,13 @@ public:
         return *this;
     }
 
+    inline writer_l& writeBytes(bytespan_t const& arr) {
+        ensureCapacity(arr->size());
+        memcpy(data + offset, arr->data(), arr->size());
+        offset += arr->size();
+        return *this;
+    }
+
     inline writer_l& writeBytes(bytes_t const& arr) {
         ensureCapacity(arr->size());
         memcpy(data + offset, arr->data(), arr->size());
@@ -250,6 +360,11 @@ public:
 
     //
     inline uintptr_t const& getSize() const { return offset; }
+
+    //
+    inline operator bytespan_t() const {
+        return bytespan_t(data + offset, capacity - offset);
+    }
 
     //
     inline operator bytes_t() const {

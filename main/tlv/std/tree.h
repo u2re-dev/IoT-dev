@@ -63,6 +63,7 @@ namespace tlvcpp {
         //
         bool deserialize(uint8_t const* buffer, const size_t size);
         bool deserialize(std::vector<uint8_t> const& buffer);
+        bool deserialize(std::span<uint8_t> const& buffer);
 
         //
         bool deserialize(reader_t &reader);

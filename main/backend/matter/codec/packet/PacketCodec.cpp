@@ -79,25 +79,14 @@ writer_t MessageCodec::encodePacketHeader(const PacketHeader& ph) {
 Message MessageCodec::decodeMessage(reader_t& reader) {
     Message dp;
     dp.header             = decodePacketHeader(reader);;
-    dp.messageExtension   = dp.header.hasMessageExtensions ? reader.readBytes(reader.readUInt16()) : bytes_t{};
+    dp.messageExtension   = dp.header.hasMessageExtensions ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     dp.rawPayload         = reader.remainingBytes();
     return dp;
 }
 
 //
-bytes_t MessageCodec::encodeMessage(Message& packet) {
+bytespan_t MessageCodec::encodeMessage(Message& packet) {
     if (packet.messageExtension && (packet.messageExtension->size() || packet.header.hasMessageExtensions)) throw NotImplementedError("Message extensions not supported when encoding a packet.");
     if (!packet.rawPayload) packet.rawPayload = encodePayload(packet.decodedPayload);
     return concat({encodePacketHeader(packet.header), packet.rawPayload});
 }
-
-/*
-//
-bytes_t MessageCodec::encodeMessage(Message const& msg) {
-    DataWriter writer;
-    writer.writeBytes(encodePacketHeader(msg.header));
-    // TODO: support writing of extensions
-    writer.writeBytes(encodePayload(msg.decodedPayload));
-    return writer.toBytes();
-}
-*/

@@ -73,8 +73,8 @@ struct MessageType {
 //
 struct Payload {
     PayloadHeader header = {};
-    bytes_t payload = {};
-    bytes_t securityExtension = {};
+    bytespan_t payload = {};
+    bytespan_t securityExtension = {};
 };
 
 //
@@ -83,8 +83,8 @@ struct Message {
     Payload decodedPayload = {};
 
     //
-    bytes_t messageExtension = {};
-    bytes_t rawPayload = {};
+    bytespan_t messageExtension = {};
+    bytespan_t rawPayload = {};
 };
 
 //
@@ -96,11 +96,11 @@ struct MsgTypeInfo {
 //
 struct MessageCodec {
     static Message decodeMessage(reader_t& packet);
-    static bytes_t encodeMessage(Message& message);
+    static bytespan_t encodeMessage(Message& message);
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
 
     //
-    static bytes_t encodePayload(Payload const& payload);
+    static bytespan_t encodePayload(Payload const& payload);
     static Payload decodePayload(reader_t& data);
 private:
     static PacketHeader decodePacketHeader(reader_t& reader);

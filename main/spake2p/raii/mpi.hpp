@@ -14,7 +14,7 @@ class mpi_t {
         mpi_t(int  a = 0) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(long a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
         mpi_t(uint a) { mbedtls_mpi_init(&mpi_); vid(mbedtls_mpi_lset(&mpi_, a)); }
-        mpi_t(bytes_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
+        mpi_t(bytespan_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(a); }
         mpi_t(uint8_t const* a, size_t const& len) { mbedtls_mpi_init(&mpi_); loadBytes(a, len); }
 
         //
@@ -27,11 +27,11 @@ class mpi_t {
 
         //
         mpi_t& loadBytes(uint8_t const* a, size_t const& len) { return vid(mbedtls_mpi_read_binary(&mpi_, a, len), "bytes loading failed"); }
-        mpi_t& loadBytes(bytes_t const& data ) { return loadBytes(data->data(), data->size()); }
+        mpi_t& loadBytes(bytespan_t const& data ) { return loadBytes(data->data(), data->size()); }
         mpi_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
 
         // bigint construction
-        bytes_t toBytes(size_t const& len = 32) const { bytes_t bytes = make_bytes(len); mbedtls_mpi_write_binary(&mpi_, bytes->data(), bytes->size()); return bytes; }
+        bytespan_t toBytes(size_t const& len = 32) const { bytespan_t bytes = make_bytes(len); mbedtls_mpi_write_binary(&mpi_, bytes->data(), bytes->size()); return bytes; }
         operator bigint_t() const { bigint_t x = 0; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return x; }
 
         // construction from bigint
