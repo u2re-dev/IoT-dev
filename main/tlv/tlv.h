@@ -37,8 +37,8 @@ namespace tlvcpp
         tlv(const tag_t& tag, const std::string& str) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())), m_type(e_type::UTF8_STRING) {}
 
         //
-        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::SIGNED_INTEGER) {}
-        explicit tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::INT16) {}
+        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::UNSIGNED_INTEGER | 0b00000010) {}
+        explicit tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::UNSIGNED_INTEGER | 0b00000001) {}
         explicit tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::UNSIGNED_INTEGER) {}
 
         //
@@ -76,6 +76,7 @@ namespace tlvcpp
         tlv& operator=(uint8_t v) { m_u8 = v; return *this; }
         tlv& operator=(uint16_t v) { m_u16 = v; return *this; }
         tlv& operator=(uint32_t v) { m_u32 = v; return *this; }
+        tlv& operator=(uint64_t v) { m_u64 = v; return *this; }
 
         //
         tlv& setBytes(const uint8_t* bytes, size_t s) { m_size = s; m_payload = bytes; return *this; }
@@ -97,6 +98,8 @@ namespace tlvcpp
         operator const uint16_t&() const { return m_u16; }
         operator uint32_t&() { return m_u32; }
         operator const uint32_t&() const { return m_u32; }
+        operator uint64_t&() { return m_u64; }
+        operator const uint64_t&() const { return m_u64; }
 
     private:
         // arven-code (8+8 bits)
@@ -107,6 +110,7 @@ namespace tlvcpp
         union {
             long m_value;
             size_t m_size;
+            uint64_t m_u64;
             uint32_t m_u32;
             uint16_t m_u16;
             uint8_t  m_u8;

@@ -10,15 +10,15 @@ namespace tlvcpp {
         enum Type : uint8_t {
             SIGNED_INTEGER        = 0x00,
             UNSIGNED_INTEGER      = 0x04,
-            INT16                 = 0x05,
             BOOLEAN               = 0x08,
             FLOATING_POINT_NUMBER = 0x0A,
             UTF8_STRING           = 0x0C,
             BYTE_STRING           = 0x10,
-            NULL_TYPE             = 0x14,
-            STRUCTURE             = 0x15,
-            ARRAY                 = 0x16,
-            PATH                  = 0x17
+            STRUCTURE             = 0x14, // itself is null
+            END                   = 0x18,
+            //HAS                   = 0x15,
+            //ARRAY                 = 0x16,
+            //PATH                  = 0x17
         };
     }
 }

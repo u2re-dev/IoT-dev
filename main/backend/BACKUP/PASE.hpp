@@ -15,6 +15,10 @@
 #include <stdexcept>
 
 //
+#include <mbedtls/aes.h>
+#include <mbedtls/ccm.h>
+
+//
 struct PBKDFParamRequest {
     bigint_t rand;
     uint16_t sess;
@@ -50,15 +54,54 @@ struct SessionKeys {
 class PASE {
 public:
     inline void init() { counter = rng.generate(); }
-    inline PASE() { init(); };
-
-
+    inline PASE() { init(); }
 
     //
     inline Message decodeMessage(bytespan_t const& bytes) const {
         auto reader  = reader_t(bytes);
-        auto message = MessageCodec::decodeMessage(reader);
-        auto readerPayload = reader_t(message.rawPayload);
+        auto message  = MessageCodec::decodeMessage(reader);
+
+        //
+        if (message.header.sessionId != 0 && message.rawPayload->size() && sessionKeys.I2Rkeys) {
+            auto aad = std::span<uint8_t>(bytes->begin(), bytes->end() - message.rawPayload->size());
+
+            //
+            writer_t nonce_w;
+            nonce_w.writeByte(message.header.securityFlags);
+            nonce_w.writeUInt32(message.header.messageId);
+            nonce_w.writeUInt64(message.header.sourceNodeId.value_or(0));
+            bytespan_t nonce = nonce_w;
+
+            //
+            mbedtls_ccm_context aes;
+            mbedtls_ccm_init(&aes);
+
+            // set keys
+            checkMbedtlsError(mbedtls_ccm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (uint8_t*) &sessionKeys.I2Rkeys, 128), "Decrypt Key Init Failed");
+
+            //
+            auto output = make_bytes(message.rawPayload->size() - 16);
+            checkMbedtlsError(mbedtls_ccm_auth_decrypt(&aes, //MBEDTLS_CCM_DECRYPT, 
+                (message.rawPayload->size() - 16),
+                nonce->data(),
+                nonce->size(),
+                aad.data(),
+                aad.size(),
+                //message.rawPayload->size() - 16,//aad.size(),
+                message.rawPayload->data(),
+                output->data(),
+                message.rawPayload->data() + (message.rawPayload->size() - 16),
+                16
+            ), "Decryption Failed");
+            mbedtls_ccm_free(&aes);
+
+            std::cout << "Decoded Payload:" << std::endl;
+            std::cout << hex::b2h(output) << std::endl;
+    
+        }
+
+        //
+        auto readerPayload = reader_t(message.rawPayload);//message.rawPayload
         message.decodedPayload = MessageCodec::decodePayload(readerPayload);
         return message;
     }
@@ -194,6 +237,9 @@ public:
 
     //
     inline bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0) {
+        makeSessionKeys();
+
+        //
         Message outMsg = makeMessage(request, 0x40, make_bytes(8));
         *(uint16_t*)(outMsg.decodedPayload.payload->data()+0) = 0;
         *(uint32_t*)(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
@@ -202,14 +248,14 @@ public:
     }
 
     //
-    inline SessionKeys makeSessionKeys() const {
+    inline SessionKeys makeSessionKeys() {
         auto info = hex::s2b("SessionKeys");
         auto keys = crypto::hkdf_len(hkdf.Ke, info);
-        return SessionKeys {
+        return (sessionKeys = SessionKeys {
             *(intx::uint128*)(keys->data()),
             *(intx::uint128*)(keys->data() + 16),
             *(intx::uint128*)(keys->data() + 32)
-        };
+        });
     }
 
 
@@ -219,6 +265,7 @@ private: //
     HKDF_HMAC hkdf = {};
     PBKDFParameters params = {};
     PBKDFParamRequest req = {};
+    SessionKeys sessionKeys = {};
 
     //
     ecp_t X_;
