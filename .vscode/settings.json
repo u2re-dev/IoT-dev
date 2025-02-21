@@ -191,5 +191,12 @@
 "workbench.editor.highlightModifiedTabs": true,
 "workbench.editor.pinnedTabsOnSeparateRow": true,
 "workbench.editor.tabSizing": "shrink",
-"workbench.editor.wrapTabs": true
+"workbench.editor.wrapTabs": true,
+"c-cpp-flylint.flexelint.enable": false,
+"c-cpp-flylint.cppcheck.enable": false,
+"c-cpp-flylint.clang.enable": false,
+"c-cpp-flylint.pclintplus.enable": false,
+"c-cpp-flylint.flawfinder.enable": false,
+"c-cpp-flylint.lizard.enable": false,
+"c-cpp-flylint.enable": false
 }

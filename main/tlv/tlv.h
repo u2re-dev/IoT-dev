@@ -103,7 +103,7 @@ namespace tlvcpp
 
     private:
         // arven-code (8+8 bits)
-        type_t m_type = 0; 
+        type_t m_type = 0;
         tag_t m_tag = 0;
 
         // number value or size
