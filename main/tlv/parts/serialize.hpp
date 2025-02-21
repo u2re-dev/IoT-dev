@@ -34,46 +34,38 @@ namespace tlvcpp
     inline bool serialize_recursive(const tlv_tree_node& node, writer_t& writer, uintptr_t level = 0)
     {
         auto& element = node.data();
-        type_t type = element.type();
-        tag_t tag   = element.tag();
+        control_t control = element.control();
 
         // also, don't write zero tags
-        if (type && type != e_type::END) { // don't write anothing about such tag
-            bool isSimple = (level == 0); // TODO: better complex type definition
-            writer.writeByte(!isSimple ? (type | 0b00100000) : type);
-            if (!isSimple) { writer.writeByte(tag); }
+        if (control.type && control.type != e_type::END) { // don't write anothing about such tag
+            bool isSimple = control.lab == 0; // TODO: better complex type definition
+            writer.writeByte(reinterpret_cast<uint8_t&>(control));
+            if (!isSimple) { writer.writeByte(element.tag()); };
         };
 
         //
-        switch (type & 0b00011100)
+        switch (control.type)
         {
             case e_type::END: return false; // skip that tag...
             case e_type::STRUCTURE:
                 for (const auto& child : node.children()) {
-                    if (!serialize_recursive(child, writer, level + 1)) {
-                        writer.writeByte(0x18); return true;
-                    }
+                    if (!serialize_recursive(child, writer, level + 1)) { break; }
                 }
-                writer.writeByte(0x18);
+                writer.writeByte(0x18); 
                 return true;
 
-            case e_type::BYTE_STRING:
+            //
             case e_type::UTF8_STRING:
-                writer.writeByte(element.size());
-                writer.writeBytes(element.payload(), element.size());
-                return true;
-
             case e_type::SIGNED_INTEGER:
             case e_type::UNSIGNED_INTEGER:
-                writeOctets(writer, element, element.type());
+            case e_type::FLOATING_POINT:
+            case e_type::BYTE_STRING:
+                if (!writeOctets(writer, element, control.octet)) return false;
+                if ( element.payload() && (control.type == e_type::BYTE_STRING || control.type == e_type::UTF8_STRING)) 
+                    { writer.writeBytes(element.payload(), element.size()); };
                 return true;
 
-            case e_type::FLOATING_POINT_NUMBER:
-                writer.writeUInt32(static_cast<uint32_t>(element));
-                return true;
-
-            default:
-                return true;
+            default: return true;
         }
         return false;
     }

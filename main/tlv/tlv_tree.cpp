@@ -16,7 +16,7 @@ namespace tlvcpp
     template<> 
     bool tree_node<tlvcpp::tlv>::serialize(writer_t& writer) const
     {
-        if (data().type() == 0x15) { // any structure always begins byself
+        if (data().type() == 0b101) { // any structure always begins byself
             if (!serialize_recursive(*this, writer)) return false;
         } else { // any other is child-written
             for (const auto &child : children())

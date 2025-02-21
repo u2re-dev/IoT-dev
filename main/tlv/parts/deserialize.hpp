@@ -8,8 +8,6 @@
 
 
 
-
-
 //
 namespace tlvcpp
 {
@@ -36,69 +34,40 @@ namespace tlvcpp
         return true;
     }
 
-
-    /* // unused
-    uint8_t next_byte = reader.readByte();
-    length_t length = 0;
-
-    //
-    if (!(next_byte & 0b10000000)) {
-        length = next_byte;
-    } else {
-        while (next_byte & 0b10000000 && reader.checkMemory())
-        { length = (length << 7) | (next_byte & 0b01111111); next_byte = reader.readByte(); }
-    }*/
-
-
     // ========== MATTER DESERIALIZATION ========
     static bool deserialize_tag(reader_t& reader, tlv& value)
     {
         if (!reader.checkMemory()) return false;
-        tag_t rawTag = reader.readByte();
+        control_t control = reinterpret_cast<control_t&>(reader.readByte());
 
         //
-        value.type(rawTag & 0b00011111);
-        bool isSimple = !(rawTag & 0b11100000);//(rawTag ^ value.type()) <= 0b00011111;
-
-        // TODO: better definition
-        value.tag(isSimple ? 0 : reader.readByte());
+        value = uint64_t(0);
+        value.control(control);
+        value.tag(control.lab == 0 ? 0 : reader.readByte());
         if (!reader.checkMemory()) return false;
 
         //
-        switch (value.type() & 0b00011100)
+        switch (control.type)
         {
             case e_type::END: return false;
-
-            // TODO: support of 0x15 i.e. "has", 0x16 i.e. "array" and 0x17 i.e. "path"
-            case e_type::STRUCTURE: return true; 
+            case e_type::STRUCTURE: return true; // TODO: support of subtypes
 
             //
-            case e_type::UTF8_STRING:
-            case e_type::BYTE_STRING: {
-                uint64_t length = 0; if (!readOctets(reader, length, value.type())) return false;
-                value.setBytes(reinterpret_cast<const uint8_t*>(reader.allocate(length)), length);
-                return true;
-            } break;
+            case e_type::FLOATING_POINT: // if boolean, just return true or false
+                if ((control.octet&0b10) == 0) { value = control.octet != 0; return true; }
 
+            // octet-typed
+            case e_type::UTF8_STRING:
+            case e_type::BYTE_STRING:
             case e_type::SIGNED_INTEGER:
             case e_type::UNSIGNED_INTEGER:
-                return readOctets(reader, value, value.type());
+                if (!readOctets(reader, value, control.octet)) return false;
+                if (control.type == e_type::BYTE_STRING) {
+                    value.setBytes(reinterpret_cast<const uint8_t*>(reader.allocate(value)), value);
+                }; return true; break;
 
-            case e_type::FLOATING_POINT_NUMBER:
-                if (!reader.checkMemory(4)) return false;
-                value = reader.readUInt32(); //value.type()
-                return true;
-
-            case e_type::BOOLEAN:
-                value = (value.type() & 0b00000001) == 1;
-                return true;
-
-            default:
-                while (reader.checkMemory() && (rawTag & 0b10000000)) {
-                    rawTag = (rawTag << 8) | reader.readByte();
-                }
-                value.tag(rawTag & 0b00011111);
-                return reader.checkMemory();
+            //
+            default: return reader.checkMemory();
         }
         return false;
     }
@@ -106,10 +75,10 @@ namespace tlvcpp
     //
     static bool deserialize_recursive(reader_t& reader, tlv_tree_node& node, intptr_t level = 0) {
         while (reader.checkMemory()) {
-            tlv value{ 0 };
+            tlv value{};
             if (!deserialize_tag(reader, value)) return false;
             if (!reader.checkMemory()) return false;
-            bool isStruct = (value.type() & 0b00011100) == e_type::STRUCTURE;
+            bool isStruct = value.type() == e_type::STRUCTURE;
             auto& child = (isStruct && level == 0) ? node : node.add_child(value);
             if (isStruct) {
                 child.data() = value; // assign type to node itself

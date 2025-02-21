@@ -6,21 +6,42 @@
 
 //
 namespace tlvcpp {
-    namespace e_type {
-        enum Type : uint8_t {
-            SIGNED_INTEGER        = 0x00,
-            UNSIGNED_INTEGER      = 0x04,
-            BOOLEAN               = 0x08,
-            FLOATING_POINT_NUMBER = 0x0A,
-            UTF8_STRING           = 0x0C,
-            BYTE_STRING           = 0x10,
-            STRUCTURE             = 0x14, // itself is null
-            END                   = 0x18,
-            //HAS                   = 0x15,
-            //ARRAY                 = 0x16,
-            //PATH                  = 0x17
-        };
-    }
-}
+    //
+    enum e_octet : uint8_t {
+        BYTE  = 0b00,
+        SHORT = 0b01,
+        WORD  = 0b10, // I don't know how it name (32-bit values)...
+        LONG  = 0b11
+    };
 
+    //
+    enum e_float : uint8_t {
+        FALSE = 0b00,
+        TRUE  = 0b01,
+        F32 = 0b10,
+        F64 = 0b11
+    };
+
+    //
+    enum e_struct : uint8_t {
+        NULL_T = 0b00,
+        STRUCT = 0b01,
+        ARRAY  = 0b10,
+        PATH   = 0b11
+    };
+
+    //
+    enum e_type : uint8_t {
+        SIGNED_INTEGER   = 0b000,
+        UNSIGNED_INTEGER = 0b001,
+        FLOATING_POINT   = 0b010,
+        UTF8_STRING      = 0b011,
+        BYTE_STRING      = 0b100,
+        STRUCTURE        = 0b101, // itself is null
+        END              = 0b110,
+        UNKNOWN          = 0b111,
+        //m_control.lab |= tag != 0 ? 0b001 : 0;
+    };
+}
+//
 #endif /* C6C745D5_626B_4A22_B876_9A1DCA736686 */

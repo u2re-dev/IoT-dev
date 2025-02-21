@@ -32,6 +32,17 @@ inline bytes_t make_bytes(Args... args) {
 }
 
 
+//
+inline uint32_t bswap32(uint32_t const& num) {
+    return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
+}
+
+//
+inline uint16_t bswap16(uint16_t const& num) {
+    return ((num<<8)&0xff) | ((num>>8)&0xff00);
+}
+
+
 
 //
 class bytespan_t {
@@ -182,8 +193,8 @@ public:
     inline operator bytes_t() const { return make_bytes(memory + offset, memory + capacity); }
 
 private:
-    inline void checkSize(size_t n) const {
-        if ((offset + n) < capacity) throw "Unexpected end of data";
+    inline void checkSize(size_t const& n) const {
+        if (capacity < (offset + n)) throw "Unexpected end of data";
     }
 
     //

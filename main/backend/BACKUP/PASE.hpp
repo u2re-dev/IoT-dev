@@ -9,6 +9,7 @@
 
 //
 #include "std/types.hpp"
+#include "tlv/parts/enums.hpp"
 #include <memory>
 #include <optional>
 #include <random>
@@ -193,10 +194,10 @@ public:
         hkdf = spake->computeHKDFFromX(X_);
 
         //
-        auto resp = tlvcpp::tlv_tree_node{}; 
-        resp.data() = tlvcpp::tlv(00,  0, nullptr, 0x15);
-        resp.add_child(tlvcpp::tlv(01, 65, Y->data(), 0x10)); // send randoms
-        resp.add_child(tlvcpp::tlv(02, 32, (uint8_t*)&hkdf.hBX, 0x10));
+        auto resp = tlvcpp::tlv_tree_node{};
+        resp.data() = tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0});
+        resp.add_child(65, Y->data(), 01); // send randoms
+        resp.add_child(32, (uint8_t*)&hkdf.hBX, 02);
 
         //
         writer_t respTLV; resp.serialize(respTLV);
@@ -211,15 +212,15 @@ public:
         //
         bigint_t rand = mpi_t().random();
         auto resp = tlvcpp::tlv_tree_node{}; 
-        resp.data() = tlvcpp::tlv(00,  0, nullptr, 0x15);
-        resp.add_child(tlvcpp::tlv(01, 32, (uint8_t*)&req.rand, 0x10)); // send randoms
-        resp.add_child(tlvcpp::tlv(02, 32, (uint8_t*)&rand, 0x10));
-        resp.add_child(tlvcpp::tlv(03,  uint16_t(rng.generate())));
+        resp.data() = tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0});
+        resp.add_child(tlvcpp::tlv(32, (uint8_t*)&req.rand, 01)); // send randoms
+        resp.add_child(tlvcpp::tlv(32, (uint8_t*)&rand, 02));
+        resp.add_child(tlvcpp::tlv(uint16_t(rng.generate()), 03));
 
         //
-        auto& tlvParams = resp.add_child(tlvcpp::tlv(04, 0, nullptr, 0x15));;
-        tlvParams.add_child(tlvcpp::tlv(01, params.iterations));
-        tlvParams.add_child(tlvcpp::tlv(02, 32, (uint8_t*)&params.salt, 0x10));
+        auto& tlvParams = resp.add_child(tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0}, 04));
+        tlvParams.add_child(tlvcpp::tlv(uint16_t(params.iterations), 01));
+        tlvParams.add_child(tlvcpp::tlv(32, (uint8_t*)&params.salt, 02));
 
         //
         writer_t respTLV; resp.serialize(respTLV); spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, respTLV));

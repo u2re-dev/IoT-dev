@@ -8,6 +8,7 @@
 #include <string>
 
 //
+#include "../std/types.hpp"
 #include "./parts/enums.hpp"
 
 //
@@ -21,28 +22,32 @@ namespace tlvcpp
     using length_t = uint32_t;
 
     //
-    //using tag_parser = const char* (*)(const tag_t);
-    //void set_tag_parser(tag_parser parser);
-    //bool tag_is_primitive(tag_t tag);
+    struct control_t {
+        uint8_t octet : 2;
+        uint8_t type  : 3;
+        uint8_t lab   : 3;
+    };
 
     //
     class tlv {
     public:
         //
         tlv() {};
-        explicit tlv(const tag_t& tag, size_t size = 0, const uint8_t* payload = nullptr, type_t type = 0) : m_tag(tag), m_size(size), m_payload(payload), m_type(type) {}
 
         //
-        tlv(const tag_t& tag, const char* str) : m_tag(tag), m_size(std::strlen(str)), m_payload(reinterpret_cast<const uint8_t*>(str)), m_type(e_type::UTF8_STRING) {}
-        tlv(const tag_t& tag, const std::string& str) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())), m_type(e_type::UTF8_STRING) {}
+        explicit tlv(control_t const& control, tag_t const& tag = 0) : m_tag(tag), m_control(control) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        explicit tlv(size_t size, const uint8_t* payload, tag_t const& tag = 0) : m_tag(tag), m_size(size), m_payload(payload), m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { m_control.lab |= tag != 0 ? 0b001 : 0; }
 
         //
-        explicit tlv(const tag_t& tag, uint32_t value) : m_tag(tag), m_u32(value), m_type(e_type::UNSIGNED_INTEGER | 0b00000010) {}
-        explicit tlv(const tag_t& tag, uint16_t value) : m_tag(tag), m_u16(value), m_type(e_type::UNSIGNED_INTEGER | 0b00000001) {}
-        explicit tlv(const tag_t& tag, uint8_t value)  : m_tag(tag), m_u8(value), m_type(e_type::UNSIGNED_INTEGER) {}
+        explicit tlv(uint8_t const* str,     tag_t const& tag = 0) : m_tag(tag), m_size(std::strlen((char const* )str)), m_payload(reinterpret_cast<const uint8_t*>(str))        , m_control({ 0b00, e_type::UTF8_STRING, 0b00 }) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        explicit tlv(std::string const& str, tag_t const& tag = 0) : m_tag(tag), m_size(str.size())                      , m_payload(reinterpret_cast<const uint8_t*>(str.c_str())) , m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { m_control.lab |= tag != 0 ? 0b001 : 0; }
 
         //
-        template <typename T> tlv(const tag_t& tag, T&& value);
+        tlv(bytespan_t const&  bn, tag_t const& tag = 0) : m_tag(tag), m_size(bn->size()), m_payload(reinterpret_cast<const uint8_t*>(bn->data())), m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        tlv(uint64_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u64(value), m_control({0b11, e_type::UNSIGNED_INTEGER, 0b000}) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        tlv(uint32_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u32(value), m_control({0b10, e_type::UNSIGNED_INTEGER, 0b000}) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        tlv(uint16_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u16(value), m_control({0b01, e_type::UNSIGNED_INTEGER, 0b000}) { m_control.lab |= tag != 0 ? 0b001 : 0; }
+        tlv( uint8_t const& value, tag_t const& tag = 0) : m_tag(tag),  m_u8(value), m_control({0b00, e_type::UNSIGNED_INTEGER, 0b000}) { m_control.lab |= tag != 0 ? 0b001 : 0; }
 
         //
         tlv(const tlv& other);
@@ -62,9 +67,13 @@ namespace tlvcpp
         friend std::ostream& operator<<(std::ostream& stream, const tlv& tlv_val);
 
         //
-        type_t& type() { return m_type; }
-        const type_t& type() const { return m_type; }
-        tlv& type(const type_t& t) { m_type = t; return *this; }
+        type_t type() const { return m_control.type; }
+        tlv& type(const type_t& t) { m_control.type = t; return *this; }
+
+        //
+        control_t& control() { return m_control; }
+        const control_t& control() const { return m_control; }
+        tlv& control(const control_t& ct) { m_control = ct; return *this; }
 
         //
         tag_t& tag() { return m_tag; }
@@ -103,14 +112,14 @@ namespace tlvcpp
 
     private:
         // arven-code (8+8 bits)
-        type_t m_type = 0;
+        control_t m_control = {0, 0, 0};
         tag_t m_tag = 0;
 
         // number value or size
         union {
             long m_value;
             size_t m_size;
-            uint64_t m_u64;
+            uint64_t m_u64 = 0;
             uint32_t m_u32;
             uint16_t m_u16;
             uint8_t  m_u8;
