@@ -36,6 +36,7 @@ public:
 
     // convert to uncompressed value
     operator bytespan_t() const { return toBytes(false); }
+    explicit operator bytes_t() const { return toBytes(false); }
 
     //
     ecp_t operator -() { return neg(); }
@@ -95,7 +96,7 @@ public:
 
 
     //
-    bytespan_t toBytes(bool compressed = false) const {
+    bytes_t toBytes(bool compressed = false) const {
         size_t len = 65; auto buffer = make_bytes(len);
         checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buffer->data(), buffer->size()), "Failed to write point to bytes");
         return buffer;

@@ -2,37 +2,12 @@
 #define F209A449_A8CD_4B1F_BEDD_F1DA13D149BD
 
 //
-#include "./enums.hpp"
-#include "../tlv.h"
-#include "../tlv_tree.h"
-
-
+#include "./utils.hpp"
 
 //
 namespace tlvcpp
 {
-    //
-    inline uint8_t width_from_bits(uint8_t bits) {
-        switch (bits & 0x03) {
-            case 0x00: return 1;
-            case 0x01: return 2;
-            case 0x02: return 4;
-            case 0x03: return 8;
-        }
-        return 1;
-    }
 
-    //
-    inline bool readOctets(reader_t& reader, auto& value, uint8_t const& type) {
-        uint8_t octet = type&0b00000011;
-        switch (octet) {
-            case 0: if (!reader.checkMemory(1)) return false; value = reader.readByte(); break;
-            case 1: if (!reader.checkMemory(2)) return false; value = reader.readUInt16(); break;
-            case 2: if (!reader.checkMemory(4)) return false; value = reader.readUInt32(); break;
-            case 3: if (!reader.checkMemory(8)) return false; value = reader.readUInt64(); break;
-        }
-        return true;
-    }
 
     // ========== MATTER DESERIALIZATION ========
     static bool deserialize_tag(reader_t& reader, tlv& value)
@@ -47,8 +22,7 @@ namespace tlvcpp
         if (!reader.checkMemory()) return false;
 
         //
-        switch (control.type)
-        {
+        switch (control.type) {
             case e_type::END: return false;
             case e_type::STRUCTURE: return true; // TODO: support of subtypes
 
@@ -79,6 +53,8 @@ namespace tlvcpp
             if (!deserialize_tag(reader, value)) return false;
             if (!reader.checkMemory()) return false;
             bool isStruct = value.type() == e_type::STRUCTURE;
+
+            // In case if in structure is one element (but we doesn't know how many)
             auto& child = (isStruct && level == 0) ? node : node.add_child(value);
             if (isStruct) {
                 child.data() = value; // assign type to node itself

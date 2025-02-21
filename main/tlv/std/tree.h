@@ -23,13 +23,13 @@ namespace tlvcpp {
         //
         tree_node() {}
         template<typename... Args> tree_node(T const &value): m_parent(nullptr), m_data(value) {}
-        template<typename... Args> tree_node(Args&&... args): m_parent(nullptr), m_data(std::forward<Args>(args)...) {}
-        template<typename... Args> tree_node(tree_node *parent, Args&&... args): m_parent(parent), m_data(std::forward<Args>(args)...) {}
+        //template<typename... Args> explicit tree_node(Args&&... args): m_parent(nullptr), m_data(std::forward<Args>(args)...) {}
+        //template<typename... Args> explicit tree_node(tree_node *parent, Args&&... args): m_parent(parent), m_data(std::forward<Args>(args)...) {}
         tree_node(tree_node *parent, T const &value): m_parent(parent), m_data(value) {}
         tree_node(tree_node &other): tree_node(const_cast<const tree_node &>(other)) {}
         tree_node(tree_node &&other) noexcept: m_parent(nullptr), m_data(std::move(other.m_data)), m_children(std::move(other.m_children)) { if (other.m_parent) other.parent()->prune(other); for (auto &child : m_children) child.m_parent = this; }
         tree_node(const tree_node &other): m_parent(nullptr), m_data(other.m_data) { for (auto const &child : other.m_children) graft(child); }
-        
+
         //
         tree_node &operator=(const tree_node &other) { if (this == &other) return *this; assert(!other.is_parent_of(*this)); m_data = other.m_data; for (auto const &child : other.m_children) graft(child); return *this; }
         tree_node &operator=(tree_node &&other) noexcept { if (this == &other) return *this; assert(!other.is_parent_of(*this)); m_data = std::move(other.m_data); if (is_parent_of(other)) m_children = std::move(std::list<tree_node>(std::move(other.m_children))); else { m_children = std::move(other.m_children); if (other.m_parent) other.parent()->prune(other); } for (auto &child : m_children) child.m_parent = this; return *this; }
@@ -44,7 +44,11 @@ namespace tlvcpp {
         T &data() { return m_data; }
         const std::list<tree_node> &children() const { return m_children; }
         std::list<tree_node> &children() { return m_children; }
-        template<typename... Args> tree_node<T> &add_child(Args&&... args) { return m_children.emplace_back(this, std::forward<Args>(args)...); }
+
+        //
+        template<typename... Args> tree_node<T> &add_child(Args&&... args) { return m_children.emplace_back(this, tlv(std::forward<Args>(args)...)); }
+        tree_node<T> &add_child(tree_node<T>& node) { m_children.push_back(node); return node; }
+        tree_node<T> &add_child(T const& node) { return m_children.emplace_back(this, node); }
 
         //
         void graft(const tree_node &node) { assert(this != &node && !node.is_parent_of(*this)); auto &grafted = add_child(node.m_data); for (auto const &child : node.m_children) grafted.graft(child); }
@@ -74,7 +78,7 @@ namespace tlvcpp {
     private: //
         template<typename U> tree_node *find_impl(U value, size_t index = 0) const { std::queue<const tree_node *> q; q.push(this); while (!q.empty()) { auto *node = q.front(); q.pop(); if (node->m_data == value && !(index--)) return const_cast<tree_node *>(node); for (auto const &child : node->m_children) q.push(&child); } return nullptr; }
         template<typename U> tree_node *find_immediate_impl(U value, size_t index = 0) const { for (auto const &child : m_children) if (child.m_tag == value && !(index--)) return const_cast<tree_node *>(&child); return nullptr; }
-        tree_node *m_parent; T m_data; std::list<tree_node> m_children;
+        tree_node *m_parent = 0; T m_data = {}; std::list<tree_node> m_children = {};
     };
 }
 

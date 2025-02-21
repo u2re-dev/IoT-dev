@@ -23,7 +23,7 @@
 struct PBKDFParamRequest {
     bigint_t rand;
     uint16_t sess;
-    uint16_t pass;
+    uint8_t pass;
 };
 
 //
@@ -57,12 +57,10 @@ public:
     inline void init() { counter = rng.generate(); }
     inline PASE() { init(); }
 
-    //
-    inline Message decodeMessage(bytespan_t const& bytes) const {
-        auto reader  = reader_t(bytes);
-        auto message  = MessageCodec::decodeMessage(reader);
 
-        //
+
+    //
+    inline Message& decryptPayload(Message& message,  bytespan_t const& bytes = {}) const {
         if (message.header.sessionId != 0 && message.rawPayload->size() && sessionKeys.I2Rkeys) {
             auto aad = std::span<uint8_t>(bytes->begin(), bytes->end() - message.rawPayload->size());
 
@@ -78,10 +76,10 @@ public:
             mbedtls_ccm_init(&aes);
 
             // set keys
-            checkMbedtlsError(mbedtls_ccm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (uint8_t*) &sessionKeys.I2Rkeys, 128), "Decrypt Key Init Failed");
+            checkMbedtlsError(mbedtls_ccm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, reinterpret_cast<uint8_t const*>(&sessionKeys.I2Rkeys), 128), "Decrypt Key Init Failed");
 
             //
-            auto output = make_bytes(message.rawPayload->size() - 16);
+            //auto output = make_bytes(message.rawPayload->size() - 16);
             checkMbedtlsError(mbedtls_ccm_auth_decrypt(&aes, //MBEDTLS_CCM_DECRYPT, 
                 (message.rawPayload->size() - 16),
                 nonce->data(),
@@ -90,19 +88,26 @@ public:
                 aad.size(),
                 //message.rawPayload->size() - 16,//aad.size(),
                 message.rawPayload->data(),
-                output->data(),
+                message.rawPayload->data(),
+                //output->data(),
                 message.rawPayload->data() + (message.rawPayload->size() - 16),
                 16
             ), "Decryption Failed");
             mbedtls_ccm_free(&aes);
 
+            //
             std::cout << "Decoded Payload:" << std::endl;
-            std::cout << hex::b2h(output) << std::endl;
-    
-        }
+            std::cout << hex::b2h(message.rawPayload) << std::endl;
+        };
+        return message;
+    }
 
-        //
-        auto readerPayload = reader_t(message.rawPayload);//message.rawPayload
+    //
+    inline Message decodeMessage(bytespan_t const& bytes) const {
+        auto reader  = reader_t(bytes);
+        auto message  = MessageCodec::decodeMessage(reader);
+        decryptPayload(message, bytes);
+        auto readerPayload = reader_t(message.rawPayload);
         message.decodedPayload = MessageCodec::decodePayload(readerPayload);
         return message;
     }
@@ -118,17 +123,16 @@ public:
         return payload.header.messageType;
     }
 
+
+
     //
-    inline uint8_t handlePAKE3(Payload const& payload) {
-        if (payload.header.messageType != 0x24) return 0;
+    inline uint8_t handlePASERequest(Payload const& payload) {
+        if (payload.header.messageType != 0x20) return 0;
 
         //
         auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
-        auto Xv = tlv.find(tlvcpp::tag_t(01))->data();
-        auto hAY = *(bigint_t*)Xv.payload();
-
-        //
-        if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
+        req = PBKDFParamRequest{ tlv.find(01)->data(), tlv.find(02)->data(), tlv.find(03)->data() };
+        params = {1000, mpi_t().random() };
 
         //
         return payload.header.messageType;
@@ -140,25 +144,20 @@ public:
 
         //
         auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
-        auto Xv = tlv.find(tlvcpp::tag_t(01))->data();
-        X_ = spake->parseECP(Xv.payload(), 65);
+        X_ = spake->parseECP(tlv.find(01)->data().payload(), 65);
 
         //
         return payload.header.messageType;
     }
 
     //
-    inline uint8_t handlePASERequest(Payload const& payload) {
-        if (payload.header.messageType != 0x20) return 0;
+    inline uint8_t handlePAKE3(Payload const& payload) {
+        if (payload.header.messageType != 0x24) return 0;
 
         //
         auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
-        auto sess = tlv.find(tlvcpp::tag_t(02))->data();
-        auto pass = tlv.find(tlvcpp::tag_t(03))->data();
-
-        //
-        req = PBKDFParamRequest{ *((bigint_t const*)tlv.find(tlvcpp::tag_t(01))->data().payload()), sess, pass };
-        params = {1000, mpi_t().random() };
+        bigint_t hAY = tlv.find(01)->data(); // TODO: fix bigint conversion (directly)
+        if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
 
         //
         return payload.header.messageType;
@@ -186,18 +185,42 @@ public:
     }
 
     //
+    inline bytespan_t makePASEResponse(Message const& request) {
+        if (request.decodedPayload.header.messageType != 0x20) return {};
+
+        // TODO: fix memory lost
+        bigint_t rand = mpi_t().random();
+
+        //
+        auto resp = tlvcpp::tlv_tree_node{};
+        resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
+        resp.add_child(req.rand, 01); // send randoms
+        resp.add_child(rand, 02);     // will lost if pass directly (without variable declaration)
+        resp.add_child(uint16_t(rng.generate()), 03);
+
+        //
+        decltype(auto) secp = resp.add_child(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0}, 04);
+        secp.add_child(params.iterations, 01);
+        secp.add_child(params.salt, 02);
+
+        //
+        writer_t respTLV; resp.serialize(respTLV); spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, respTLV));
+        Message outMsg = makeMessage(request, 0x21, respTLV);
+        return MessageCodec::encodeMessage(outMsg);
+    }
+
+    //
     inline bytespan_t makePAKE2(Message const& request) {
         if (request.decodedPayload.header.messageType != 0x22) return {};
 
         //
-        bytespan_t Y  = spake->computeY();
-        hkdf = spake->computeHKDFFromX(X_);
+        auto resp = tlvcpp::tlv_tree_node{};
+        resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
 
         //
-        auto resp = tlvcpp::tlv_tree_node{};
-        resp.data() = tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0});
-        resp.add_child(65, Y->data(), 01); // send randoms
-        resp.add_child(32, (uint8_t*)&hkdf.hBX, 02);
+        // TODO: save bytes in ecp_t itself
+        auto Yp = bytes_t(spake->computeY()); resp.add_child(Yp, 01);
+        resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
         //
         writer_t respTLV; resp.serialize(respTLV);
@@ -205,28 +228,6 @@ public:
         return MessageCodec::encodeMessage(outMsg);
     }
 
-    //
-    inline bytespan_t makePASEResponse(Message const& request) {
-        if (request.decodedPayload.header.messageType != 0x20) return {};
-
-        //
-        bigint_t rand = mpi_t().random();
-        auto resp = tlvcpp::tlv_tree_node{}; 
-        resp.data() = tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0});
-        resp.add_child(tlvcpp::tlv(32, (uint8_t*)&req.rand, 01)); // send randoms
-        resp.add_child(tlvcpp::tlv(32, (uint8_t*)&rand, 02));
-        resp.add_child(tlvcpp::tlv(uint16_t(rng.generate()), 03));
-
-        //
-        auto& tlvParams = resp.add_child(tlvcpp::tlv(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0}, 04));
-        tlvParams.add_child(tlvcpp::tlv(uint16_t(params.iterations), 01));
-        tlvParams.add_child(tlvcpp::tlv(32, (uint8_t*)&params.salt, 02));
-
-        //
-        writer_t respTLV; resp.serialize(respTLV); spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, respTLV));
-        Message outMsg = makeMessage(request, 0x21, respTLV);
-        return MessageCodec::encodeMessage(outMsg);
-    }
 
 
 
@@ -242,9 +243,9 @@ public:
 
         //
         Message outMsg = makeMessage(request, 0x40, make_bytes(8));
-        *(uint16_t*)(outMsg.decodedPayload.payload->data()+0) = 0;
-        *(uint32_t*)(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
-        *(uint16_t*)(outMsg.decodedPayload.payload->data()+6) = status;
+        *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+0) = 0;
+        *reinterpret_cast<uint32_t*>(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
+        *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;
         return MessageCodec::encodeMessage(outMsg);
     }
 
@@ -252,10 +253,12 @@ public:
     inline SessionKeys makeSessionKeys() {
         auto info = hex::s2b("SessionKeys");
         auto keys = crypto::hkdf_len(hkdf.Ke, info);
+
+        // TODO: better interpret code
         return (sessionKeys = SessionKeys {
-            *(intx::uint128*)(keys->data()),
-            *(intx::uint128*)(keys->data() + 16),
-            *(intx::uint128*)(keys->data() + 32)
+            *reinterpret_cast<intx::uint128*>(keys->data()),
+            *reinterpret_cast<intx::uint128*>(keys->data() + 16),
+            *reinterpret_cast<intx::uint128*>(keys->data() + 32)
         });
     }
 
