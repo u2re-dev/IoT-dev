@@ -216,10 +216,7 @@ public:
         //
         auto resp = tlvcpp::tlv_tree_node{};
         resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
-
-        //
-        // TODO: save bytes in ecp_t itself
-        auto Yp = bytes_t(spake->computeY()); resp.add_child(Yp, 01);
+        resp.add_child(spake->computeY(), 01);  // works only when Y stored with `spake`
         resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
         //

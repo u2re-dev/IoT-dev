@@ -36,22 +36,14 @@ public:
 
     // convert to uncompressed value
     operator bytespan_t() const { return toBytes(false); }
-    explicit operator bytes_t() const { return toBytes(false); }
+    operator bytespan_t() { return toBytes(false); }
+    explicit operator bytes_t&() { return toBytes(false); }
 
     //
     ecp_t operator -() { return neg(); }
-
-    //
     ecp_t operator *(mpi_t const& a) { return mul(a); }
     ecp_t operator +(ecp_t const& a) { return add(a); }
     ecp_t operator -(ecp_t const& a) { return sub(a); }
-    ecp_t& operator =(ecp_t const& a) {
-        group_ = a.group_, 
-        mbedtls_ecp_point_init(&point_);
-        mbedtls_ecp_copy(&point_, &a.point_);
-        return *this; 
-    }
-
 
     //
     ecp_t neg() {
@@ -91,37 +83,60 @@ public:
 
 
     //
+    ecp_t& operator =(bytespan_t const& a) {
+        mbedtls_ecp_point_init(&point_);
+        loadBytes(a);
+        return *this; 
+    }
+
+    //
+    ecp_t& operator =(bytes_t const& a) {
+        mbedtls_ecp_point_init(&point_);
+        loadBytes(a);
+        return *this; 
+    }
+
+    //
+    ecp_t& operator =(ecp_t const& a) {
+        group_ = a.group_, 
+        mbedtls_ecp_point_init(&point_);
+        mbedtls_ecp_copy(&point_, &a.point_);
+        return *this; 
+    }
+
+
+
+    //
     ecp_t& zero() { checkMbedtlsError(mbedtls_ecp_set_zero(&point_), "invalid point"); return *this; }
     ecp_t getG() { return ecp_t(group_, group_.G); }
 
-
-    //
+    // for const version
     bytes_t toBytes(bool compressed = false) const {
-        size_t len = 65; auto buffer = make_bytes(len);
-        checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buffer->data(), buffer->size()), "Failed to write point to bytes");
-        return buffer;
+        size_t len = compressed ? 33 : 65; auto bytes_ = make_bytes(len);
+        checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, compressed ? MBEDTLS_ECP_PF_COMPRESSED : MBEDTLS_ECP_PF_UNCOMPRESSED, &len, bytes_->data(), bytes_->size()), "Failed to write point to bytes");
+        return bytes_;
     }
-
 
     //
-    ecp_t& loadBytes(uint8_t const* data, size_t const& length) {
-        return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data, length), "bytes loading failed"); 
+    bytes_t& toBytes(bool compressed = false) {
+        size_t len = compressed ? 33 : 65; if (!bytes_) { bytes_ = make_bytes(len); };
+        checkMbedtlsError(mbedtls_ecp_point_write_binary(&group_, &point_, compressed ? MBEDTLS_ECP_PF_COMPRESSED : MBEDTLS_ECP_PF_UNCOMPRESSED, &len, bytes_->data(), bytes_->size()), "Failed to write point to bytes");
+        return bytes_;
     }
-    ecp_t& loadBytes(bytespan_t const& data ) { 
-        return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data->data(), data->size()), "bytes loading failed"); 
-    }
+
+    //
+    ecp_t& loadBytes(uint8_t const* data, size_t const& length) { return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data, length), "bytes loading failed"); }
+    ecp_t& loadBytes(bytespan_t const& data ) { return vid(mbedtls_ecp_point_read_binary(&group_, &point_, data->data(), data->size()), "bytes loading failed"); }
     ecp_t& loadHex  (std::string const& h) { return loadBytes(hex::h2b(h)); }
-
-
 
     //
     ecp_t& getM() {
-        auto bt = hex::h2b("02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f");
-        size_t oLen = 65; auto xy = make_bytes(oLen);
+        const auto bt = hex::h2b("02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f");
 
         //
-        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), xy->data(), &oLen, xy->size()), "Failed to decompress M point" );
-        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy->data(), xy->size()), "Failed to read M point" );
+        size_t oLen = 65; if (!bytes_) bytes_ = make_bytes(oLen);
+        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), bytes_->data(), &oLen, bytes_->size()), "Failed to decompress M point" );
+        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, bytes_->data(), bytes_->size()), "Failed to read M point" );
 
         //
         return *this;
@@ -129,31 +144,26 @@ public:
 
     //
     ecp_t& getN() {
-        auto bt = hex::h2b("03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49");
-        size_t oLen = 65; auto xy = make_bytes(oLen);
+        const auto bt = hex::h2b("03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49");
 
         //
-        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), xy->data(), &oLen, xy->size()), "Failed to decompress N point" );
-        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, xy->data(), xy->size()), "Failed to read N point" );
+        size_t oLen = 65; if (!bytes_) bytes_ = make_bytes(oLen);
+        checkMbedtlsError( mbedtls_ecp_decompress(&group_, bt->data(), bt->size(), bytes_->data(), &oLen, bytes_->size()), "Failed to decompress N point" );
+        checkMbedtlsError( mbedtls_ecp_point_read_binary(&group_, &point_, bytes_->data(), bytes_->size()), "Failed to read N point" );
 
         //
         return *this;
     }
 
+    //
+    ecp_t& vid (auto const& status, std::string const& message = "invalid operation") { checkMbedtlsError(status, message); return *this; }
+    ecp_t const& vid (auto const& status, std::string const& message = "invalid operation") const { checkMbedtlsError(status, message); return *this; }
 
-    ecp_t& vid (auto const& status, std::string const& message = "invalid operation") {
-        checkMbedtlsError(status, message);
-        return *this;
-    }
-
-    ecp_t const& vid (auto const& status, std::string const& message = "invalid operation") const {
-        checkMbedtlsError(status, message);
-        return *this;
-    }
-
+    //
 protected:
     mbedtls_ecp_group group_;
     mbedtls_ecp_point point_;
+    bytes_t bytes_;
 };
 
 
