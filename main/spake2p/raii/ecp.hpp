@@ -36,7 +36,7 @@ public:
 
     // convert to uncompressed value
     operator bytespan_t() const { return toBytes(false); }
-    operator bytespan_t() { return toBytes(false); }
+    operator bytespan_t() { return bytes_ ? bytes_ : toBytes(false); }
     explicit operator bytes_t&() { return toBytes(false); }
 
     //
