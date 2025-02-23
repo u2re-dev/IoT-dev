@@ -34,26 +34,14 @@ inline uint16_t bswap16(uint16_t const& num) { return ((num<<8 )&0xff) | ((num>>
 //
 class bytespan_t {
 public:
-    inline bytespan_t() : span_({}), holder_({}) {
-        //std::cerr << "WARNING: bytespan_t doesn't contain anything." << std::endl;
-    }
-
-    //
+    inline bytespan_t() : holder_({}), span_({}) {}
     inline bytespan_t(std::string const& ptr, uintptr_t const& offset = 0) {
         span_ = std::span<uint8_t>(const_cast<uint8_t *>(reinterpret_cast<uint8_t const*>(ptr.c_str())) + offset, ptr.size() - offset);
     }
 
     //
-    inline bytespan_t(bytes_t const& ptr, uintptr_t const& offset = 0) : holder_(ptr) {
-        span_ = std::span<uint8_t>(ptr->begin() + offset, ptr->end());
-    }
-
-    //
-    inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_) {
-        span_ = std::span<uint8_t>(span->begin() + offset, span->end());
-    }
-
-    //
+    inline bytespan_t(bytes_t    const& bptr, uintptr_t const& offset = 0) : holder_(bptr)         { span_ = std::span<uint8_t>(bptr->begin() + offset, bptr->end()); }
+    inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_) { span_ = std::span<uint8_t>(span->begin() + offset, span->end()); }
     inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0) : holder_({}) {
         span_ = std::span<uint8_t>(const_cast<uint8_t*>(ptr), size);
     }
@@ -136,7 +124,7 @@ class reader_t {
 public:
     inline reader_t(reader_t const& reader) : offset(reader.offset), memory(reader.memory), capacity(reader.capacity) {}
     inline reader_t(uint8_t const* data = nullptr, size_t size = 0) : offset(0), memory(data), capacity(size) {}
-    inline reader_t(bytes_t const& data_) : offset(0), memory(data_->data()), capacity(data_->size()) {}
+    inline reader_t(bytes_t const& data_)    : offset(0), memory(data_->data()), capacity(data_->size()) {}
     inline reader_t(bytespan_t const& data_) : offset(0), memory(data_->data()), capacity(data_->size()) {}
 
     //
@@ -296,8 +284,10 @@ private: bytes_t data = {};
 //
 class writer_l {
 public:
-    inline writer_l(bytespan_t& span) : data(span->data()), offset(0), capacity(span->size()) {};
-    inline writer_l(uint8_t* buffer = nullptr, size_t capacity = 0) : data(buffer), offset(0), capacity(capacity) {};
+    inline writer_l() {}
+    inline writer_l(bytes_t& span)    : data(span->data()), offset(0), capacity(span->size()) {}
+    inline writer_l(bytespan_t& span) : data(span->data()), offset(0), capacity(span->size()) {}
+    inline writer_l(uint8_t* buffer, size_t const& capacity = 0) : data(buffer), offset(0), capacity(capacity) {}
 
     //
     inline bool checkMemory(size_t const& size = 1) const { return ((offset + size) < capacity) || (!capacity); }

@@ -4,8 +4,11 @@
 //
 #include <mbedtls/bignum.h>
 #include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+
+//
 #include "./misc.hpp"
-#include "../bigint/intx.hpp"
+//#include "../bigint/intx.hpp"
 #include "../../std/types.hpp"
 
 //
@@ -32,12 +35,11 @@ class mpi_t {
 
         // bigint construction
         bytespan_t toBytes(size_t const& len = 32) const { bytespan_t bytes = make_bytes(len); mbedtls_mpi_write_binary(&mpi_, bytes->data(), bytes->size()); return bytes; }
-        operator bigint_t() const { bigint_t x = 0; mbedtls_mpi_write_binary(&mpi_, (uint8_t*)&x, sizeof(x)); return x; }
+        operator bigint_t() const { bigint_t x = 0; mbedtls_mpi_write_binary(&mpi_, reinterpret_cast<uint8_t*>(&x), sizeof(x)); return x; }
 
         // construction from bigint
-        mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes((uint8_t const*)&a, sizeof(a)); }
+        mpi_t(bigint_t const& a) { mbedtls_mpi_init(&mpi_); loadBytes(reinterpret_cast<uint8_t const*>(&a), sizeof(a)); }
         mpi_t& operator=(bigint_t const& a) { return loadBytes((uint8_t const*)&a, sizeof(a)); }
-
 
         // assign-ops
         mpi_t& operator=( int  const& a) { return vid(mbedtls_mpi_lset(&mpi_, a)); }

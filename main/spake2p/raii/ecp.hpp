@@ -6,12 +6,14 @@
 
 //
 #include "../mbedtls/ecc_point_compression.h"
-#include "../../std/hex.hpp"
 
 //
 #include "./mpi.hpp"
 #include "./misc.hpp"
-#include "std/types.hpp"
+
+//
+#include "../../std/hex.hpp"
+#include "../../std/types.hpp"
 
 //
 class ecp_t {

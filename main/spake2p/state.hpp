@@ -1,10 +1,10 @@
 #pragma once
 
 //
+#ifdef ENABLE_PAKE_STATE
 #include "../../std/types.hpp"
 
 //
-#ifdef ENABLE_PAKE_STATE
 struct SpakeKeys {
     std::array<uint8_t, 32> M;
     std::array<uint8_t, 32> N;

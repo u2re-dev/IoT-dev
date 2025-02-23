@@ -10,12 +10,13 @@
 #include <mbedtls/bignum.h>
 #include <mbedtls/ecp.h>
 #include <mbedtls/ecjpake.h>
+#include <stdexcept>
 
 //
 #include "../mbedtls/ecc_point_compression.h"
 
 //
-void checkMbedtlsError(int ret, const std::string& message) {
+inline void checkMbedtlsError(int ret, const std::string& message) {
     if (ret != 0) {
         char error_buf[100];
         mbedtls_strerror(ret, error_buf, sizeof(error_buf));
