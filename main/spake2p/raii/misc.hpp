@@ -13,9 +13,6 @@
 #include <stdexcept>
 
 //
-#include "../mbedtls/ecc_point_compression.h"
-
-//
 inline void checkMbedtlsError(int ret, const std::string& message) {
     if (ret != 0) {
         char error_buf[100];
@@ -24,4 +21,4 @@ inline void checkMbedtlsError(int ret, const std::string& message) {
     }
 }
 
-#endif /* C62DECF5_6D6A_4958_93B8_383B9AB3753A */
+#endif
