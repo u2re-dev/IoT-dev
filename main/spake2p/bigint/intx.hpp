@@ -1,10 +1,8 @@
 // intx: extended precision integer library.
-
-#ifndef D38F1264_9D11_4AAB_BFB1_0CFCC71893CF
-#define D38F1264_9D11_4AAB_BFB1_0CFCC71893CF
 // Copyright 2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -1818,6 +1816,3 @@ inline void store(uint8_t* dst, const uint256& x) noexcept
 #ifdef _MSC_VER
     #pragma warning(pop)
 #endif
-
-
-#endif /* D38F1264_9D11_4AAB_BFB1_0CFCC71893CF */

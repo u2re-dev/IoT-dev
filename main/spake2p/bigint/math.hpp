@@ -1,13 +1,12 @@
 #pragma once
-#include "../std/types.hpp"
-#include "./intx.hpp"
-#include "../../std/hex.hpp"
 
 //
-using bigint_t = intx::uint<256>;
+#include "./intx.hpp"
+//#include "../../std/types.hpp"
 
 //
 namespace bmath {
+    using bigint_t = intx::uint<256>;
 
     //
     inline void zeroize(void* d, size_t n) {

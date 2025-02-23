@@ -3,6 +3,7 @@
 
 //
 #include "./types.hpp"
+#include "./hex.hpp"
 #include "../spake2p/raii/mpi.hpp"
 
 //
@@ -32,4 +33,4 @@ namespace mpc {
     }
 }
 
-#endif /* BD88A99E_90E2_4652_B277_35E5B254A4D4 */
+#endif
