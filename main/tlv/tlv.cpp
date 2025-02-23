@@ -2,8 +2,7 @@
 #include <cstring>
 
 //
-namespace tlvcpp
-{
+namespace tlvcpp {
     // from another
     tlv::tlv(const tlv &other) : m_tag(other.m_tag), m_value(other.m_value), m_control(other.m_control),  m_payload(other.m_payload) {};
     tlv::tlv(tlv &&other) noexcept { m_tag = std::move(other.m_tag); m_value = std::move(other.m_value);m_control = std::move(other.m_control); m_payload = std::move(other.m_payload); other.m_tag = 0;}

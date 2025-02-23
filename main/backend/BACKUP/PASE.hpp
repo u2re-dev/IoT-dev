@@ -19,11 +19,12 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/ccm.h>
 
-//
+
+// TODO: may be broken with pre-declared parameters
 struct PBKDFParamRequest {
-    bigint_t rand;
-    uint16_t sess;
-    uint8_t pass;
+    bigint_t rand = 0;
+    uint16_t sess = 0;
+    uint8_t pass = 0;
 };
 
 //
@@ -102,13 +103,12 @@ public:
         return message;
     }
 
-    //
+    // TODO: needs to test (my SSH with WSL2 was fatally broken)
     inline Message decodeMessage(bytespan_t const& bytes) const {
-        auto reader  = reader_t(bytes);
-        auto message  = MessageCodec::decodeMessage(reader);
+        auto reader = reader_t(bytes);
+        auto message = MessageCodec::decodeMessage(reader);
         decryptPayload(message, bytes);
-        auto readerPayload = reader_t(message.rawPayload);
-        message.decodedPayload = MessageCodec::decodePayload(readerPayload);
+        message.decodedPayload = MessageCodec::decodePayload(reader);
         return message;
     }
 
@@ -130,7 +130,7 @@ public:
         if (payload.header.messageType != 0x20) return 0;
 
         //
-        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
+        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
         req = PBKDFParamRequest{ tlv.find(01)->data(), tlv.find(02)->data(), tlv.find(03)->data() };
         params = {1000, mpi_t().random() };
 
@@ -143,7 +143,7 @@ public:
         if (payload.header.messageType != 0x22) return 0;
 
         //
-        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
+        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
         X_ = spake->parseECP(tlv.find(01)->data().payload(), 65);
 
         //
@@ -155,7 +155,7 @@ public:
         if (payload.header.messageType != 0x24) return 0;
 
         //
-        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(*payload.payload);
+        auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
         bigint_t hAY = tlv.find(01)->data(); // TODO: fix bigint conversion (directly)
         if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
 

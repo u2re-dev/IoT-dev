@@ -3,11 +3,11 @@
 
 //
 #include "./utils.hpp"
+#include "../tlv_tree.h"
 
-// ========== MATTER-SERIALIZATION! =======
-// TODO: partialy compatibility with classic TLV
+//
 namespace tlvcpp {
-    //
+    // ========== MATTER-SERIALIZATION! =======
     inline bool serialize_recursive(const tlv_tree_node& node, writer_t& writer, uintptr_t level = 0) {
         auto& element = node.data(); control_t control = element.control();
 
@@ -28,8 +28,13 @@ namespace tlvcpp {
                 writer.writeByte(0x18); return true;
 
             //
-            case e_type::FLOATING_POINT: if ((control.octet&0b10) == 0) return true;
             case e_type::UTF8_STRING:
+                if (element.payload()) 
+                    { writer.writeBytes(element.payload(), element.size()); };
+                writer.writeByte(0); return true; // write zero byte of UTF8
+
+            // write octets
+            case e_type::FLOATING_POINT: if ((control.octet&0b10) == 0) return true; // i.e. boolean
             case e_type::SIGNED_INTEGER:
             case e_type::UNSIGNED_INTEGER:
             case e_type::BYTE_STRING:
@@ -45,4 +50,4 @@ namespace tlvcpp {
     }
 }
 
-#endif /* E5F5B917_5190_430A_98EA_FD71CC83AB96 */
+#endif

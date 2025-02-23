@@ -32,25 +32,19 @@ namespace tlvcpp {
     class tlv {
     public: //
         tlv() {};
-
-        //
-        tlv(control_t const& control, tag_t const& tag = 0) : m_tag(tag), m_control(control) { TAGFIX; }
-        explicit tlv(size_t size, const uint8_t* payload, tag_t const& tag = 0) : m_tag(tag), m_size(size), m_payload(payload), m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { TAGFIX; }
-
-        //
-        explicit tlv(uint8_t const* str, tag_t const& tag = 0) : m_tag(tag), m_size(std::strlen((char const* )str)), m_payload(str), m_control({ 0b00, e_type::UTF8_STRING, 0b00 }) { TAGFIX; }
-        explicit tlv(std::string const& str, tag_t const& tag = 0) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())) , m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { TAGFIX; }
-
-        //
+        tlv(control_t const& control, tag_t const& tag = 0) : m_size(0), m_tag(tag), m_control(control) { TAGFIX; }
         tlv(bytespan_t const&  bn, tag_t const& tag = 0) : m_tag(tag), m_size(bn->size()), m_payload(bn->data()), m_control({ 0b00, e_type::BYTE_STRING, 0b000 }) { TAGFIX; }
         tlv(uint64_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u64(value), m_control({0b11, e_type::UNSIGNED_INTEGER, 0b000}) { TAGFIX; }
         tlv(uint32_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u32(value), m_control({0b10, e_type::UNSIGNED_INTEGER, 0b000}) { TAGFIX; }
         tlv(uint16_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u16(value), m_control({0b01, e_type::UNSIGNED_INTEGER, 0b000}) { TAGFIX; }
         tlv( uint8_t const& value, tag_t const& tag = 0) : m_tag(tag), m_u8(value) , m_control({0b00, e_type::UNSIGNED_INTEGER, 0b000}) { TAGFIX; }
+        tlv(bigint_t const& value, tag_t const& tag = 0) : m_size(32), m_tag(tag), m_payload(reinterpret_cast<uint8_t const*>(&value)), m_control({0b00, e_type::BYTE_STRING, 0b000}) { TAGFIX; }
+        tlv(intx::uint128 const& value, tag_t const& tag = 0) : m_size(16), m_tag(tag), m_payload(reinterpret_cast<uint8_t const*>(&value)), m_control({0b00, e_type::BYTE_STRING, 0b000}) { TAGFIX; }
 
         //
-        tlv(bigint_t const& value, tag_t const& tag = 0) : m_size(32), m_tag(tag), m_payload((uint8_t const*)&value), m_control({0b00, e_type::BYTE_STRING, 0b000}) { TAGFIX; }
-        tlv(intx::uint128 const& value, tag_t const& tag = 0) : m_size(16), m_tag(tag), m_payload((uint8_t const*)&value), m_control({0b00, e_type::BYTE_STRING, 0b000}) { TAGFIX; }
+        explicit tlv(size_t size, const uint8_t* payload, tag_t const& tag = 0) : m_tag(tag), m_size(size), m_payload(payload), m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { TAGFIX; }
+        explicit tlv(uint8_t const* str, tag_t const& tag = 0) : m_tag(tag), m_size(std::strlen(reinterpret_cast<char const*>(str))), m_payload(str), m_control({ 0b00, e_type::UTF8_STRING, 0b00 }) { TAGFIX; }
+        explicit tlv(std::string const& str, tag_t const& tag = 0) : m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())) , m_control({ 0b00, e_type::BYTE_STRING, 0b00 }) { TAGFIX; }
 
         //
         tlv(const tlv& other);

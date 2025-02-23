@@ -3,17 +3,14 @@
 
 //
 #include "./utils.hpp"
+#include "../tlv_tree.h"
 
 //
-namespace tlvcpp
-{
-
-
+namespace tlvcpp {
     // ========== MATTER DESERIALIZATION ========
-    static bool deserialize_tag(reader_t& reader, tlv& value)
-    {
+    static bool deserialize_tag(reader_t& reader, tlv& value) {
         if (!reader.checkMemory()) return false;
-        control_t control = reinterpret_cast<control_t&>(reader.readByte());
+        control_t control = reinterpret_cast<control_t const&>(reader.readByte());
 
         //
         value = uint64_t(0);
@@ -27,16 +24,22 @@ namespace tlvcpp
             case e_type::STRUCTURE: return true; // TODO: support of subtypes
 
             //
+            case e_type::UTF8_STRING: {
+                size_t length = 0; // until zero-byte (end of charset)
+                value.setBytes(reader.readUTF8(length));
+                value = length; return true;
+            };
+
+            //
             case e_type::FLOATING_POINT: // if boolean, just return true or false
                 if ((control.octet&0b10) == 0) { value = control.octet != 0; return true; }
 
             // octet-typed
-            case e_type::UTF8_STRING:
             case e_type::BYTE_STRING:
             case e_type::SIGNED_INTEGER:
             case e_type::UNSIGNED_INTEGER:
                 if (!readOctets(reader, value, control.octet)) return false;
-                if (control.type == e_type::BYTE_STRING) {
+                if (control.type == e_type::BYTE_STRING) { // not only size, but byte array
                     value.setBytes(reinterpret_cast<const uint8_t*>(reader.allocate(value)), value);
                 }; return true; break;
 
@@ -55,7 +58,7 @@ namespace tlvcpp
             bool isStruct = value.type() == e_type::STRUCTURE;
 
             // In case if in structure is one element (but we doesn't know how many)
-            auto& child = (isStruct && level == 0) ? node : node.add_child(value);
+            decltype(auto) child = (isStruct && level == 0) ? node : node.add_child(value);
             if (isStruct) {
                 child.data() = value; // assign type to node itself
                 if (!deserialize_recursive(reader, child, level + 1)) return false;

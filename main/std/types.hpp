@@ -3,6 +3,8 @@
 // C++ libs
 #include <stdexcept>
 #include <vector>
+#include <memory>
+#include <span>
 
 // C-libs
 #include <cmath>
@@ -10,38 +12,23 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
-#include <memory>
-#include <span>
 
 //
 #include "../spake2p/bigint/intx.hpp"
 
-
-
 //
 using byte_t   = uint8_t;
-using bytes_t  = std::shared_ptr<std::vector<byte_t>>;
-using node_id  = uint64_t;
 using group_id = uint16_t;
+using node_id  = uint64_t;
 using bigint_t = intx::uint256;
+using bytes_t  = std::shared_ptr<std::vector<byte_t>>;
+
 
 //
 template<typename... Args>
-inline bytes_t make_bytes(Args... args) {
-    return std::make_shared<std::vector<byte_t>>(args...);
-}
-
-
-//
-inline uint32_t bswap32(uint32_t const& num) {
-    return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
-}
-
-//
-inline uint16_t bswap16(uint16_t const& num) {
-    return ((num<<8)&0xff) | ((num>>8)&0xff00);
-}
-
+inline bytes_t  make_bytes(Args... args) { return std::make_shared<std::vector<byte_t>>(args...); }
+inline uint32_t bswap32(uint32_t const& num) { return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000); }
+inline uint16_t bswap16(uint16_t const& num) { return ((num<<8 )&0xff) | ((num>>8)&0xff00); }
 
 
 //
@@ -49,6 +36,11 @@ class bytespan_t {
 public:
     inline bytespan_t() : span_({}), holder_({}) {
         //std::cerr << "WARNING: bytespan_t doesn't contain anything." << std::endl;
+    }
+
+    //
+    inline bytespan_t(std::string const& ptr, uintptr_t const& offset = 0) {
+        span_ = std::span<uint8_t>(const_cast<uint8_t *>(reinterpret_cast<uint8_t const*>(ptr.c_str())) + offset, ptr.size() - offset);
     }
 
     //
@@ -63,7 +55,7 @@ public:
 
     //
     inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0) : holder_({}) {
-        span_ = std::span<uint8_t>((uint8_t*)ptr, (uint8_t*)ptr + size);
+        span_ = std::span<uint8_t>(const_cast<uint8_t*>(ptr), size);
     }
 
     //
@@ -95,23 +87,23 @@ public:
     inline byte_t const& operator[](uintptr_t I) const { return span_[I]; }
 
     //
-    inline int64_t const& readInt64(uintptr_t const& offset = 0) const { return *(int64_t const*)(span_.data() + offset); }
-    inline int32_t const& readInt32(uintptr_t const& offset = 0) const { return *(int32_t const*)(span_.data() + offset); }
-    inline int16_t const& readInt16(uintptr_t const& offset = 0) const { return *(int16_t const*)(span_.data() + offset); }
-    inline  int8_t const& readInt8 (uintptr_t const& offset = 0) const { return *( int8_t const*)(span_.data() + offset); }
+    inline int64_t const& readInt64(uintptr_t const& offset = 0) const { return *reinterpret_cast<int64_t const*>(span_.data() + offset); }
+    inline int32_t const& readInt32(uintptr_t const& offset = 0) const { return *reinterpret_cast<int32_t const*>(span_.data() + offset); }
+    inline int16_t const& readInt16(uintptr_t const& offset = 0) const { return *reinterpret_cast<int16_t const*>(span_.data() + offset); }
+    inline  int8_t const& readInt8 (uintptr_t const& offset = 0) const { return *reinterpret_cast<int8_t const*>(span_.data() + offset); }
 
     //
-    inline bigint_t const& readBigInt(uintptr_t const& offset = 0) const { return *(bigint_t const*)(span_.data() + offset); }
-    inline intx::uint128 const& readUInt128(uintptr_t const& offset = 0) const { return *(intx::uint128 const*)(span_.data() + offset); }
+    inline bigint_t const& readBigInt(uintptr_t const& offset = 0) const { return *reinterpret_cast<bigint_t const*>(span_.data() + offset); }
+    inline intx::uint128 const& readUInt128(uintptr_t const& offset = 0) const { return *reinterpret_cast<intx::uint128 const*>(span_.data() + offset); }
 
     //
-    inline uint64_t const& readUInt64(uintptr_t const& offset = 0) const { return *(uint64_t const*)(span_.data() + offset); }
-    inline uint32_t const& readUInt32(uintptr_t const& offset = 0) const { return *(uint32_t const*)(span_.data() + offset); }
-    inline uint16_t const& readUInt16(uintptr_t const& offset = 0) const { return *(uint16_t const*)(span_.data() + offset); }
-    inline  uint8_t const& readUInt8 (uintptr_t const& offset = 0) const { return *( uint8_t const*)(span_.data() + offset); }
+    inline uint64_t const& readUInt64(uintptr_t const& offset = 0) const { return *reinterpret_cast<uint64_t const*>(span_.data() + offset); }
+    inline uint32_t const& readUInt32(uintptr_t const& offset = 0) const { return *reinterpret_cast<uint32_t const*>(span_.data() + offset); }
+    inline uint16_t const& readUInt16(uintptr_t const& offset = 0) const { return *reinterpret_cast<uint16_t const*>(span_.data() + offset); }
+    inline  uint8_t const& readUInt8 (uintptr_t const& offset = 0) const { return *reinterpret_cast<uint8_t const*>(span_.data() + offset); }
 
     //
-    inline byte_t const& readByte (uintptr_t const& offset = 0) const { return *( byte_t const*)(span_.data() + offset); }
+    inline byte_t const& readByte (uintptr_t const& offset = 0) const { return *(span_.data() + offset); }
 
     //
     inline operator bool() const { return span_.size() > 0; };
@@ -144,26 +136,30 @@ class reader_t {
 public:
     inline reader_t(reader_t const& reader) : offset(reader.offset), memory(reader.memory), capacity(reader.capacity) {}
     inline reader_t(uint8_t const* data = nullptr, size_t size = 0) : offset(0), memory(data), capacity(size) {}
-    inline reader_t(bytes_t const& data_) : memory(data_->data()), capacity(data_->size()) {}
-    inline reader_t(bytespan_t const& data_) : memory(data_->data()), capacity(data_->size()) {}
+    inline reader_t(bytes_t const& data_) : offset(0), memory(data_->data()), capacity(data_->size()) {}
+    inline reader_t(bytespan_t const& data_) : offset(0), memory(data_->data()), capacity(data_->size()) {}
 
     //
     inline bool checkMemory(size_t size = 1) const { return (capacity >= (size + offset)); }
 
     //
-    inline int64_t& readInt64() { return *(int64_t*)allocate(8); }
-    inline int32_t& readInt32() { return *(int32_t*)allocate(4); }
-    inline int16_t& readInt16() { return *(int16_t*)allocate(2); }
-    inline int8_t& readInt8 () { return *(int8_t *)allocate(1); }
+    inline int64_t const& readInt64() { return *reinterpret_cast<int64_t const*>(allocate(8)); }
+    inline int32_t const& readInt32() { return *reinterpret_cast<int32_t const*>(allocate(4)); }
+    inline int16_t const& readInt16() { return *reinterpret_cast<int16_t const*>(allocate(2)); }
+    inline  int8_t const& readInt8 () { return *reinterpret_cast< int8_t const*>(allocate(1)); }
 
     //
-    inline uint64_t& readUInt64() { return *(uint64_t*)allocate(8); }
-    inline uint32_t& readUInt32() { return *(uint32_t*)allocate(4); }
-    inline uint16_t& readUInt16() { return *(uint16_t*)allocate(2); }
-    inline uint8_t& readUInt8 () { return *(uint8_t *)allocate(1); }
+    inline uint64_t const& readUInt64() { return *reinterpret_cast<uint64_t const*>(allocate(8)); }
+    inline uint32_t const& readUInt32() { return *reinterpret_cast<uint32_t const*>(allocate(4)); }
+    inline uint16_t const& readUInt16() { return *reinterpret_cast<uint16_t const*>(allocate(2)); }
+    inline  uint8_t const& readUInt8 () { return *reinterpret_cast< uint8_t const*>(allocate(1)); }
 
     //
-    inline byte_t& readByte () { return *(byte_t *)allocate(1); }
+    inline byte_t  const& readByte() { return *allocate(1); }
+    inline uint8_t const* readUTF8(size_t& len) {
+        char const * str = reinterpret_cast<char const*>(memory + offset); len = strlen(str);
+        return allocate(len);
+    }
 
     //
     inline uint8_t const* allocate(size_t size) {
@@ -213,7 +209,7 @@ public:
     //
     inline writer_t() : data(make_bytes()) {}
     inline writer_t(bytes_t const& exists) : data(exists) {}
-    inline writer_t(uint8_t* mem, size_t length) : data(make_bytes(mem, mem + length)) {}
+    inline writer_t(uint8_t* mem, size_t const& length) : data(make_bytes(mem, mem + length)) {}
 
     //
     inline uintptr_t offset() const {
@@ -289,80 +285,33 @@ public:
         return *this;
     }
 
-    // TODO: better method for writing bytes
-    inline writer_t& writeBytes(bytespan_t const& val) {
-        data->reserve(val->size());
-        for (size_t i = 0; i < val->size(); ++i) {
-            data->push_back(val[i]);
-        }
-        return *this;
-    }
-    
-    // TODO: better method for writing bytes
-    inline writer_t& writeBytes(bytes_t const& val) {
-        data->reserve(val->size());
-        for (size_t i = 0; i < val->size(); ++i) {
-            data->push_back((*val)[i]);
-        }
-        return *this;
-    }
-
     //
-    inline bytes_t const& toBytes() const {
-        return data;
-    }
+    inline writer_t& writeBytes(bytespan_t const& val) { return writeBytes(val->data(), val->size()); }
+    inline writer_t& writeBytes(bytes_t const& val) { return writeBytes(val->data(), val->size()); }
+    inline bytes_t const& toBytes() const { return data; }
 
-private: bytes_t data;
+private: bytes_t data = {};
 };
 
 //
 class writer_l {
 public:
-    inline writer_l(uint8_t* buffer = nullptr, size_t capacity = 0) : offset(0), data(buffer), capacity(capacity) {};
+    inline writer_l(bytespan_t& span) : data(span->data()), offset(0), capacity(span->size()) {};
+    inline writer_l(uint8_t* buffer = nullptr, size_t capacity = 0) : data(buffer), offset(0), capacity(capacity) {};
 
     //
-    inline bool checkMemory(size_t size = 1) const { return ((offset + size) < capacity) || (!capacity); }
+    inline bool checkMemory(size_t const& size = 1) const { return ((offset + size) < capacity) || (!capacity); }
 
     //
-    inline writer_l& writeUInt8(uint8_t value) {
-        ensureCapacity(1);
-        *(data + offset) = value; offset++;
-        return *this;
-    }
+    inline writer_l& writeUInt8 (uint8_t  const& value) { ensureCapacity(1); *(data + offset) = value; offset++; return *this; }
+    inline writer_l& writeUInt16(uint16_t const& value) { ensureCapacity(2); *reinterpret_cast<uint16_t*>(data + offset) = value; offset += 2; return *this; }
+    inline writer_l& writeUInt32(uint32_t const& value) { ensureCapacity(4); *reinterpret_cast<uint32_t*>(data + offset) = value; offset += 4; return *this; }
+    inline writer_l& writeUInt64(uint64_t const& value) { ensureCapacity(8); *reinterpret_cast<uint64_t*>(data + offset) = value; offset += 8; return *this; }
 
-    inline writer_l& writeUInt16(uint16_t value) {
-        ensureCapacity(2);
-        *(uint16_t*)(data + offset) = value; offset += 2;
-        return *this;
-    }
-
-    inline writer_l& writeUInt32(uint32_t value) {
-        ensureCapacity(4);
-        *(uint32_t*)(data + offset) = value; offset += 4;
-        return *this;
-    }
-
-    inline writer_l& writeUInt64(uint64_t value) {
-        ensureCapacity(8);
-        *(uint64_t*)(data + offset) = value; offset += 8;
-        return *this;
-    }
-
-    inline writer_l& writeBytes(bytespan_t const& arr) {
-        ensureCapacity(arr->size());
-        memcpy(data + offset, arr->data(), arr->size());
-        offset += arr->size();
-        return *this;
-    }
-
-    inline writer_l& writeBytes(bytes_t const& arr) {
-        ensureCapacity(arr->size());
-        memcpy(data + offset, arr->data(), arr->size());
-        offset += arr->size();
-        return *this;
-    }
-
-    inline writer_l& writeBytes(const uint8_t* arr, size_t length) {
+    //
+    inline writer_l& writeBytes(bytespan_t const& arr) { return writeBytes(arr->data(), arr->size()); }
+    inline writer_l& writeBytes(bytes_t    const& arr) { return writeBytes(arr->data(), arr->size()); }
+    inline writer_l& writeBytes(const uint8_t* arr, size_t const& length) {
         ensureCapacity(length);
         memcpy(data + offset, arr, length);
         offset += length;
@@ -370,32 +319,20 @@ public:
     }
 
     //
+    inline bytes_t toBytes() const { return make_bytes(data, data + offset); }
     inline uintptr_t const& getSize() const { return offset; }
 
     //
-    inline operator bytespan_t() const {
-        return bytespan_t(data + offset, capacity - offset);
-    }
+    inline operator bytespan_t() const { return bytespan_t(data + offset, capacity - offset); }
+    inline operator bytes_t() const { return toBytes(); }
 
-    //
-    inline operator bytes_t() const {
-        return toBytes();
-    }
-
-    //
-    inline bytes_t toBytes() const {
-        return make_bytes(data, data + offset);
-    }
-
-private:
+private: //
     uint8_t* data = nullptr;
     uintptr_t offset = 0;
     size_t  capacity = 0;
 
-    // Проверяет, достаточно ли места в буфере для записи
-    void ensureCapacity(size_t additionalBytes) {
-        if (!checkMemory()) {
-            throw std::runtime_error("Buffer overflow: not enough space in the buffer");
-        }
+    //
+    void ensureCapacity(size_t const& additionalBytes) {
+        if (!checkMemory()) { throw std::runtime_error("Buffer overflow: not enough space in the buffer"); }
     }
 };

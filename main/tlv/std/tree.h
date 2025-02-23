@@ -1,4 +1,6 @@
 #pragma once
+
+//
 #ifndef D5260195_61AB_4BF6_AF66_AFA17C759B97
 #include <algorithm>
 #include <cassert>
@@ -20,7 +22,6 @@
 namespace tlvcpp {
     template<typename T> class tree_node {
     public:
-        //
         tree_node() {}
         template<typename... Args> tree_node(T const &value): m_parent(nullptr), m_data(value) {}
         //template<typename... Args> explicit tree_node(Args&&... args): m_parent(nullptr), m_data(std::forward<Args>(args)...) {}
@@ -59,18 +60,22 @@ namespace tlvcpp {
         template<typename U> const tree_node *find_immediate(U value, size_t index = 0) const { return find_immediate_impl(value, index); }
         template<typename U> tree_node *find(U value, size_t index = 0) { return find_impl(value, index); }
         template<typename U> tree_node *find_immediate(U value, size_t index = 0) { return find_immediate_impl(value, index); }
-        
+
         //
         bool is_child_of(const tree_node &other) const { for (auto *p = m_parent; p; p = p->parent()) if (p == &other) return true; return false; }
         bool is_parent_of(const tree_node &other) const { return other.is_child_of(*this); }
 
         //
-        bool deserialize(uint8_t const* buffer, const size_t size);
+        bool deserialize(uint8_t const* buffer, size_t const& size);
         bool deserialize(std::vector<uint8_t> const& buffer);
         bool deserialize(std::span<uint8_t> const& buffer);
+        bool deserialize(reader_t &reader);
 
         //
-        bool deserialize(reader_t &reader);
+        bool deserialize(bytes_t const& buffer);
+        bool deserialize(bytespan_t const& buffer);
+
+        //
         bool serialize(writer_t &buffer) const;
 
         //

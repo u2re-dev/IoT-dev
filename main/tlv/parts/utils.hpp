@@ -3,7 +3,6 @@
 
 //
 #include "../tlv.h"
-#include "../tlv_tree.h"
 
 //
 namespace tlvcpp {
@@ -43,4 +42,4 @@ namespace tlvcpp {
 
 };
 
-#endif /* D193BBED_1DDC_4CC0_AD00_0C9E1A6017FB */
+#endif
