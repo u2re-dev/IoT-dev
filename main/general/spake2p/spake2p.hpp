@@ -45,7 +45,7 @@ struct W0W1L {
     ecp_t L;
     mpi_t w0;
     mpi_t w1;
-    mpi_t random;
+    mpi_t rand;
 };
 
 //
@@ -91,23 +91,23 @@ public:
 
 
     // Client
-    inline ecp_t& computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getN(), base_.w0); return Y_; }
+    inline ecp_t& computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.rand, ecp_t(group_).getN(), base_.w0); return Y_; }
     inline HKDF_HMAC computeHKDFFromX( uncomp_t const& bX ) const {
         ecp_t X  = ecp_t(group_, bX);
         ecp_t Lp = base_.L;
         ecp_t Br = X  - ecp_t(group_).getM() * base_.w0; // with foreign factor
-        ecp_t Z  = Br * base_.random; // random factor crossed
-        ecp_t V  = Lp * base_.random; // always Device-side factor (own)
+        ecp_t Z  = Br * base_.rand; // random factor crossed
+        ecp_t V  = Lp * base_.rand; // always Device-side factor (own)
         return computeHKDF(X, Y_, Z, V);
     }
 
 
     // Initiator //!unused
-    inline ecp_t& computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.random, ecp_t(group_).getM(), base_.w0); return X_; }
+    inline ecp_t& computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.rand, ecp_t(group_).getM(), base_.w0); return X_; }
     inline HKDF_HMAC computeHKDFFromY( uncomp_t const& bY ) const {
         ecp_t Y  = ecp_t(group_, bY);
         ecp_t Br = Y  - ecp_t(group_).getN() * base_.w0; // with foreign factor
-        ecp_t Z  = Br * base_.random; // random factor crossed
+        ecp_t Z  = Br * base_.rand; // random factor crossed
         ecp_t V  = Br * base_.w1;     // always Device-side factor (foreign)
         return computeHKDF(X_, Y, Z, V);
     }
@@ -173,10 +173,10 @@ private:
 
         //
         W0W1L w0w1L = {};
-        w0w1L.w0 = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N,
-        w0w1L.w1 = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.N;
-        w0w1L.L  = computeLPoint(group, w0w1L.w1);
-        w0w1L.random = mpi_t().random() % group.P;
+        w0w1L.w0    = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N,
+        w0w1L.w1    = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.N;
+        w0w1L.L     = computeLPoint(group, w0w1L.w1);
+        w0w1L.rand  = mpi_t().random() % group.P;
         return w0w1L;
     }
 

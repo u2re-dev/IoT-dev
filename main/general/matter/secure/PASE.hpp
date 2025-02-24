@@ -2,7 +2,7 @@
 #define C89D871D_0511_4554_A58E_A06935CE9861
 
 //
-#include <spake2p/spake2p-p256.hpp>
+#include <spake2p/spake2p.hpp>
 
 //
 #include <tlv/parts/enums.hpp>
