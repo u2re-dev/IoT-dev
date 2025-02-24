@@ -18,3 +18,4 @@ managed_components/
 logs/
 private.hpp
 src/private.hpp
+data/
