@@ -14,7 +14,7 @@ namespace tlvcpp { //
     template<> bool tree_node<tlvcpp::tlv>::serialize(writer_t& writer) const {
         // any structure always begins byself
         if (data().type() == 0b101)
-            { if (!serialize_recursive(*this, writer)) return false; } else 
+            { if (!serialize_recursive(*this, writer)) return false; } else
             { for (const auto &child : children())  // any other is child-written
                 if (!serialize_recursive(child, writer)) return false; }
         return true;
@@ -23,8 +23,8 @@ namespace tlvcpp { //
     //
     template <> bool tree_node<tlvcpp::tlv>::deserialize(reader_t& reader) {
         if (!deserialize_recursive(reader, *this)) return false;
-        if (this->data().tag() == 0 && children().size() == 1) *this = std::move(children().front()); 
-        return true; 
+        if (this->data().tag() == 0 && children().size() == 1) *this = std::move(children().front());
+        return true;
     }
 
     //

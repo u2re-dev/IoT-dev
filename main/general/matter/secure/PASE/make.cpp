@@ -10,8 +10,6 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
 
     // TODO: fix memory lost
     bigint_t rand = mpi_t().random();
-
-    //
     auto resp = tlvcpp::tlv_tree_node{};
     resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
     resp.add_child(req.rand, 01); // send randoms
@@ -23,13 +21,11 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
     secp.add_child(params.iterations, 01);
     secp.add_child(params.salt, 02);
 
-    // TODO: make TLV encoding inline
-    writer_t respTLV; resp.serialize(respTLV);
-    Message outMsg = makeMessage(request, 0x21, respTLV);
-
-    // use spake-byteset from `Message` object itself
+    //
+    Message outMsg = makeMessage(request, 0x21, resp);
+    auto encoded = MessageCodec::encodeMessage(outMsg); // before sending, make spake keys
     spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, outMsg.decodedPayload.payload));
-    return MessageCodec::encodeMessage(outMsg);
+    return encoded;
 }
 
 //
@@ -42,11 +38,8 @@ bytespan_t PASE::makePAKE2(Message const& request) {
     resp.add_child(spake->computeY(), 01);  // works only when Y stored with `spake`
     resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
-    // TODO: make TLV encoding inline
-    writer_t respTLV; resp.serialize(respTLV);
-    Message outMsg = makeMessage(request, 0x23, respTLV);
-
     //
+    Message outMsg = makeMessage(request, 0x23, resp);
     return MessageCodec::encodeMessage(outMsg);
 }
 
@@ -69,5 +62,4 @@ bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;
     return MessageCodec::encodeMessage(outMsg);
 }
-
-#endif /* E0967858_9A99_411B_AE86_8645186140D5 */
+#endif

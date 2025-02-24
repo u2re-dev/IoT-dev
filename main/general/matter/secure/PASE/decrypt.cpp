@@ -17,7 +17,7 @@ SessionKeys& PASE::makeSessionKeys() {
     });
 }
 
-// TODO: embed TLV decoding here
+//
 Message& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const {
     if (message.header.sessionId != 0 && message.rawPayload->size() && sessionKeys.I2Rkeys) {
         writer_t nonce_w;
@@ -49,4 +49,6 @@ Message& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const 
     };
     return message;
 }
+
+//
 #endif

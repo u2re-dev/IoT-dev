@@ -1,7 +1,8 @@
 #pragma once
 
 //
-#include "../../../std/types.hpp"
+#include <std/types.hpp>
+#include <tlv/tlv_tree.h>
 #include <optional>
 
 //
@@ -75,6 +76,7 @@ struct Payload {
     PayloadHeader header = {};
     bytespan_t payload = {};
     bytespan_t securityExtension = {};
+    tlvcpp::tlv_tree_node TLV = {};
 };
 
 //
@@ -100,7 +102,8 @@ struct MessageCodec {
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
 
     //
-    static bytespan_t encodePayload(Payload const& payload);
+    static bytespan_t encodePayload(Payload const& payload); // const (variant I)
+    static bytespan_t encodePayload(Payload& payload); // non-const (variant II)
     static Payload decodePayload(reader_t& data);
 private:
     static PacketHeader decodePacketHeader(reader_t& reader);

@@ -47,14 +47,29 @@ Payload MessageCodec::decodePayload(reader_t& reader) {
     msg.header = decodePayloadHeader(reader);
     msg.securityExtension = msg.header.hasSecuredExtension ? bytespan_t(reader.readBytes(bswap16(reader.readUInt16()))) : bytespan_t{};
     msg.payload = reader.remainingBytes();
+    if (msg.payload && msg.payload->size() > 0) {
+        msg.TLV.deserialize(msg.payload);
+    }
     return msg;
 }
 
-//
+
+
+// variant I - write TLV as part of final byte-set (when Payload is const)
 bytespan_t MessageCodec::encodePayload(Payload const& payload) {
     writer_t encodedPH = encodePayloadHeader(payload.header);
+    if (!payload.payload) { payload.TLV.serialize(encodedPH); }; // if there is no payload, encode TLV itself at row
     return payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes();
 }
+
+// variant II - write TLV as payload (when not const)
+bytespan_t MessageCodec::encodePayload(Payload& payload) {
+    writer_t encodedPH = encodePayloadHeader(payload.header);
+    if (!payload.payload) { writer_t tlv; payload.TLV.serialize(tlv); payload.payload = tlv.toBytes(); }
+    return payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes();
+}
+
+
 
 //
 Message MessageCodec::buildMessage(PacketHeader const& header, Payload const& payload) {

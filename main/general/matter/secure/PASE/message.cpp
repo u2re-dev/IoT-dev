@@ -5,8 +5,7 @@
 #include "../PASE.hpp"
 
 
-
-// TOOD: enable TLV decoding inlinely
+//
 uint8_t PASE::handlePayload(Payload const& payload) {
     switch (payload.header.messageType) {
         case 0x20: return handlePASERequest(payload);
@@ -17,7 +16,7 @@ uint8_t PASE::handlePayload(Payload const& payload) {
     return payload.header.messageType;
 }
 
-// TODO: enable TLV decoding here (inline)
+//
 Message PASE::decodeMessage(bytespan_t const& bytes) const {
     auto reader = reader_t(bytes);
     auto message = MessageCodec::decodeMessage(reader);
@@ -28,8 +27,8 @@ Message PASE::decodeMessage(bytespan_t const& bytes) const {
 
 
 
-// TOOD: use TLV data inlinely and directly
-Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload) {
+//
+Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_t const& set) {
     Message outMsg = {};
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
     outMsg.header.sessionId  = request.header.sessionId;
@@ -39,8 +38,22 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
     outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
-    outMsg.decodedPayload.payload = payload; // planned to replace by TLV encoding
+    outMsg.decodedPayload.payload = set; // planned to replace by TLV encoding
     return outMsg;
 }
 
+//
+Message PASE::makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& TLV) {
+    Message outMsg = {};
+    outMsg.header.messageId  = (counter++); ///- request.header.messageId;
+    outMsg.header.sessionId  = request.header.sessionId;
+    outMsg.header.destNodeId = request.header.sourceNodeId;
+    outMsg.decodedPayload.header.messageType = messageType;
+    outMsg.decodedPayload.header.requiresAck = false;//true;
+    outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
+    outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
+    outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
+    outMsg.decodedPayload.TLV = TLV; // planned to replace by TLV encoding
+    return outMsg;
+}
 #endif

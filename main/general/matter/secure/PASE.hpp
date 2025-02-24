@@ -46,6 +46,7 @@ public:
 
     //
     Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {});
+    Message makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& payload);
     Message decodeMessage(bytespan_t const& bytes) const;
     Message& decryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
     SessionKeys& makeSessionKeys();

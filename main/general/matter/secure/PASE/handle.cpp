@@ -7,39 +7,27 @@
 //
 uint8_t PASE::handlePASERequest(Payload const& payload) {
     if (payload.header.messageType != 0x20) return 0;
-
-    // TODO: enable TLV decoding in message itself
-    auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
-    req = PBKDFParamRequest{ tlv.find(01)->data(), tlv.find(02)->data(), tlv.find(03)->data() };
+    req = PBKDFParamRequest{
+        payload.TLV.find(01)->data(),
+        payload.TLV.find(02)->data(),
+        payload.TLV.find(03)->data()
+    };
     params = {1000, mpi_t().random() };
-
-    //
     return payload.header.messageType;
 }
 
 //
 uint8_t PASE::handlePAKE1(Payload const& payload) {
     if (payload.header.messageType != 0x22) return 0;
-
-    // TODO: enable TLV decoding in message itself
-    auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
-    X_ = spake->parseECP(tlv.find(01)->data().payload(), 65);
-
-    //
+    X_ = spake->parseECP(payload.TLV.find(01)->data().payload(), 65);
     return payload.header.messageType;
 }
 
 //
 uint8_t PASE::handlePAKE3(Payload const& payload) {
     if (payload.header.messageType != 0x24) return 0;
-
-    // TODO: enable TLV decoding in message itself
-    auto tlv = tlvcpp::tlv_tree_node{}; tlv.deserialize(payload.payload);
-    bigint_t hAY = tlv.find(01)->data(); // TODO: fix bigint conversion (directly)
+    bigint_t hAY = payload.TLV.find(01)->data(); // TODO: fix bigint conversion (directly)
     if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
-
-    //
     return payload.header.messageType;
 }
-
 #endif
