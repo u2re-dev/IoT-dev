@@ -11,8 +11,8 @@
 
 //
 inline void entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *userdata) {
-    if (state == AVAHI_ENTRY_GROUP_ESTABLISHED) { std::cout << "Service successfully established." << std::endl; } else 
-    if (state == AVAHI_ENTRY_GROUP_COLLISION)   { std::cerr << "Service name collision detected!"  << std::endl; } else 
+    if (state == AVAHI_ENTRY_GROUP_ESTABLISHED) { std::cout << "Service successfully established." << std::endl; } else
+    if (state == AVAHI_ENTRY_GROUP_COLLISION)   { std::cerr << "Service name collision detected!"  << std::endl; } else
     if (state == AVAHI_ENTRY_GROUP_FAILURE)     { std::cerr << "Failed to establish service: "     << avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(g))) << std::endl; }
 }
 
@@ -77,7 +77,7 @@ public:
             nullptr,  // Хост (по умолчанию текущий хост)
             port,
             "D=840", "CM=1", nullptr  // TXT-записи
-        ) < 0) 
+        ) < 0)
         {
             std::cerr << "Failed to add service: " << avahi_strerror(avahi_client_errno(client)) << std::endl;
             avahi_entry_group_free(group);

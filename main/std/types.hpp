@@ -14,7 +14,7 @@
 #include <cstdint>
 
 //
-#include "../spake2p/bigint/intx.hpp"
+#include <bigint/intx.hpp>
 
 //
 using byte_t   = uint8_t;

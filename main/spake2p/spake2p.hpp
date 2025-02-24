@@ -2,8 +2,8 @@
 #define D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE
 
 //
-#include "../std/types.hpp"
-#include "../std/hex.hpp"
+#include <std/types.hpp>
+#include <std/hex.hpp>
 
 //
 #include <mbedtls/ctr_drbg.h>
@@ -16,9 +16,7 @@
 #include "./raii/ecp.hpp"
 #include "./raii/misc.hpp"
 #include "./crypto.hpp"
-#include "spake2p/bigint/intx.hpp"
-
-
+//#include "spake2p/bigint/intx.hpp"
 
 //
 constexpr  uint8_t H_VERSION   = 0x01;
@@ -62,7 +60,7 @@ public:
 
     //
     inline void init(const PBKDFParameters& pbkdfParameters, uint32_t const& pin, bigint_t const& context) {
-        mbedtls_ecp_group_init(&group_); 
+        mbedtls_ecp_group_init(&group_);
         mbedtls_ecp_group_load(&group_, MBEDTLS_ECP_DP_SECP256R1);
         //context_ = make_bytes(std::vector<uint8_t>{0x43, 0x48, 0x49, 0x50, 0x20, 0x50, 0x41, 0x4b, 0x45, 0x20, 0x56, 0x31, 0x20, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x69, 0x6e, 0x67 });
         base_ = computeW0W1L(group_, pbkdfParameters, pin);
@@ -74,13 +72,13 @@ public:
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
         mbedtls_sha256_starts_ret(&ctx, 0);
-    
+
         //
         const auto name = hex::s2b("CHIP PAKE V1 Commissioning");
         mbedtls_sha256_update_ret(&ctx, name->data(), name->size());
         mbedtls_sha256_update_ret(&ctx, req->data(), req->size());
         mbedtls_sha256_update_ret(&ctx, res->data(), res->size());
-    
+
         //
         auto out = bigint_t(0);
         checkMbedtlsError(mbedtls_sha256_finish_ret(&ctx, reinterpret_cast<uint8_t*>(&out)), "Failed to compute Hash");
@@ -175,7 +173,7 @@ private:
 
         //
         W0W1L w0w1L = {};
-        w0w1L.w0 = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N, 
+        w0w1L.w0 = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N,
         w0w1L.w1 = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.N;
         w0w1L.L  = computeLPoint(group, w0w1L.w1);
         w0w1L.random = mpi_t().random() % group.P;

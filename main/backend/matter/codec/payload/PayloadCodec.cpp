@@ -2,9 +2,6 @@
 #include "../message/Message.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
-//#include "../core/Utils.hpp"
-//#include "../core/Types.hpp"
-
 //
 writer_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
     writer_t writer;
@@ -44,7 +41,7 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 
 
 
-// 
+//
 Payload MessageCodec::decodePayload(reader_t& reader) {
     Payload msg {};
     msg.header = decodePayloadHeader(reader);

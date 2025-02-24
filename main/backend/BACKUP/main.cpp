@@ -1,7 +1,9 @@
 //#include <arpa/inet.h>
 #include "./mdns.hpp"
 #include "./udp.hpp"
-#include "./PASE.hpp"
+
+//
+#include <matter/secure/PASE.hpp>
 
 //
 #define ENABLE_MATTER_TEST //
@@ -27,8 +29,6 @@ int main() {
         if (resp) {
             auto msg  = pase.decodeMessage(resp);
             auto type = pase.handlePayload(msg.decodedPayload);
-
-            //
             if (type) { socket.sendResponse(pase.makeAckMessage(msg)); };
             switch (type) {
                 case 0x24: socket.sendResponse(pase.makeReportStatus(msg)); break;
@@ -44,10 +44,9 @@ int main() {
 }
 #endif
 
-#ifdef ENABLE_SPAKE2P_TEST
 //
+#ifdef ENABLE_SPAKE2P_TEST
 int main () {
-    
     auto salt = mpi_t().random();
 
     // from client and server

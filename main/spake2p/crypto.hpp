@@ -8,10 +8,10 @@
 #include <mbedtls/bignum.h>
 #include <mbedtls/ecp.h>
 #include <mbedtls/ecjpake.h>
-#include "./raii/misc.hpp"
+#include <std/types.hpp>
 
 //
-#include "../std/types.hpp"
+#include "./raii/misc.hpp"
 
 //
 namespace crypto {
@@ -24,10 +24,10 @@ namespace crypto {
         mbedtls_md_context_t ctx;
         mbedtls_md_init(&ctx);
         checkMbedtlsError(mbedtls_md_setup(&ctx, inf, 1), "pbkdf2 setup failed");
-        checkMbedtlsError(mbedtls_pkcs5_pbkdf2_hmac(&ctx, 
-            input, plen, 
-            reinterpret_cast<uint8_t const*>(&salt), sizeof(salt), 
-            iterations, 
+        checkMbedtlsError(mbedtls_pkcs5_pbkdf2_hmac(&ctx,
+            input, plen,
+            reinterpret_cast<uint8_t const*>(&salt), sizeof(salt),
+            iterations,
             output->size(), output->data()
         ), "pbkdf2 failed");
         mbedtls_md_free(&ctx);
@@ -40,10 +40,10 @@ namespace crypto {
         auto inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);;
         mbedtls_md_context_t ctx;
         mbedtls_md_init(&ctx); mbedtls_md_setup(&ctx, inf, 1);
-        checkMbedtlsError(mbedtls_hkdf(inf, 
-            nullptr, 0, 
-            reinterpret_cast<uint8_t const*>(&ikm), sizeof(ikm), 
-            info->data(), info->size(), 
+        checkMbedtlsError(mbedtls_hkdf(inf,
+            nullptr, 0,
+            reinterpret_cast<uint8_t const*>(&ikm), sizeof(ikm),
+            info->data(), info->size(),
             out->data(), out->size()
         ), "HKDF failed");
         mbedtls_md_free(&ctx);
@@ -55,10 +55,10 @@ namespace crypto {
         bigint_t out = bigint_t(0);
         mbedtls_md_context_t ctx; const mbedtls_md_info_t *inf = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
         mbedtls_md_init(&ctx); mbedtls_md_setup(&ctx, inf, 1);
-        checkMbedtlsError(mbedtls_hkdf(inf, 
-            nullptr, 0, 
-            reinterpret_cast<uint8_t const*>(&ikm), sizeof(ikm), 
-            info->data(), info->size(), 
+        checkMbedtlsError(mbedtls_hkdf(inf,
+            nullptr, 0,
+            reinterpret_cast<uint8_t const*>(&ikm), sizeof(ikm),
+            info->data(), info->size(),
             reinterpret_cast<uint8_t*>(&out), sizeof(out)
         ), "HKDF failed");
         mbedtls_md_free(&ctx);

@@ -22,7 +22,7 @@ public:
     //
     inline int init() {
         //
-        if ((sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0) 
+        if ((sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0)
         { std::cerr << "Error: Unable to create socket. " << std::to_string(sockfd) << std::endl; return 1; }
 
         //
@@ -61,7 +61,7 @@ public:
     }
 
 //
-private: 
+private:
     int bound = -1, sockfd = -1;
     const int port = 5540;
 
