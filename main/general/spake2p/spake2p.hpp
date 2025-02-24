@@ -12,9 +12,12 @@
 
 //
 #include "./mbedtls/ecc_point_compression.h"
+
+#include "./raii/misc.hpp"
 #include "./raii/mpi.hpp"
 #include "./raii/ecp.hpp"
-#include "./raii/misc.hpp"
+#include "./raii/group.hpp"
+
 #include "./crypto.hpp"
 //#include "spake2p/bigint/intx.hpp"
 
@@ -54,16 +57,13 @@ using uncomp_t = bytespan_t;
 //
 class Spake2p {
 public:
-    inline ~Spake2p() { mbedtls_ecp_group_free(&group_); }
+    inline ~Spake2p() {}
     inline Spake2p(Spake2p const& another) : X_(another.X_), group_(another.group_), context_(another.context_), base_(another.base_) {}
     inline Spake2p(PBKDFParameters const& pbkdfParameters, uint32_t const& pin, bigint_t const& context) { init(pbkdfParameters, pin, context); }
 
     //
     inline void init(const PBKDFParameters& pbkdfParameters, uint32_t const& pin, bigint_t const& context) {
-        mbedtls_ecp_group_init(&group_);
-        mbedtls_ecp_group_load(&group_, MBEDTLS_ECP_DP_SECP256R1);
-        //context_ = make_bytes(std::vector<uint8_t>{0x43, 0x48, 0x49, 0x50, 0x20, 0x50, 0x41, 0x4b, 0x45, 0x20, 0x56, 0x31, 0x20, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x69, 0x6e, 0x67 });
-        base_ = computeW0W1L(group_, pbkdfParameters, pin);
+        base_    = computeW0W1L(group_, pbkdfParameters, pin);
         context_ = context;
     }
 
@@ -86,16 +86,16 @@ public:
     }
 
     //
-    inline ecp_t parseECP (uint8_t const* stream, size_t const& length) { return std::move(ecp_t(group_).loadBytes(stream, length)); }
-    inline ecp_t parseECP (bytespan_t const& bytes) { return std::move(ecp_t(group_).loadBytes(bytes->data(), bytes->size())); }
+    inline ecp_t parseECP (uint8_t const* stream, size_t const& length) { return group_.make(bytespan_t(stream, length)); }
+    inline ecp_t parseECP (bytespan_t const& bytes) { return group_.make(bytes); }
 
 
     // Client
-    inline ecp_t& computeY() { Y_ = ecp_t(group_, group_.G).muladd(base_.rand, ecp_t(group_).getN(), base_.w0); return Y_; }
-    inline HKDF_HMAC computeHKDFFromX( uncomp_t const& bX ) const {
-        ecp_t X  = ecp_t(group_, bX);
+    inline ecp_t& computeY() { Y_ = group_.getGp().muladd(base_.rand, group_.getNp(), base_.w0); return Y_; }
+    inline HKDF_HMAC computeHKDFFromX( uncomp_t const& bX ) {
+        ecp_t X  = group_.make(bX);
         ecp_t Lp = base_.L;
-        ecp_t Br = X  - ecp_t(group_).getM() * base_.w0; // with foreign factor
+        ecp_t Br = X  - group_.getMp() * base_.w0; // with foreign factor
         ecp_t Z  = Br * base_.rand; // random factor crossed
         ecp_t V  = Lp * base_.rand; // always Device-side factor (own)
         return computeHKDF(X, Y_, Z, V);
@@ -103,10 +103,10 @@ public:
 
 
     // Initiator //!unused
-    inline ecp_t& computeX() { X_ = ecp_t(group_, group_.G).muladd(base_.rand, ecp_t(group_).getM(), base_.w0); return X_; }
-    inline HKDF_HMAC computeHKDFFromY( uncomp_t const& bY ) const {
-        ecp_t Y  = ecp_t(group_, bY);
-        ecp_t Br = Y  - ecp_t(group_).getN() * base_.w0; // with foreign factor
+    inline ecp_t& computeX() { X_ = group_.getGp().muladd(base_.rand, group_.getMp(), base_.w0); return X_; }
+    inline HKDF_HMAC computeHKDFFromY( uncomp_t const& bY ) {
+        ecp_t Y  = group_.make(bY);
+        ecp_t Br = Y  - group_.getNp() * base_.w0; // with foreign factor
         ecp_t Z  = Br * base_.rand; // random factor crossed
         ecp_t V  = Br * base_.w1;     // always Device-side factor (foreign)
         return computeHKDF(X_, Y, Z, V);
@@ -147,8 +147,8 @@ private:
         writer.writeUInt64(0); writer.writeUInt64(0); // identifiers
 
         // N and M write
-        writer.writeUInt64(65); writer.writeBytes(ecp_t(group_).getM());
-        writer.writeUInt64(65); writer.writeBytes(ecp_t(group_).getN());
+        writer.writeUInt64(65); writer.writeBytes(group_.getMp());
+        writer.writeUInt64(65); writer.writeBytes(group_.getNp());
 
         // X, Y, Z, V points
         writer.writeUInt64(65); writer.writeBytes(X); // pA
@@ -162,27 +162,27 @@ private:
     }
 
     //
-    static ecp_t computeLPoint(mbedtls_ecp_group const& group, mpi_t const& w1) {
-        return std::move(ecp_t(group, group.G) * w1);
+    static ecp_t computeLPoint(ecp_group_t& group, mpi_t const& w1) {
+        return std::move(group.getGp() * w1);
     }
 
     //
-    static W0W1L computeW0W1L(mbedtls_ecp_group const& group, const PBKDFParameters& pbkdfParameters, uint32_t const& pin) {
+    static W0W1L computeW0W1L(ecp_group_t& group, const PBKDFParameters& pbkdfParameters, uint32_t const& pin) {
         decltype(auto) ws = crypto::pbkdf2(reinterpret_cast<uint8_t const*>(&pin), 4, pbkdfParameters.salt, pbkdfParameters.iterations, PBKDF2_OUTLEN);
         if (ws->size() < PBKDF2_OUTLEN) { throw std::runtime_error("PBKDF2: not enough length"); }
 
         //
         W0W1L w0w1L = {};
-        w0w1L.w0    = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.N,
-        w0w1L.w1    = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.N;
+        w0w1L.w0    = mpi_t(bytespan_t(ws->data(), CRYPTO_W_SIZE_BYTES)) % group.getN(),
+        w0w1L.w1    = mpi_t(bytespan_t(ws->data() + CRYPTO_W_SIZE_BYTES, CRYPTO_W_SIZE_BYTES)) % group.getN();
         w0w1L.L     = computeLPoint(group, w0w1L.w1);
-        w0w1L.rand  = mpi_t().random() % group.P;
+        w0w1L.rand  = mpi_t().random() % group.getP();
         return w0w1L;
     }
 
     //
     union { ecp_t X_, Y_; };
-    mbedtls_ecp_group group_;
+    ecp_group_t group_ = {};
     bigint_t context_ = {};
     W0W1L base_ = {};
 };

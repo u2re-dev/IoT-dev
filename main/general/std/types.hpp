@@ -106,6 +106,9 @@ public:
     inline std::span<uint8_t> const& operator*() const { return span_; };
     inline std::span<uint8_t>& operator*() { return span_; };
 
+    //
+    inline bytes_t& holder() { return holder_; };
+    inline bytes_t const& holder() const { return holder_; };
 
 private:
     bytes_t holder_;
