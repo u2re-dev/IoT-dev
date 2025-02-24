@@ -4,7 +4,9 @@
 //
 #include "../PASE.hpp"
 
-//
+
+
+// TOOD: enable TLV decoding inlinely
 uint8_t PASE::handlePayload(Payload const& payload) {
     switch (payload.header.messageType) {
         case 0x20: return handlePASERequest(payload);
@@ -15,7 +17,7 @@ uint8_t PASE::handlePayload(Payload const& payload) {
     return payload.header.messageType;
 }
 
-//
+// TODO: enable TLV decoding here (inline)
 Message PASE::decodeMessage(bytespan_t const& bytes) const {
     auto reader = reader_t(bytes);
     auto message = MessageCodec::decodeMessage(reader);
@@ -24,7 +26,9 @@ Message PASE::decodeMessage(bytespan_t const& bytes) const {
     return message;
 }
 
-//
+
+
+// TOOD: use TLV data inlinely and directly
 Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload) {
     Message outMsg = {};
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
@@ -35,8 +39,8 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
     outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
-    outMsg.decodedPayload.payload = payload;
+    outMsg.decodedPayload.payload = payload; // planned to replace by TLV encoding
     return outMsg;
 }
 
-#endif /* A3E1DE45_C06A_44C2_9B2F_34F686879D28 */
+#endif

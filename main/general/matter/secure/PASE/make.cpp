@@ -23,9 +23,12 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
     secp.add_child(params.iterations, 01);
     secp.add_child(params.salt, 02);
 
-    //
-    writer_t respTLV; resp.serialize(respTLV); spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, respTLV));
+    // TODO: make TLV encoding inline
+    writer_t respTLV; resp.serialize(respTLV);
     Message outMsg = makeMessage(request, 0x21, respTLV);
+
+    // use spake-byteset from `Message` object itself
+    spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, outMsg.decodedPayload.payload));
     return MessageCodec::encodeMessage(outMsg);
 }
 
@@ -39,9 +42,11 @@ bytespan_t PASE::makePAKE2(Message const& request) {
     resp.add_child(spake->computeY(), 01);  // works only when Y stored with `spake`
     resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
-    //
+    // TODO: make TLV encoding inline
     writer_t respTLV; resp.serialize(respTLV);
     Message outMsg = makeMessage(request, 0x23, respTLV);
+
+    //
     return MessageCodec::encodeMessage(outMsg);
 }
 
