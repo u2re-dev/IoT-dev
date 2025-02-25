@@ -4,6 +4,8 @@
 //
 #include "../PASE.hpp"
 
+//
+#include <tlv/parts/debug.hpp>
 
 //
 uint8_t PASE::handlePayload(Payload const& payload) {
@@ -22,6 +24,7 @@ Message PASE::decodeMessage(bytespan_t const& bytes) const {
     auto message = MessageCodec::decodeMessage(reader);
     decryptPayload(message, bytes);
     message.decodedPayload = MessageCodec::decodePayload(reader);
+    tlvcpp::debug_print_recursive(message.decodedPayload.TLV);
     return message;
 }
 
