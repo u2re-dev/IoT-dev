@@ -52,12 +52,15 @@ namespace tlvcpp {
     //
     static bool deserialize_recursive(reader_t& reader, tlv_tree_node& node, intptr_t level = 0) {
         while (reader.checkMemory()) {
-            tlv value{};
-            if (!deserialize_tag(reader, value)) return false;
+            tlv value{}; // break parsing block
+            if (!deserialize_tag(reader, value)) break;
+            if (value.type() == e_type::END) break;
+
+            // when memory is over, stop
             if (!reader.checkMemory()) return false;
-            bool isStruct = value.type() == e_type::STRUCTURE;
 
             // In case if in structure is one element (but we doesn't know how many)
+            bool isStruct = value.type() == e_type::STRUCTURE;
             decltype(auto) child = (isStruct && level == 0) ? node : node.add_child(value);
             if (isStruct) {
                 child.data() = value; // assign type to node itself
