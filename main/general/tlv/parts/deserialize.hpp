@@ -11,10 +11,10 @@ namespace tlvcpp {
     static bool deserialize_tag(reader_t& reader, tlv& value) {
         if (!reader.checkMemory()) return false;
         control_t control = reinterpret_cast<control_t const&>(reader.readByte());
+        value = uint64_t(0); value.control(control);
 
         //
-        value = uint64_t(0);
-        value.control(control);
+        if (!reader.checkMemory()) return false;
         value.tag(control.lab == 0 ? 0 : reader.readByte());
         if (!reader.checkMemory()) return false;
 

@@ -31,6 +31,7 @@ namespace tlvcpp {
     //
     inline bool readOctets(reader_t& reader, auto& value, uint8_t const& type) {
         uint8_t octet = type&0b00000011;
+        value = uint64_t(0);
         switch (octet) {
             case 0: if (!reader.checkMemory(1)) return false; value = reader.readByte(); break;
             case 1: if (!reader.checkMemory(2)) return false; value = reader.readUInt16(); break;
