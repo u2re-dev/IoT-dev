@@ -20,7 +20,7 @@ uint8_t PASE::handlePayload(Payload const& payload) {
 
 //
 Message PASE::decodeMessage(bytespan_t const& bytes) const {
-    auto reader = reader_t(bytes);
+    auto reader  = reader_t(bytes);
     auto message = MessageCodec::decodeMessage(reader);
     decryptPayload(message, bytes);
     message.decodedPayload = MessageCodec::decodePayload(reader);
@@ -37,7 +37,7 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_
     outMsg.header.sessionId  = request.header.sessionId;
     outMsg.header.destNodeId = request.header.sourceNodeId;
     outMsg.decodedPayload.header.messageType = messageType;
-    outMsg.decodedPayload.header.requiresAck = false;//true;
+    outMsg.decodedPayload.header.messageFlags.requiresAck = 0;
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
     outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
@@ -52,7 +52,7 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, tlvcpp::t
     outMsg.header.sessionId  = request.header.sessionId;
     outMsg.header.destNodeId = request.header.sourceNodeId;
     outMsg.decodedPayload.header.messageType = messageType;
-    outMsg.decodedPayload.header.requiresAck = false;//true;
+    outMsg.decodedPayload.header.messageFlags.requiresAck = 0;
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
     outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;

@@ -4,27 +4,32 @@
 #include <std/types.hpp>
 #include <tlv/tlv_tree.h>
 #include <optional>
+#include "./Consts.hpp"
 
 //
-enum PacketHeaderFlag : uint8_t {
-    HasDestNodeId   = 0b00000001,
-    HasDestGroupId  = 0b00000010,
-    HasSourceNodeId = 0b00000100,
-    Reserved        = 0b00001000,
-    VersionMask     = 0b11110000,
+struct exch_f {
+    uint8_t hasDestNodeId: 1;
+    uint8_t hasDestGroupId: 1;
+    uint8_t hasSourceNodeId: 1;
+    uint8_t reserved: 1;
+    uint8_t version: 4;
+};
+
+//
+struct sec_f {
+    uint8_t sessionType: 2;
+    uint8_t unknown: 3;
+    uint8_t hasMessageExtensions: 1;
+    uint8_t isControlMessage: 1;
+    uint8_t hasPrivacyEnhancements: 1;
 };
 
 //
 struct PacketHeader {
     uint32_t messageId      = 0;
     uint16_t sessionId      = 0;
-    uint8_t  sessionType    = 0;
-    uint8_t  securityFlags  = 0;
-
-    //
-    bool hasPrivacyEnhancements = false;
-    bool isControlMessage       = false;
-    bool hasMessageExtensions   = false;
+     sec_f   securityFlags  = {0, 0, 0, 0, 0};
+    exch_f   exchangeFlags  = {0, 0, 0, 0, HEADER_VERSION};
 
     //
     std::optional<uint16_t> destGroupId;
@@ -33,29 +38,23 @@ struct PacketHeader {
 };
 
 //
-enum PayloadHeaderFlag : uint8_t {
-    IsInitiatorMessage = 0b00000001,
-    IsAckMessage       = 0b00000010,
-    RequiresAck        = 0b00000100,
-    HasSecureExtension = 0b00001000,
-    HasVendorId        = 0b00010000,
+struct msg_f {
+    uint8_t isInitiatorMessage: 1;
+    uint8_t isAckMessage: 1;
+    uint8_t requiresAck: 1;
+    uint8_t hasSecureExtension: 1;
+    uint8_t hasVendorId: 1;
 };
 
 //
 struct PayloadHeader {
+    msg_f    messageFlags   = {0, 0, 0, 0, 0};
     uint16_t exchangeId     = 0;
     uint32_t protocolId     = 0;
     uint32_t ackedMessageId = 0;
     uint16_t vendorId       = 0;
      uint8_t messageType    = 0;
-
-    //
-    bool isInitiatorMessage  = false;
-    bool requiresAck         = false;
-    bool hasSecuredExtension = false;
 };
-
-
 
 //
 struct SecureMessageType {
@@ -102,14 +101,14 @@ struct MessageCodec {
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
 
     //
-    static bytespan_t encodePayload(Payload const& payload); // const (variant I)
+    //static bytespan_t encodePayload(Payload const& payload); // const (variant I)
     static bytespan_t encodePayload(Payload& payload); // non-const (variant II)
     static Payload decodePayload(reader_t& data);
 private:
     static PacketHeader decodePacketHeader(reader_t& reader);
-    static writer_t encodePacketHeader(const PacketHeader& ph);
+    static writer_t encodePacketHeader(PacketHeader& ph);
 
     //
     static PayloadHeader decodePayloadHeader(reader_t& reader);
-    static writer_t encodePayloadHeader(const PayloadHeader& ph);
+    static writer_t encodePayloadHeader(PayloadHeader& ph);
 };

@@ -29,5 +29,5 @@ namespace tlvcpp { //
     template <> bool tree_node<tlvcpp::tlv>::deserialize(std::vector<uint8_t> const& buffer) { return deserialize(buffer.data(), buffer.size()); }
     template <> bool tree_node<tlvcpp::tlv>::deserialize(  std::span<uint8_t> const& buffer) { return deserialize(buffer.data(), buffer.size()); }
     template <> bool tree_node<tlvcpp::tlv>::deserialize(bytespan_t const& buffer) { return deserialize(buffer->data(), buffer->size()); }
-    template <> bool tree_node<tlvcpp::tlv>::deserialize(bytes_t    const& buffer) { return deserialize(buffer->data(), buffer->size()); }
+    template <> bool tree_node<tlvcpp::tlv>::deserialize(bytes_t const& buffer) { return deserialize(buffer->data(), buffer->size()); }
 };

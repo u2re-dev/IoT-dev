@@ -42,7 +42,7 @@ public:
     //
     inline bytespan_t(bytes_t    const& bptr, uintptr_t const& offset = 0) : holder_(bptr)         { span_ = std::span<uint8_t>(bptr->begin() + offset, bptr->end()); }
     inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_) { span_ = std::span<uint8_t>(span->begin() + offset, span->end()); }
-    inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0) : holder_({}) {
+    inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0,  bytes_t const& holder = {}) : holder_(holder) {
         span_ = std::span<uint8_t>(const_cast<uint8_t*>(ptr), size);
     }
 
@@ -53,7 +53,7 @@ public:
     //
     inline operator bytes_t() const {
         // if pointer of span is same, use same as holder, otherwise copy vector
-        return (span_.data() == holder_->data()) ? holder_ : make_bytes(span_.begin(), span_.end());
+        return (span_.data() == holder_->data()) ? holder_ : make_bytes(span_.data(), span_.data() + span_.size());
     }
 
     //
@@ -126,9 +126,9 @@ inline bytes_t concat(std::initializer_list<bytespan_t> const& arrays) {
 class reader_t {
 public:
     inline reader_t(reader_t const& reader) : offset(reader.offset), memory(reader.memory), capacity(reader.capacity) {}
-    inline reader_t(uint8_t const* data = nullptr, size_t size = 0) : offset(0), memory(data), capacity(size) {}
-    inline reader_t(bytes_t const& data_)    : offset(0), memory(data_->data()), capacity(data_->size()) {}
-    inline reader_t(bytespan_t const& data_) : offset(0), memory(data_->data()), capacity(data_->size()) {}
+    inline reader_t(uint8_t const* data = nullptr, size_t size = 0, bytes_t const& holder = {}) : offset(0), memory(bytespan_t(data, size, holder)), capacity(size) {}
+    inline reader_t(bytes_t const& data_)    : offset(0), memory(data_), capacity(data_->size()) {}
+    inline reader_t(bytespan_t const& data_) : offset(0), memory(data_), capacity(data_->size()) {}
 
     //
     inline bool checkMemory(size_t size = 1) const { return (capacity >= (size + offset)); }
@@ -148,7 +148,7 @@ public:
     //
     inline byte_t  const& readByte() { return *allocate(1); }
     inline uint8_t const* readUTF8(size_t& len) {
-        char const * str = reinterpret_cast<char const*>(memory + offset); len = strlen(str);
+        char const * str = reinterpret_cast<char const*>(memory->data() + offset); len = strlen(str);
         return allocate(len);
     }
 
@@ -158,7 +158,7 @@ public:
             throw std::runtime_error("Remain memory exceeded");
             return nullptr;
         }
-        auto ptr = memory + offset;
+        auto ptr = memory->data() + offset;
         offset += size;
         return ptr;
     }
@@ -167,17 +167,17 @@ public:
     inline bytespan_t readBytes(size_t length) {
         checkSize(length);
         auto bytes = allocate(length);
-        return bytespan_t(bytes,length);
+        return bytespan_t(bytes, length, memory.holder());
     }
 
     //
     inline bytespan_t remainingBytes() const {
-        return bytespan_t(memory + offset, capacity - offset);
+        return bytespan_t(memory->data() + offset, capacity - offset, memory.holder());
     }
 
     //
-    inline operator bytespan_t() const { return bytespan_t(memory + offset, capacity - offset); };
-    inline operator bytes_t() const { return make_bytes(memory + offset, memory + capacity); }
+    inline operator bytespan_t() const { return bytespan_t(memory->data() + offset, capacity - offset, memory.holder()); };
+    inline operator bytes_t() const { return make_bytes(memory->data() + offset, memory->data() + capacity); }
 
 private:
     inline void checkSize(size_t const& n) const {
@@ -186,7 +186,7 @@ private:
 
     //
     uintptr_t offset = 0;
-    byte_t const* memory = nullptr;
+    bytespan_t memory = {};
     size_t capacity = 0;
 };
 

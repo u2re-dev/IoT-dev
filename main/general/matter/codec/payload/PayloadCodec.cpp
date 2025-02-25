@@ -1,41 +1,34 @@
+//
+#include <std/hex.hpp>
+
+//
 #include "../message/Consts.hpp"
 #include "../message/Message.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
 //
-writer_t MessageCodec::encodePayloadHeader(const PayloadHeader& ph) {
+writer_t MessageCodec::encodePayloadHeader(PayloadHeader& ph) {
     writer_t writer;
-    uint16_t vendorId = static_cast<uint16_t>((ph.protocolId >> 16) & 0xffff);
-    uint8_t flags = (ph.isInitiatorMessage ? IsInitiatorMessage : 0) |
-                    (ph.ackedMessageId     ? IsAckMessage       : 0) |
-                    (ph.requiresAck        ? RequiresAck        : 0) |
-                    (vendorId != COMMON_VENDOR_ID ? HasVendorId : 0);
-    writer.writeUInt8(flags);
+    ph.messageFlags.isAckMessage = ph.ackedMessageId ? 1 : 0;
+    ph.messageFlags.hasVendorId  = ph.vendorId != COMMON_VENDOR_ID ? 1 : 0;
+    writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.messageFlags));
     writer.writeUInt8(ph.messageType);
     writer.writeUInt16(ph.exchangeId);
-    if (vendorId != COMMON_VENDOR_ID) { writer.writeUInt32(ph.protocolId); } else { writer.writeUInt16(static_cast<uint16_t>(ph.protocolId)); };
-    if (ph.ackedMessageId) writer.writeUInt32(ph.ackedMessageId);
+    if (ph.messageFlags.hasVendorId) writer.writeUInt16(ph.vendorId);
+    writer.writeUInt16(static_cast<uint16_t>(ph.protocolId));
+    if (ph.messageFlags.isAckMessage) writer.writeUInt32(ph.ackedMessageId);
     return writer;
 }
 
 //
 PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
     PayloadHeader ph{};
-    uint8_t exchFlags = reader.readByte();
-    bool isAck     = (exchFlags & IsAckMessage) != 0;
-    bool hasVendor = (exchFlags & HasVendorId ) != 0;
-
-    //
-    ph.isInitiatorMessage  = (exchFlags & IsInitiatorMessage) != 0;
-    ph.hasSecuredExtension = (exchFlags & HasSecureExtension) != 0;
-    ph.requiresAck         = (exchFlags & RequiresAck)  != 0;;
-    ph.messageType = reader.readUInt8();
-    ph.exchangeId  = reader.readUInt16();
-    ph.vendorId    = hasVendor ? reader.readUInt16() : COMMON_VENDOR_ID;
-    ph.protocolId  = reader.readUInt16(); //vendorId != COMMON_VENDOR_ID ? reader.readUInt32() : reader.readUInt16();
-
-    //
-    if (isAck) ph.ackedMessageId = reader.readUInt32();
+    ph.messageFlags = reinterpret_cast<msg_f const&>(reader.readByte());
+    ph.messageType  = reader.readUInt8();
+    ph.exchangeId   = reader.readUInt16();
+    ph.vendorId     = ph.messageFlags.hasVendorId ? reader.readUInt16() : COMMON_VENDOR_ID;
+    ph.protocolId   = reader.readUInt16();
+    if (ph.messageFlags.isAckMessage) ph.ackedMessageId = reader.readUInt32();
     return ph;
 }
 
@@ -45,8 +38,7 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 Payload MessageCodec::decodePayload(reader_t& reader) {
     Payload msg {};
     msg.header = decodePayloadHeader(reader);
-    msg.securityExtension = msg.header.hasSecuredExtension ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
-    //msg.securityExtension = msg.header.hasSecuredExtension ? bytespan_t(reader.readBytes(bswap16(reader.readUInt16()))) : bytespan_t{};
+    msg.securityExtension = msg.header.messageFlags.hasSecureExtension ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     msg.payload = reader.remainingBytes();
     if (msg.payload && msg.payload->size() > 0) {
         msg.TLV.deserialize(msg.payload);
@@ -57,11 +49,11 @@ Payload MessageCodec::decodePayload(reader_t& reader) {
 
 
 // variant I - write TLV as part of final byte-set (when Payload is const)
-bytespan_t MessageCodec::encodePayload(Payload const& payload) {
+/*bytespan_t MessageCodec::encodePayload(Payload const& payload) {
     writer_t encodedPH = encodePayloadHeader(payload.header);
     if (!payload.payload) { payload.TLV.serialize(encodedPH); }; // if there is no payload, encode TLV itself at row
     return payload.payload ? concat({encodedPH, payload.payload}) : encodedPH.toBytes();
-}
+}*/
 
 // variant II - write TLV as payload (when not const)
 bytespan_t MessageCodec::encodePayload(Payload& payload) {
@@ -74,11 +66,12 @@ bytespan_t MessageCodec::encodePayload(Payload& payload) {
 
 //
 Message MessageCodec::buildMessage(PacketHeader const& header, Payload const& payload) {
-    if (payload.header.hasSecuredExtension) throw NotImplementedError("Security extensions not supported when encoding a payload.");
+    if (payload.header.messageFlags.hasSecureExtension)
+        { throw NotImplementedError("Security extensions not supported when encoding a payload."); }
 
     //
     Message pkt;
-    pkt.header  = header;
+    pkt.header         = header;
     pkt.decodedPayload = payload; //encodePayload(payload);
     return pkt;
 }

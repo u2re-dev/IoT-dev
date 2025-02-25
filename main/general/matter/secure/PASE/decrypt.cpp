@@ -21,7 +21,7 @@ SessionKeys& PASE::makeSessionKeys() {
 Message& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const {
     if (message.rawPayload->size() && sessionKeys.I2Rkeys) {
         writer_t nonce_w;
-        nonce_w.writeByte(message.header.securityFlags);
+        nonce_w.writeByte(reinterpret_cast<uint8_t const&>(message.header.securityFlags));
         nonce_w.writeUInt32(message.header.messageId);
         nonce_w.writeUInt64(message.header.sourceNodeId.value_or(0));
 

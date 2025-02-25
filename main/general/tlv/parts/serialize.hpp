@@ -29,7 +29,7 @@ namespace tlvcpp {
 
             //
             case e_type::UTF8_STRING:
-                if (element.payload()) 
+                if (element.payload())
                     { writer.writeBytes(element.payload(), element.size()); };
                 writer.writeByte(0); return true; // write zero byte of UTF8
 
@@ -39,7 +39,7 @@ namespace tlvcpp {
             case e_type::UNSIGNED_INTEGER:
             case e_type::BYTE_STRING:
                 if (!writeOctets(writer, element, control.octet)) return false;
-                if ( element.payload() && (control.type == e_type::BYTE_STRING || control.type == e_type::UTF8_STRING)) 
+                if ( element.payload() && (control.type == e_type::BYTE_STRING || control.type == e_type::UTF8_STRING))
                     { writer.writeBytes(element.payload(), element.size()); };
                 return true;
 

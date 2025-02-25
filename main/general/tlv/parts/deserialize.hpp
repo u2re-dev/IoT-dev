@@ -40,6 +40,7 @@ namespace tlvcpp {
             case e_type::UNSIGNED_INTEGER:
                 if (!readOctets(reader, value, control.octet)) return false;
                 if (control.type == e_type::BYTE_STRING) { // not only size, but byte array
+                    if (!reader.checkMemory(value)) return false; // broken memory...
                     value.setBytes(reinterpret_cast<const uint8_t*>(reader.allocate(value)), value);
                 }; return true; break;
 
