@@ -5,17 +5,15 @@
 #include <mbedtls/ctr_drbg.h>
 
 //
+#include <std/types.hpp>
+#include <std/hex.hpp>
+
+//
 #include "../mbedtls/ecc_point_compression.h"
 
 //
 #include "./mpi.hpp"
 #include "./misc.hpp"
-
-//
-#include "../../std/hex.hpp"
-#include "../../std/types.hpp"
-
-//
 #include "./ecp.hpp"
 
 //

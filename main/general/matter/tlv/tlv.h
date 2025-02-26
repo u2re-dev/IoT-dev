@@ -8,7 +8,7 @@
 #include <string>
 
 //
-#include "../std/types.hpp"
+#include <std/types.hpp>
 #include "./parts/enums.hpp"
 //#include "./parts/debug.hpp"
 

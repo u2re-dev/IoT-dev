@@ -7,9 +7,11 @@
 #include <mbedtls/entropy.h>
 
 //
+#include <std/types.hpp>
+#include <std/hex.hpp>
+
+//
 #include "./misc.hpp"
-#include "../../std/types.hpp"
-#include "../../std/hex.hpp"
 
 //
 class mpi_t {
