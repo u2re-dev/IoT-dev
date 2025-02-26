@@ -9,9 +9,6 @@
 #include <std/hex.hpp>
 
 //
-#include "../mbedtls/ecc_point_compression.h"
-
-//
 #include "./mpi.hpp"
 #include "./misc.hpp"
 

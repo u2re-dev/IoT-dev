@@ -11,15 +11,11 @@
 #include <iostream>
 
 //
-#include "./mbedtls/ecc_point_compression.h"
-
-#include "./raii/misc.hpp"
-#include "./raii/mpi.hpp"
-#include "./raii/ecp.hpp"
-#include "./raii/group.hpp"
-
-#include "./crypto.hpp"
-//#include "spake2p/bigint/intx.hpp"
+#include <raii/misc.hpp>
+#include <raii/mpi.hpp>
+#include <raii/ecp.hpp>
+#include <raii/group.hpp>
+#include <raii/crypto.hpp>
 
 //
 constexpr  uint8_t H_VERSION   = 0x01;
@@ -187,4 +183,5 @@ private:
     W0W1L base_ = {};
 };
 
+//
 #endif

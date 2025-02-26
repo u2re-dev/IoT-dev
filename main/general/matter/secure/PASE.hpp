@@ -16,10 +16,10 @@
 
 //
 #include "./PASE/structs.hpp"
+#include "./PASE/spake2p.hpp"
 
 //
 #include "../codec/message/Message.hpp"
-#include "../spake2p/spake2p.hpp"
 #include "../tlv/parts/enums.hpp"
 #include "../tlv/tlv_tree.h"
 #include "../tlv/tlv.h"

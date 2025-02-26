@@ -62,4 +62,6 @@ bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;
     return MessageCodec::encodeMessage(outMsg);
 }
+
+//
 #endif
