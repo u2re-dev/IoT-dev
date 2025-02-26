@@ -1,4 +1,3 @@
-
 #pragma once
 
 //
@@ -8,6 +7,8 @@
 
 //
 namespace hex {
+
+    //
     inline bytespan_t n2b(bigint_t const &x) {
         auto a = make_bytes(sizeof(x)); memcpy(a->data(), &x, sizeof(x)); return a;
     }

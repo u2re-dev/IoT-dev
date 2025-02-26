@@ -9,7 +9,7 @@
 //
 namespace tlvcpp {
     //
-    inline std::string debugOctets(tlv const& value, uint8_t const& type,  uint8_t const& base = 10) {
+    inline std::string debugOctets(tlv const& value, uint8_t const& type/*,  uint8_t const& base = 10*/) {
         uint8_t octet = type&0b00000011;
         switch (octet) { // TODO: support of more types
             case 0: return std::to_string(uint8_t(value)); break;
@@ -21,11 +21,7 @@ namespace tlvcpp {
     }
 
     //
-    inline std::string indent(uintptr_t level) {
-        return std::string(level * 2, ' ');
-    }
-
-    //
+    inline std::string indent(uintptr_t const& level) { return std::string(level * 2, ' '); }
     inline std::string controlInfo(control_t const& control) {
         std::ostringstream oss;
         oss << "type=" << std::to_string(control.type)
@@ -41,8 +37,6 @@ namespace tlvcpp {
 
         //
         std::cout << "[DEBUG] " << indent(level) << "Node: Control{" << controlInfo(control) << "}, Tag=" << static_cast<int>(element.tag()) << ", PayloadPtr=" << std::hex << static_cast<const void*>(element.payload()) << std::endl;
-
-        //
         if (control.type == e_type::END) {
             std::cout << "[DEBUG] " << indent(level) << "END tag encountered. Skipping further processing of this branch." << std::endl; return;
         }
@@ -73,7 +67,7 @@ namespace tlvcpp {
             control.type == e_type::UNSIGNED_INTEGER ||
             control.type == e_type::FLOATING_POINT ||
             control.type == e_type::BYTE_STRING)
-        {
+        {   //
             std::cout << "[DEBUG] " << indent(level+1)
                 << "Data Type (" << static_cast<int>(control.type)
                 << "). Octet: 0x" << std::hex << static_cast<int>(control.octet)
@@ -81,8 +75,7 @@ namespace tlvcpp {
 
             //
             if (element.payload()) {
-                const uint8_t* p = reinterpret_cast<const uint8_t*>(element.payload());
-                std::cout << "[DEBUG] " << indent(level+1) << "Payload Size: " << std::to_string(element.size()) << std::endl;
+                std::cout << "[DEBUG] " << indent(level+1) << "Payload Size: "   << std::to_string(element.size()) << std::endl;
                 std::cout << "[DEBUG] " << indent(level+1) << "Payload Data: 0x" << hex::b2h(bytespan_t(element.payload(), element.size())) << std::endl;
             } else {
                 std::cout << "[DEBUG] " << indent(level+1) << "Octet Value: " << debugOctets(element, control.octet) << std::endl;
@@ -95,4 +88,5 @@ namespace tlvcpp {
     }
 }
 
+//
 #endif

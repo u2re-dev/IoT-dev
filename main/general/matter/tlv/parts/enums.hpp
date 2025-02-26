@@ -39,9 +39,9 @@ namespace tlvcpp {
         BYTE_STRING      = 0b100,
         STRUCTURE        = 0b101, // itself is null
         END              = 0b110,
-        UNKNOWN          = 0b111,
-        //m_control.lab |= tag != 0 ? 0b001 : 0;
+        UNKNOWN          = 0b111
     };
 }
+
 //
 #endif

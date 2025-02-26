@@ -1,5 +1,6 @@
 #pragma once
 
+
 // C++ libs
 #include <stdexcept>
 #include <vector>
@@ -15,6 +16,7 @@
 
 //
 #include <bigint/intx.hpp>
+
 
 //
 using byte_t   = uint8_t;
@@ -57,18 +59,8 @@ public:
     }
 
     //
-    inline bytespan_t& operator=(bytes_t const& v) {
-        holder_ = v;
-        span_   = std::span<uint8_t>(v->begin(), v->end());
-        return *this;
-    }
-
-    //
-    inline bytespan_t& operator=(bytespan_t const& span) {
-        holder_ = span.holder_;
-        span_   = span.span_;
-        return *this;
-    }
+    inline bytespan_t& operator=(bytes_t const& v) { holder_ = v; span_ = std::span<uint8_t>(v->begin(), v->end()); return *this; }
+    inline bytespan_t& operator=(bytespan_t const& span) { holder_ = span.holder_; span_ = span.span_; return *this; }
 
     //
     inline byte_t& operator[](uintptr_t I) { return span_[I]; }
@@ -110,9 +102,8 @@ public:
     inline bytes_t& holder() { return holder_; };
     inline bytes_t const& holder() const { return holder_; };
 
-private:
-    bytes_t holder_;
-    std::span<uint8_t> span_;
+    //
+    private: std::span<uint8_t> span_; bytes_t holder_;
 };
 
 //
@@ -124,7 +115,7 @@ inline bytes_t concat(std::initializer_list<bytespan_t> const& arrays) {
 
 //
 class reader_t {
-public:
+    public:
     inline reader_t(reader_t const& reader) : offset(reader.offset), memory(reader.memory), capacity(reader.capacity) {}
     inline reader_t(uint8_t const* data = nullptr, size_t size = 0, bytes_t const& holder = {}) : offset(0), memory(bytespan_t(data, size, holder)), capacity(size) {}
     inline reader_t(bytes_t const& data_)    : offset(0), memory(data_), capacity(data_->size()) {}
@@ -179,10 +170,8 @@ public:
     inline operator bytespan_t() const { return bytespan_t(memory->data() + offset, capacity - offset, memory.holder()); };
     inline operator bytes_t() const { return make_bytes(memory->data() + offset, memory->data() + capacity); }
 
-private:
-    inline void checkSize(size_t const& n) const {
-        if (capacity < (offset + n)) throw "Unexpected end of data";
-    }
+    //
+    private: inline void checkSize(size_t const& n) const { if (capacity < (offset + n)) throw "Unexpected end of data"; }
 
     //
     uintptr_t offset = 0;
@@ -192,7 +181,7 @@ private:
 
 //
 class writer_t {
-public:
+    public:
     operator bytes_t&() { return data; };
     operator bytes_t const&() const { return data; };
     operator bytespan_t() const { return bytespan_t(data); };
@@ -281,7 +270,7 @@ public:
     inline writer_t& writeBytes(bytes_t const& val) { return writeBytes(val->data(), val->size()); }
     inline bytes_t const& toBytes() const { return data; }
 
-private: bytes_t data = {};
+    private: bytes_t data = {};
 };
 
 //
@@ -319,13 +308,13 @@ public:
     inline operator bytespan_t() const { return bytespan_t(data + offset, capacity - offset); }
     inline operator bytes_t() const { return toBytes(); }
 
-private: //
+    //
+    private: void ensureCapacity(size_t const& additionalBytes) {
+        if (!checkMemory()) { throw std::runtime_error("Buffer overflow: not enough space in the buffer"); }
+    }
+
+    //
     uint8_t* data = nullptr;
     uintptr_t offset = 0;
     size_t  capacity = 0;
-
-    //
-    void ensureCapacity(size_t const& additionalBytes) {
-        if (!checkMemory()) { throw std::runtime_error("Buffer overflow: not enough space in the buffer"); }
-    }
 };

@@ -154,5 +154,4 @@ namespace tlvcpp {
         // additional byte-stream or string (char-set)
         uint8_t const* m_payload = nullptr;
     };
-
 }

@@ -4,6 +4,7 @@
 //
 #include "../PASE.hpp"
 
+
 //
 uint8_t PASE::handlePASERequest(Payload const& payload) {
     if (payload.header.messageType != 0x20) return 0;
@@ -30,4 +31,6 @@ uint8_t PASE::handlePAKE3(Payload const& payload) {
     if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
     return payload.header.messageType;
 }
+
+//
 #endif

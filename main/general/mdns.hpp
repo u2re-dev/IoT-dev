@@ -23,6 +23,20 @@ inline void client_callback(AvahiClient *c, AvahiClientState state, void *userda
 
 //
 class MDNS {
+private:
+    const int port = 5540;
+    const char *subtype1 = "_S3._sub._matterc._udp";
+    const char *subtype2 = "_CM._sub._matterc._udp";
+    const char *subtype3 = "_L840._sub._matterc._udp";
+    const char *subtype4 = "_T261._sub._matterc._udp";
+    const char *service_name = "DD200C20D25AE5F7";
+    const char *service_type = "_matterc._udp";
+
+    //
+    const char *TXT_discr = "D=840";
+    const char *TXT_com = "CM=1";
+    const char *TXT_device_type = "DT=261";
+
 public:
 
     //
@@ -76,7 +90,10 @@ public:
             nullptr,  // Домен (по умолчанию "local")
             nullptr,  // Хост (по умолчанию текущий хост)
             port,
-            "D=840", "CM=1", nullptr  // TXT-записи
+
+            // TXT-records
+            TXT_discr, TXT_com, TXT_device_type,
+            nullptr
         ) < 0)
         {
             std::cerr << "Failed to add service: " << avahi_strerror(avahi_client_errno(client)) << std::endl;
@@ -89,7 +106,8 @@ public:
         //
         if (avahi_entry_group_add_service_subtype(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0,  service_name, service_type, nullptr, subtype1) < 0 ||
             avahi_entry_group_add_service_subtype(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0,  service_name, service_type, nullptr, subtype2) < 0 ||
-            avahi_entry_group_add_service_subtype(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0,  service_name, service_type, nullptr, subtype3) < 0) {
+            avahi_entry_group_add_service_subtype(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0,  service_name, service_type, nullptr, subtype3) < 0 ||
+            avahi_entry_group_add_service_subtype(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0,  service_name, service_type, nullptr, subtype4) < 0) {
 
             //
             std::cerr << "Failed to add service subtype: " << avahi_strerror(avahi_client_errno(client)) << std::endl;
@@ -103,16 +121,7 @@ public:
         return 0;
     }
 
-    //
 private:
-    const int port = 5540;
-    const char *subtype1 = "_S3._sub._matterc._udp";
-    const char *subtype2 = "_L840._sub._matterc._udp";
-    const char *subtype3 = "_CM._sub._matterc._udp";
-    const char *service_name = "DD200C20D25AE5F7";
-    const char *service_type = "_matterc._udp";
-
-    //
     AvahiClient *client = nullptr;
     AvahiThreadedPoll *poll = nullptr;
     AvahiEntryGroup *group = nullptr;

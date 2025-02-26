@@ -8,7 +8,7 @@
 //
 namespace tlvcpp {
     // ========== MATTER DESERIALIZATION ========
-    static bool deserialize_tag(reader_t& reader, tlv& value) {
+    inline bool deserialize_tag(reader_t& reader, tlv& value) {
         if (!reader.checkMemory()) return false;
         control_t control = reinterpret_cast<control_t const&>(reader.readByte());
         value = uint64_t(0); value.control(control);
@@ -51,7 +51,7 @@ namespace tlvcpp {
     }
 
     //
-    static bool deserialize_recursive(reader_t& reader, tlv_tree_node& node, intptr_t level = 0) {
+    inline bool deserialize_recursive(reader_t& reader, tlv_tree_node& node, intptr_t level = 0) {
         while (reader.checkMemory()) {
             tlv value{}; // break parsing block
             if (!deserialize_tag(reader, value)) break;

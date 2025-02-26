@@ -1,6 +1,10 @@
 #ifndef D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE
 #define D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE
 
+
+//
+#include <iostream>
+
 //
 #include <std/types.hpp>
 #include <std/hex.hpp>
@@ -8,7 +12,6 @@
 //
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
-#include <iostream>
 
 //
 #include <raii/misc.hpp>
@@ -17,38 +20,23 @@
 #include <raii/group.hpp>
 #include <raii/crypto.hpp>
 
-//
-constexpr  uint8_t H_VERSION   = 0x01;
-constexpr uint16_t SER_VERSION = 0x0001;
 
 //
+constexpr  uint8_t H_VERSION             = 0x01;
+constexpr uint16_t SER_VERSION           = 0x0001;
 constexpr size_t CRYPTO_GROUP_SIZE_BYTES = 32;
 constexpr size_t CRYPTO_W_SIZE_BYTES     = CRYPTO_GROUP_SIZE_BYTES + 8;
 constexpr size_t PBKDF2_OUTLEN           = CRYPTO_W_SIZE_BYTES     * 2;
 
-//
-struct HKDF_HMAC {
-    intx::uint128 Ke;
-    bigint_t hAY;
-    bigint_t hBX;
-};
 
 //
-struct PBKDFParameters {
-    uint16_t iterations;
-    bigint_t salt;
-};
-
-//
-struct W0W1L {
-    ecp_t L;
-    mpi_t w0;
-    mpi_t w1;
-    mpi_t rand;
-};
+struct HKDF_HMAC { intx::uint128 Ke = 0; bigint_t hAY = 0, hBX = 0; };
+struct PBKDFParameters { uint16_t iterations = 0; bigint_t salt = 0; };
+struct W0W1L { ecp_t L; mpi_t w0, w1, rand; };
 
 //
 using uncomp_t = bytespan_t;
+
 
 //
 class Spake2p {
@@ -58,6 +46,8 @@ public:
     inline Spake2p(PBKDFParameters const& pbkdfParameters, uint32_t const& pin, bigint_t const& context) { init(pbkdfParameters, pin, context); }
 
     //
+    inline ecp_t parseECP (uint8_t const* stream, size_t const& length) { return group_.make(bytespan_t(stream, length)); }
+    inline ecp_t parseECP (bytespan_t const& bytes) { return group_.make(bytes); }
     inline void init(const PBKDFParameters& pbkdfParameters, uint32_t const& pin, bigint_t const& context) {
         base_    = computeW0W1L(group_, pbkdfParameters, pin);
         context_ = context;
@@ -80,10 +70,6 @@ public:
         checkMbedtlsError(mbedtls_sha256_finish_ret(&ctx, reinterpret_cast<uint8_t*>(&out)), "Failed to compute Hash");
         return out;
     }
-
-    //
-    inline ecp_t parseECP (uint8_t const* stream, size_t const& length) { return group_.make(bytespan_t(stream, length)); }
-    inline ecp_t parseECP (bytespan_t const& bytes) { return group_.make(bytes); }
 
 
     // Client
