@@ -4,13 +4,16 @@
 #include <cstdint>
 
 //
-#include "../../backend/tuya/libtuya.hpp"
-#include "../hal/network.hpp"
-#include "../hal/rtc.hpp"
+#include <tuya/libtuya.hpp>
+#include <device/hal/network.hpp>
+#include <device/hal/rtc.hpp>
 
 //
 #ifdef USE_ARDUINO_JSON
 #include <ArduinoJson.hpp>
+#else
+#include <json/json.hpp>
+using json = nlohmann::json;
 #endif
 
 //
@@ -32,6 +35,11 @@ namespace th
         ArduinoJson::JsonDocument data;
         ArduinoJson::JsonDocument sending;
         ArduinoJson::JsonDocument current;
+#else
+        json blank = {};
+        json data = {};
+        json sending = {};
+        json current = {};
 #endif
 
         std::string tuya_local_key = "";
@@ -39,7 +47,7 @@ namespace th
         std::string device_id = "";
         std::string device_uid = "";
 
-        //
+        // TODO: replace to bigint
         uint8_t *tmp = nullptr;      // for sending local_nonce
         uint8_t *hmac = nullptr;     // length = 32 or 48
         uint8_t *hmac_key = nullptr; // length = 16
@@ -54,13 +62,13 @@ namespace th
         //
     public:
         TuyaSession()
-        {
+        {   // TODO: replace to bigint
             tmp = (uint8_t *)calloc(1, 16);
             hmac_key = (uint8_t *)calloc(1, 16);
             hmac_payload = (uint8_t *)calloc(1, 16 + 16 + 12);
 
             // TODO: auto extension when required
-            inBuffer = (uint8_t *)calloc(1, 512);
+            inBuffer  = (uint8_t *)calloc(1, 512);
             outBuffer = (uint8_t *)calloc(1, 512);
             SEQ_NO = 1;
             linked = false;
@@ -70,11 +78,17 @@ namespace th
         void connectDevice(std::string tuya_local_ip, std::string tuya_local_key, std::string device_id, std::string device_uid);
         void sendMessage(uint cmd, uint8_t *data, size_t &keyLen);
         void sendLocalNonce();
+        void handleSignal();
 
+        //
 #ifdef USE_ARDUINO_JSON
         void getDPS() { sendJSON(0x10, blank); }
         void setDPS(ArduinoJson::JsonObject const &dps);
         void sendJSON(uint cmd, ArduinoJson::JsonDocument &doc);
+#else
+        void getDPS() { sendJSON(0x10, blank); }
+        void setDPS(json const &dps);
+        void sendJSON(uint cmd, json &doc);
 #endif
 
         //
@@ -87,7 +101,6 @@ namespace th
             return false;
 #endif
         }
-        void handleSignal();
     };
 
 };

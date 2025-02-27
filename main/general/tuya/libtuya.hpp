@@ -1,8 +1,8 @@
 #pragma once
 
 //
-#include "../../std/std.hpp"
-#include "../../std/utils.hpp"
+#include <std/std.hpp>
+#include <std/utils.hpp>
 
 //
 namespace tc {

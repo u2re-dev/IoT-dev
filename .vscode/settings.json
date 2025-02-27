@@ -166,8 +166,9 @@
     "xlocnum": "cpp",
     "xloctime": "cpp",
     "future": "cpp",
-    "set": "cpp"
-  },
+    "set": "cpp",
+    "valarray": "cpp"
+},
   "C_Cpp.default.cppStandard": "gnu++23",
   "C_Cpp.default.cStandard": "gnu23",
   "C_Cpp.default.includePath": [

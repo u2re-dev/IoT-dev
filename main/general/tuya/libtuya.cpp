@@ -1,5 +1,12 @@
-#include "../../crypto/soc.hpp"
+//#include "../../crypto/soc.hpp"
 #include "./libtuya.hpp"
+
+//
+#include <esp32s3/rom/crc.h>
+#include <aes/esp_aes.h>
+#include <md/esp_md.h>
+#include <mbedtls/md.h>
+#include <mbedtls/gcm.h>
 
 //
 #define AES128 1

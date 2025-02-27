@@ -3,7 +3,6 @@
 //
 namespace th
 {
-
     //
     void TuyaSession::connectDevice(std::string tuya_local_ip, std::string tuya_local_key, std::string device_id, std::string device_uid)
     {
@@ -46,11 +45,9 @@ namespace th
     }
 
     //
-    void TuyaSession::sendLocalNonce()
-    {
+    void TuyaSession::sendLocalNonce() {
 #ifdef USE_ARDUINO
-        if (client.connected())
-        {
+        if (client.connected()) {
             size_t keyLen = 16; // say hello with local_nonce with local_key encryption and checksum
             sendMessage(0x3u, tc::encryptDataECB((uint8_t *)tuya_local_key.c_str(), (uint8_t *)tc::local_nonce, keyLen, tmp, false), keyLen);
         }
@@ -60,13 +57,22 @@ namespace th
     //
 #ifdef USE_ARDUINO_JSON
     void TuyaSession::setDPS(ArduinoJson::JsonObject const &dps)
+#else
+    void TuyaSession::setDPS(json const &dps)
+#endif
     {
         sending["protocol"] = 5;
         sending["t"] = uint64_t(getUnixTime()) * 1000ull;
 
         //
         data["dps"] = dps;
+
+        //
+#ifdef USE_ARDUINO_JSON
         sending["data"] = data.as<ArduinoJson::JsonObject>();
+#else
+        sending["data"] = data;
+#endif
 
         // protocol 3.3
         // sending["devId"] = device_id;
@@ -78,14 +84,22 @@ namespace th
         sendJSON(0xd, sending);
     }
 
-    // protocol 3.4 specific
-    void TuyaSession::sendJSON(uint cmd, ArduinoJson::JsonDocument &doc)
-    {
-        //
-        size_t jsonLen = ArduinoJson::measureJson(doc);
 
-#ifdef TUYA_35_SUPPORT
-        // protocol 3.5 specific
+#ifdef USE_ARDUINO_JSON
+    void TuyaSession::sendJSON(uint const& cmd, ArduinoJson::JsonDocument &doc)
+#else
+    void TuyaSession::sendJSON(uint const& cmd, json &doc)
+#endif
+    {   // protocol 3.4 specific
+#ifdef USE_ARDUINO_JSON
+        size_t jsonLen = ArduinoJson::measureJson(doc);
+#else
+        decltype(auto) bset = doc.dump();
+        size_t jsonLen = bset.size();
+#endif
+
+//
+#ifdef TUYA_35_SUPPORT // protocol 3.5 specific
         const size_t HEADER_OFFSET = 18;
         size_t withHeadLen = jsonLen + 15;
         size_t encryptLen = (((withHeadLen + 16) >> 4) << 4);
@@ -110,13 +124,14 @@ namespace th
 #endif
 
         //
+#ifdef USE_ARDUINO_JSON
         serializeJson(doc, payload + 15, std::min(size_t(512), jsonLen));
-        for (uint i = 0; i < 15; i++)
-        {
-            payload[i] = 0;
-        };
+#else
+        memcpy(payload + 15, bset.c_str(), std::min(size_t(512), jsonLen));
+#endif
 
         //
+        for (uint i = 0; i < 15; i++) { payload[i] = 0; };
 #ifdef TUYA_35_SUPPORT                                                   // protocol 3.5 specific
         memcpy(payload, "3.5", 3);                                       // protocol version
         memcpy(enc, std::to_string(getUnixTime() * 100ull).c_str(), 12); // generate IV
@@ -127,31 +142,15 @@ namespace th
         tc::checksumTuyaCode(outBuffer, hmac_key);
 #endif
 
-        // ===== //
-        // debug //
-        // ===== //
-
-        if (outLen > 0)
-        { // debug-log
-            DebugLog("Sent Code");
-            DebugCode(outBuffer, outLen);
-        }
-
-        if (outLen > 0)
-        {
-            waitAndSend(client, outBuffer, outLen);
-        }
+        //if (outLen > 0) { DebugLog("Sent Code"); DebugCode(outBuffer, outLen); }
+        if (outLen > 0) { waitAndSend(client, outBuffer, outLen); }
     }
-#endif
 
     //
     void TuyaSession::handleSignal()
     {
 #ifdef USE_ARDUINO
-        if (!client.connected())
-        {
-            return;
-        };
+        if (!client.connected()) return;
         waitForReceive(client, inBuffer, inLen, 100);
 #endif
 
@@ -185,7 +184,7 @@ namespace th
 
                 // protocol 3.4 link status
                 linked = true;
-            }
+            } else
             if (code == 0x8)
             {
                 const size_t data_offset = 15;
@@ -203,10 +202,11 @@ namespace th
                 //
 #ifdef USE_ARDUINO_JSON
                 deserializeJson(current, json_part, json_len);
+#else
+                current = json::parse(json_part, json_part + json_len);
 #endif
             }
         }
         inLen = 0;
     }
-
 };
