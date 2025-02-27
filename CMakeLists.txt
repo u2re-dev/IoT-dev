@@ -21,21 +21,24 @@ include(${ESP_MATTER_PATH}/generate-include-files.cmake)
 
 #
 include_directories("./include")
-include_directories("${MATTER_SDK_PATH}")
-include_directories("${MATTER_SDK_PATH}/src")
-include_directories("${MATTER_SDK_PATH}/src/app")
-include_directories("${MATTER_SDK_PATH}/src/include")
-include_directories("${MATTER_SDK_PATH}/zzz_generated/app-common")
-include_directories("${MATTER_SDK_PATH}/third_party/nlassert/repo/include")
-include_directories("${MATTER_SDK_PATH}/third_party/nlio/repo/include")
-include_directories("${MATTER_SDK_PATH}/third_party/jsoncpp/repo/include")
-include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo")
-include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_fuzzer/public")
-include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_containers/public")
-include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_assert/public")
-include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_assert_backend/public")
-include_directories("${ESP_MATTER_PATH}/components/esp_matter")
 
+#
+#include_directories("${MATTER_SDK_PATH}")
+#include_directories("${MATTER_SDK_PATH}/src")
+#include_directories("${MATTER_SDK_PATH}/src/app")
+#include_directories("${MATTER_SDK_PATH}/src/include")
+#include_directories("${MATTER_SDK_PATH}/zzz_generated/app-common")
+#include_directories("${MATTER_SDK_PATH}/third_party/nlassert/repo/include")
+#include_directories("${MATTER_SDK_PATH}/third_party/nlio/repo/include")
+#include_directories("${MATTER_SDK_PATH}/third_party/jsoncpp/repo/include")
+#include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo")
+#include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_fuzzer/public")
+#include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_containers/public")
+#include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_assert/public")
+#include_directories("${MATTER_SDK_PATH}/third_party/pigweed/repo/pw_assert_backend/public")
+#include_directories("${ESP_MATTER_PATH}/components/esp_matter")
+include_directories("${PROJECT_SOURCE_DIR}/main")
+include_directories("${PROJECT_SOURCE_DIR}/main/general")
 
 
 #
