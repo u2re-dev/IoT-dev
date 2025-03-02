@@ -9,13 +9,20 @@
 //
 namespace tlvcpp {
     //
-    inline std::string debugOctets(tlv const& value, uint8_t const& type/*,  uint8_t const& base = 10*/) {
-        uint8_t octet = type&0b00000011;
+    inline std::string value_to_string(auto const& v, size_t const& count = 2) {
+        std::ostringstream oss;
+        oss << std::hex << std::setw(count) << std::setfill('0') << (int64_t)v;
+        return "0x" + oss.str();
+    }
+
+    //
+    inline std::string debugOctets(tlv const& value, uint8_t const& octet, uint8_t const& type = 0) {
+        if (type == FLOATING_POINT && (octet&0b10) == 0) { return bool(value) ? "true" : "false"; };
         switch (octet) { // TODO: support of more types
-            case 0: return std::to_string(uint8_t(value)); break;
-            case 1: return std::to_string(uint16_t(value)); break;
-            case 2: return std::to_string(uint32_t(value)); break;
-            case 3: return std::to_string(uint64_t(value)); break;
+            case 0: return value_to_string(uint8_t(value), 2); break;
+            case 1: return value_to_string(uint16_t(value), 4); break;
+            case 2: return value_to_string(uint32_t(value), 8); break;
+            case 3: return value_to_string(uint64_t(value), 16); break;
         }
         return "";
     }
@@ -78,7 +85,7 @@ namespace tlvcpp {
                 std::cout << "[DEBUG] " << indent(level+1) << "Payload Size: "   << std::to_string(element.size()) << std::endl;
                 std::cout << "[DEBUG] " << indent(level+1) << "Payload Data: 0x" << hex::b2h(bytespan_t(element.payload(), element.size())) << std::endl;
             } else {
-                std::cout << "[DEBUG] " << indent(level+1) << "Octet Value: " << debugOctets(element, control.octet) << std::endl;
+                std::cout << "[DEBUG] " << indent(level+1) << "Octet Value: " << debugOctets(element, control.octet, control.type) << std::endl;
             }
             return;
         }
