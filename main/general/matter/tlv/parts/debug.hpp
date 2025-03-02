@@ -16,13 +16,23 @@ namespace tlvcpp {
     }
 
     //
-    inline std::string debugOctets(tlv const& value, uint8_t const& octet, uint8_t const& type = 0) {
-        if (type == FLOATING_POINT && (octet&0b10) == 0) { return "bool     m_" + std::to_string(value.tag()) + " = " + (bool(value) ? "true" : "false"); };
-        switch (octet) { // TODO: support of more types
-            case 0: return ("uint8_t  m_" + std::to_string(value.tag()) + " = " + value_to_string( uint8_t(value), 2)); break;
-            case 1: return ("uint16_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint16_t(value), 4)); break;
-            case 2: return ("uint32_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint32_t(value), 8)); break;
-            case 3: return ("uint64_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint64_t(value), 16)); break;
+    inline std::string debugOctets(tlv const& value, control_t const& ctl) {
+        if (ctl.lab) { // TODO: floating point support
+            if (ctl.type == FLOATING_POINT && (ctl.octet&0b10) == 0) { return "bool     m_" + std::to_string(value.tag()) + " = " + (bool(value) ? "true" : "false"); };
+            switch (ctl.octet) { // TODO: support of more types
+                case 0: return ("uint8_t  m_" + std::to_string(value.tag()) + " = " + value_to_string( uint8_t(value), 2)); break;
+                case 1: return ("uint16_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint16_t(value), 4)); break;
+                case 2: return ("uint32_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint32_t(value), 8)); break;
+                case 3: return ("uint64_t m_" + std::to_string(value.tag()) + " = " + value_to_string(uint64_t(value), 16)); break;
+            }
+        } else { // TODO: floating point support
+            if (ctl.type == FLOATING_POINT && (ctl.octet&0b10) == 0) { return (bool(value) ? "true" : "false"); };
+            switch (ctl.octet) { // TODO: support of more types
+                case 0: return value_to_string( uint8_t(value),  2) +  "_u8"; break;
+                case 1: return value_to_string(uint16_t(value),  4) + "_u16"; break;
+                case 2: return value_to_string(uint32_t(value),  8) + "_u32"; break;
+                case 3: return value_to_string(uint64_t(value), 16) + "_u64"; break;
+            }
         }
         return "";
     }
@@ -49,27 +59,24 @@ namespace tlvcpp {
 
         //
         if (control.type == e_type::STRUCTURE) {
-            if (control.octet == e_struct::STRUCT) {
-                std::cout << "[DEBUG] " << indent(level) << "struct m_" << std::to_string(element.tag()) << " = {" << std::endl;
-                for (const auto& child : node.children()) { debug_print_recursive(child, level + 1); }
-                std::cout << "[DEBUG] " << indent(level) << "}" << std::endl; return;
-            } else
-            if (control.octet == e_struct::PATH) {
-                std::cout << "[DEBUG] " << indent(level) << "path m_" << std::to_string(element.tag()) << " = [" << std::endl;
-                for (const auto& child : node.children()) { debug_print_recursive(child, level + 1); }
-                std::cout << "[DEBUG] " << indent(level) << "]" << std::endl; return;
-            } else
-            if (control.octet == e_struct::ARRAY) {
-                std::cout << "[DEBUG] " << indent(level) << "array m_" << std::to_string(element.tag()) << " = [" << std::endl;
-                for (const auto& child : node.children()) { debug_print_recursive(child, level + 1); }
-                std::cout << "[DEBUG] " << indent(level) << "]" << std::endl; return;
-            }
+            std::cout << "[DEBUG] " << indent(level);
+            if (control.octet == e_struct::STRUCT) { std::cout << "struct "; } else
+            if (control.octet == e_struct::ARRAY)  { std::cout << "array "; } else
+            if (control.octet == e_struct::PATH)   { std::cout << "path "; } else
+            { std::cout << "null "; }
+
+            //
+            if (control.lab) std::cout << "m_" << std::to_string(element.tag()) << " = ";
+            std::cout << (control.octet == e_struct::ARRAY ? "[" : "{") << std::endl;
+            for (const auto& child : node.children()) { debug_print_recursive(child, level + 1); }
+            std::cout << "[DEBUG] " << indent(level);
+            std::cout << (control.octet == e_struct::ARRAY ? "]" : "}") << std::endl;
             return;
         }
 
         //
         if (control.type == e_type::UTF8_STRING) {
-            std::cout << "[DEBUG] " << indent(level+1) << "string m_" << std::to_string(element.tag()) << " = ";
+            std::cout << "[DEBUG] " << indent(level) << "string m_" << std::to_string(element.tag()) << " = ";
             if (element.payload()) {
                 std::cout << "\"" << std::string(element.payload(), element.payload() + element.size()) << "\"" << std::endl;
             } else {
@@ -85,9 +92,9 @@ namespace tlvcpp {
             control.type == e_type::BYTE_STRING)
         {   //
             if (element.payload()) {
-                std::cout << "[DEBUG] " << indent(level) << "byte_t m_" + std::to_string(element.tag()) << "[" << std::to_string(element.size()) << "] = 0x" << hex::b2h(bytespan_t(element.payload(), element.size())) << "" << std::endl;
+                std::cout << "[DEBUG] " << indent(level) << "byte_t   m_" + std::to_string(element.tag()) << "[" << std::to_string(element.size()) << "] = 0x" << hex::b2h(bytespan_t(element.payload(), element.size())) << "" << std::endl;
             } else {
-                std::cout << "[DEBUG] " << indent(level) << debugOctets(element, control.octet, control.type) << std::endl;
+                std::cout << "[DEBUG] " << indent(level) << debugOctets(element, control) << std::endl;
             }
             return;
         }
