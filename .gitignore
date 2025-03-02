@@ -19,3 +19,7 @@ logs/
 private.hpp
 src/private.hpp
 data/
+spec/pdf
+spec/chunked
+./spec/pdf
+./spec/chunked
