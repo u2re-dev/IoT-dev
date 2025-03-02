@@ -55,7 +55,7 @@ namespace tlvcpp {
         while (reader.checkMemory()) {
             tlv value{}; // break parsing block
             if (!deserialize_tag(reader, value)) break;
-            if (value.type() == e_type::END) break;
+            if (value.type() == e_type::END || value.type() == e_type::UNKNOWN || value.tag() == 0xFF) break;
 
             // when memory is over, stop
             if (!reader.checkMemory()) return false;
@@ -67,6 +67,7 @@ namespace tlvcpp {
                 child.data() = value; // assign type to node itself
                 if (!deserialize_recursive(reader, child, level + 1)) return false;
             }
+            if (value.type() == e_type::END || value.type() == e_type::UNKNOWN || value.tag() == 0xFF) break;
         }
         return true;
     }
