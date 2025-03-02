@@ -7,6 +7,7 @@
 #include "./Consts.hpp"
 
 //
+#pragma pack(push, 1)
 struct msg_f {
     uint8_t hasDestNodeId: 1;
     uint8_t hasDestGroupId: 1;
@@ -14,8 +15,10 @@ struct msg_f {
     uint8_t reserved: 1;
     uint8_t version: 4;
 };
+#pragma pack(pop)
 
 //
+#pragma pack(push, 1)
 struct sec_f {
     uint8_t sessionType: 2;
     uint8_t unknown: 3;
@@ -23,8 +26,10 @@ struct sec_f {
     uint8_t isControlMessage: 1;
     uint8_t hasPrivacyEnhancements: 1;
 };
+#pragma pack(pop)
 
 //
+#pragma pack(push, 1)
 struct PacketHeader {
     msg_f    messageFlags   = {0, 0, 0, 0, HEADER_VERSION};
     uint16_t sessionId      = 0;
@@ -36,6 +41,7 @@ struct PacketHeader {
     std::optional<uint64_t> sourceNodeId;
     std::optional<uint64_t> destNodeId;
 };
+#pragma pack(pop)
 
 //
 #endif

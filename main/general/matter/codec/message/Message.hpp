@@ -9,6 +9,7 @@
 #include "./Packet.hpp"
 
 //
+#pragma pack(push, 1)
 struct Message {
     PacketHeader header = {};
     Payload decodedPayload = {};
@@ -17,6 +18,7 @@ struct Message {
     bytespan_t messageExtension = {};
     bytespan_t rawPayload = {};
 };
+#pragma pack(pop)
 
 //
 struct MessageCodec {

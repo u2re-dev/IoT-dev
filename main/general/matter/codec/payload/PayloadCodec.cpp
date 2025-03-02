@@ -13,7 +13,7 @@ writer_t MessageCodec::encodePayloadHeader(PayloadHeader& ph) {
     ph.exchangeFlags.isAckMessage = ph.ackedMessageId ? 1 : 0;
     ph.exchangeFlags.hasVendorId  = ph.vendorId != COMMON_VENDOR_ID ? 1 : 0;
     writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.exchangeFlags));
-    writer.writeUInt8(ph.protocolOpCode);
+    writer.writeUInt8(ph.protocolCode);
     writer.writeUInt16(ph.exchangeId);
     if (ph.exchangeFlags.hasVendorId) writer.writeUInt16(ph.vendorId);
     writer.writeUInt16(static_cast<uint16_t>(ph.protocolId));
@@ -25,7 +25,7 @@ writer_t MessageCodec::encodePayloadHeader(PayloadHeader& ph) {
 PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
     PayloadHeader ph = {};
     ph.exchangeFlags  = reinterpret_cast<exch_f const&>(reader.readByte());
-    ph.protocolOpCode = reader.readUInt8();
+    ph.protocolCode   = reader.readUInt8();
     ph.exchangeId     = reader.readUInt16();
     ph.vendorId       = ph.exchangeFlags.hasVendorId ? reader.readUInt16() : COMMON_VENDOR_ID;
     ph.protocolId     = reader.readUInt16();

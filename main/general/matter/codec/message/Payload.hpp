@@ -9,6 +9,7 @@
 #include "../../tlv/tlv_tree.h"
 
 //
+#pragma pack(push, 1)
 struct exch_f {
     uint8_t isInitiatorMessage: 1;
     uint8_t isAckMessage: 1;
@@ -16,24 +17,29 @@ struct exch_f {
     uint8_t hasSecureExtension: 1;
     uint8_t hasVendorId: 1;
 };
+#pragma pack(pop)
 
 //
+#pragma pack(push, 1)
 struct PayloadHeader {
     exch_f   exchangeFlags  = {0, 0, 0, 0, 0};
+    uint8_t  protocolCode   = 0;
     uint16_t exchangeId     = 0;
-    uint32_t protocolId     = 0;
+    uint16_t protocolId     = 0;
     uint32_t ackedMessageId = 0;
     uint16_t vendorId       = 0;
-     uint8_t protocolOpCode = 0;
 };
+#pragma pack(pop)
 
 //
+#pragma pack(push, 1)
 struct Payload {
     PayloadHeader header = {};
     bytespan_t securityExtension = {};
     bytespan_t payload = {};
     tlvcpp::tlv_tree_node TLV = {};
 };
+#pragma pack(pop)
 
 //
 #endif

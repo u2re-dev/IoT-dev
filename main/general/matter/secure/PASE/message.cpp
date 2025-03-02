@@ -11,13 +11,13 @@
 
 //
 uint8_t PASE::handlePayload(Payload const& payload) {
-    switch (payload.header.protocolOpCode) {
+    switch (payload.header.protocolCode) {
         case 0x20: return handlePASERequest(payload);
         case 0x22: return handlePAKE1(payload);
         case 0x24: return handlePAKE3(payload);
         default: return 0;
     }
-    return payload.header.protocolOpCode;
+    return payload.header.protocolCode;
 }
 
 //
@@ -39,7 +39,7 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
     outMsg.header.sessionId  = request.header.sessionId;
     outMsg.header.destNodeId = request.header.sourceNodeId;
-    outMsg.decodedPayload.header.protocolOpCode = messageType;
+    outMsg.decodedPayload.header.protocolCode = messageType;
     outMsg.decodedPayload.header.exchangeFlags.requiresAck = 0;
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;
@@ -54,7 +54,7 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, tlvcpp::t
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
     outMsg.header.sessionId  = request.header.sessionId;
     outMsg.header.destNodeId = request.header.sourceNodeId;
-    outMsg.decodedPayload.header.protocolOpCode = messageType;
+    outMsg.decodedPayload.header.protocolCode = messageType;
     outMsg.decodedPayload.header.exchangeFlags.requiresAck = 0;
     outMsg.decodedPayload.header.exchangeId  = request.decodedPayload.header.exchangeId;
     outMsg.decodedPayload.header.protocolId  = request.decodedPayload.header.protocolId;

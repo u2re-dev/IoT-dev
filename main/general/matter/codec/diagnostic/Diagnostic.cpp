@@ -26,7 +26,7 @@ namespace Diagnostic {
     std::string messageDiagnostics(Message const&  message, std::string const&  logContext) {
         auto& payload = message.decodedPayload;
         bool duplicate = false;
-        auto info = mapProtocolAndMessageType(payload.header.protocolId, payload.header.protocolOpCode);
+        auto info = mapProtocolAndMessageType(payload.header.protocolId, payload.header.protocolCode);
         std::vector<std::pair<std::string, std::string>> diag = {
             { "for", logContext },
             { "msgId", std::to_string(message.header.sessionId) + "/" + std::to_string(payload.header.exchangeId) + "/" + std::to_string(message.header.messageId) },
@@ -65,8 +65,8 @@ Message const& MessageCodec::debugMessage(Message const& message) {
     std::cout << "  Dest Node ID: " << (message.header.destNodeId ? as_hex(*message.header.destNodeId) : "None") << std::endl;
     std::cout << "  Dest Group ID: " << (message.header.destGroupId ? as_hex(*message.header.destGroupId) : "None") << std::endl;
     std::cout << "  Source Node ID: " << (message.header.sourceNodeId ? as_hex(*message.header.sourceNodeId) : "None") << std::endl;
-    std::cout << "  Raw Payload Size: " << message.rawPayload->size() << " bytes" << std::endl;
     std::cout << "  Message Extension Size: " << message.messageExtension->size() << " bytes" << std::endl;
+    std::cout << "  Raw Payload Size: " << message.rawPayload->size() << " bytes" << std::endl;
     return message;
 }
 
@@ -79,11 +79,11 @@ Payload const& MessageCodec::debugPayload(Payload const& payload) {
     std::cout << "    Requires Ack: " << std::to_string(payload.header.exchangeFlags.requiresAck) << std::endl;
     std::cout << "    Has Secure Extension: " << std::to_string(payload.header.exchangeFlags.hasSecureExtension) << std::endl;
     std::cout << "    Has Vendor ID: " << std::to_string(payload.header.exchangeFlags.hasVendorId) << std::endl;
+    std::cout << "  Protocol Code: " << as_hex(payload.header.protocolCode) << std::endl;
     std::cout << "  Exchange ID: " << as_hex(payload.header.exchangeId) << std::endl;
+    std::cout << "  PtVendor ID: " << as_hex(payload.header.vendorId) << std::endl;
     std::cout << "  Protocol ID: " << as_hex(payload.header.protocolId) << std::endl;
     std::cout << "  Acked Message ID: " << as_hex(payload.header.ackedMessageId) << std::endl;
-    std::cout << "  Vendor ID: " << as_hex(payload.header.vendorId) << std::endl;
-    std::cout << "  Protocol OpCode: " << as_hex(payload.header.protocolOpCode) << std::endl;
     std::cout << "  Security Extension Size: " << payload.securityExtension->size() << " bytes" << std::endl;
     std::cout << "  Payload Size: " << payload.payload->size() << " bytes" << std::endl;
     std::cout << "  Decoded Payload:" << std::endl;
