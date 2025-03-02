@@ -9,7 +9,7 @@
 #include "../../tlv/tlv_tree.h"
 
 //
-struct msg_f {
+struct exch_f {
     uint8_t isInitiatorMessage: 1;
     uint8_t isAckMessage: 1;
     uint8_t requiresAck: 1;
@@ -19,12 +19,12 @@ struct msg_f {
 
 //
 struct PayloadHeader {
-    msg_f    messageFlags   = {0, 0, 0, 0, 0};
+    exch_f   exchangeFlags  = {0, 0, 0, 0, 0};
     uint16_t exchangeId     = 0;
     uint32_t protocolId     = 0;
     uint32_t ackedMessageId = 0;
     uint16_t vendorId       = 0;
-     uint8_t messageType    = 0;
+     uint8_t protocolOpCode = 0;
 };
 
 //

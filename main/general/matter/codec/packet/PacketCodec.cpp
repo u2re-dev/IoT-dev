@@ -6,22 +6,22 @@
 
 //
 PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
-    PacketHeader header{};
+    PacketHeader header = {};
 
     //
-    header.exchangeFlags = reinterpret_cast<exch_f const&>(reader.readUInt8());
-    if (header.exchangeFlags.hasDestNodeId && header.exchangeFlags.hasDestGroupId) throw UnexpectedDataError("Header cannot contain both destination node and group.");
-    if (header.exchangeFlags.version != HEADER_VERSION) throw NotImplementedError("Unsupported header version " + std::to_string(header.exchangeFlags.version) + ".");
+    header.messageFlags = reinterpret_cast<msg_f const&>(reader.readUInt8());
+    if (header.messageFlags.hasDestNodeId && header.messageFlags.hasDestGroupId) throw UnexpectedDataError("Header cannot contain both destination node and group.");
+    if (header.messageFlags.version != HEADER_VERSION) throw NotImplementedError("Unsupported header version " + std::to_string(header.messageFlags.version) + ".");
 
     //
     header.sessionId     = reader.readUInt16();
-    header.securityFlags = reinterpret_cast<secr_f const&>(reader.readUInt8());
+    header.securityFlags = reinterpret_cast<sec_f const&>(reader.readUInt8());
     header.messageId     = reader.readUInt32();
 
     //
-    if (header.exchangeFlags.hasSourceNodeId) header.sourceNodeId = reader.readUInt64();
-    if (header.exchangeFlags.hasDestNodeId)   header.destNodeId   = reader.readUInt64();
-    if (header.exchangeFlags.hasDestGroupId)  header.destGroupId  = static_cast<uint16_t>(reader.readUInt16());
+    if (header.messageFlags.hasSourceNodeId) header.sourceNodeId = reader.readUInt64();
+    if (header.messageFlags.hasDestNodeId)   header.destNodeId   = reader.readUInt64();
+    if (header.messageFlags.hasDestGroupId)  header.destGroupId  = static_cast<uint16_t>(reader.readUInt16());
 
     //
     if (header.securityFlags.sessionType != static_cast<uint8_t>(SessionType::Group) && header.securityFlags.sessionType != static_cast<uint8_t>(SessionType::Unicast))
@@ -37,23 +37,23 @@ PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
 
 //
 writer_t MessageCodec::encodePacketHeader(PacketHeader& ph) {
-    writer_t writer;
+    writer_t writer = {};
 
     // TODO: use different principle
-    if (ph.sourceNodeId.has_value()) ph.exchangeFlags.hasSourceNodeId = 1;
-    if (ph.destNodeId.has_value())   ph.exchangeFlags.hasDestNodeId = 1;
-    if (ph.destGroupId.has_value())  ph.exchangeFlags.hasDestGroupId = 1;
+    if (ph.sourceNodeId.has_value()) ph.messageFlags.hasSourceNodeId = 1;
+    if (ph.destNodeId.has_value())   ph.messageFlags.hasDestNodeId = 1;
+    if (ph.destGroupId.has_value())  ph.messageFlags.hasDestGroupId = 1;
 
     //
-    writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.exchangeFlags));
+    writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.messageFlags));
     writer.writeUInt16(ph.sessionId);
     writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.securityFlags));
     writer.writeUInt32(ph.messageId);
 
     // TODO: use different principle
-    if (ph.exchangeFlags.hasSourceNodeId) writer.writeUInt64(ph.sourceNodeId.value_or(0));
-    if (ph.exchangeFlags.hasDestNodeId)   writer.writeUInt64(ph.destNodeId.value_or(0));
-    if (ph.exchangeFlags.hasDestGroupId)  writer.writeUInt16(ph.destGroupId.value_or(0));
+    if (ph.messageFlags.hasSourceNodeId) writer.writeUInt64(ph.sourceNodeId.value_or(0));
+    if (ph.messageFlags.hasDestNodeId)   writer.writeUInt64(ph.destNodeId.value_or(0));
+    if (ph.messageFlags.hasDestGroupId)  writer.writeUInt16(ph.destGroupId.value_or(0));
 
     //
     return writer;
@@ -63,7 +63,7 @@ writer_t MessageCodec::encodePacketHeader(PacketHeader& ph) {
 
 //
 Message MessageCodec::decodeMessage(reader_t& reader) {
-    Message dp;
+    Message dp = {};
     dp.header             = decodePacketHeader(reader);;
     dp.messageExtension   = dp.header.securityFlags.hasMessageExtensions ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     dp.rawPayload         = reader.remainingBytes();
@@ -79,11 +79,11 @@ bytespan_t MessageCodec::encodeMessage(Message& packet) {
 
 //
 Message MessageCodec::buildMessage(PacketHeader const& header, Payload const& payload) {
-    if (payload.header.messageFlags.hasSecureExtension)
+    if (payload.header.exchangeFlags.hasSecureExtension)
         { throw NotImplementedError("Security extensions not supported when encoding a payload."); }
 
     //
-    Message pkt;
+    Message pkt = {};
     pkt.header         = header;
     pkt.decodedPayload = payload;
     return pkt;

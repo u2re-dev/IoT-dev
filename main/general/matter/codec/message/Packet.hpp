@@ -7,7 +7,7 @@
 #include "./Consts.hpp"
 
 //
-struct exch_f {
+struct msg_f {
     uint8_t hasDestNodeId: 1;
     uint8_t hasDestGroupId: 1;
     uint8_t hasSourceNodeId: 1;
@@ -16,7 +16,7 @@ struct exch_f {
 };
 
 //
-struct secr_f {
+struct sec_f {
     uint8_t sessionType: 2;
     uint8_t unknown: 3;
     uint8_t hasMessageExtensions: 1;
@@ -26,10 +26,10 @@ struct secr_f {
 
 //
 struct PacketHeader {
-    uint32_t messageId      = 0;
+    msg_f    messageFlags   = {0, 0, 0, 0, HEADER_VERSION};
     uint16_t sessionId      = 0;
-    secr_f   securityFlags  = {0, 0, 0, 0, 0};
-    exch_f   exchangeFlags  = {0, 0, 0, 0, HEADER_VERSION};
+    sec_f    securityFlags  = {0, 0, 0, 0, 0};
+    uint32_t messageId      = 0;
 
     //
     std::optional<uint16_t> destGroupId;

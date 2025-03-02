@@ -8,7 +8,7 @@
 
 //
 bytespan_t PASE::makePASEResponse(Message const& request) {
-    if (request.decodedPayload.header.messageType != 0x20) return {};
+    if (request.decodedPayload.header.protocolOpCode != 0x20) return {};
 
     // TODO: fix memory lost
     bigint_t rand = mpi_t().random();
@@ -32,7 +32,7 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
 
 //
 bytespan_t PASE::makePAKE2(Message const& request) {
-    if (request.decodedPayload.header.messageType != 0x22) return {};
+    if (request.decodedPayload.header.protocolOpCode != 0x22) return {};
 
     //
     auto resp = tlvcpp::tlv_tree_node{};

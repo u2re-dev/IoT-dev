@@ -10,26 +10,26 @@
 //
 writer_t MessageCodec::encodePayloadHeader(PayloadHeader& ph) {
     writer_t writer = {};
-    ph.messageFlags.isAckMessage = ph.ackedMessageId ? 1 : 0;
-    ph.messageFlags.hasVendorId  = ph.vendorId != COMMON_VENDOR_ID ? 1 : 0;
-    writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.messageFlags));
-    writer.writeUInt8(ph.messageType);
+    ph.exchangeFlags.isAckMessage = ph.ackedMessageId ? 1 : 0;
+    ph.exchangeFlags.hasVendorId  = ph.vendorId != COMMON_VENDOR_ID ? 1 : 0;
+    writer.writeUInt8(reinterpret_cast<uint8_t const&>(ph.exchangeFlags));
+    writer.writeUInt8(ph.protocolOpCode);
     writer.writeUInt16(ph.exchangeId);
-    if (ph.messageFlags.hasVendorId) writer.writeUInt16(ph.vendorId);
+    if (ph.exchangeFlags.hasVendorId) writer.writeUInt16(ph.vendorId);
     writer.writeUInt16(static_cast<uint16_t>(ph.protocolId));
-    if (ph.messageFlags.isAckMessage) writer.writeUInt32(ph.ackedMessageId);
+    if (ph.exchangeFlags.isAckMessage) writer.writeUInt32(ph.ackedMessageId);
     return writer;
 }
 
 //
 PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
     PayloadHeader ph = {};
-    ph.messageFlags   = reinterpret_cast<msg_f const&>(reader.readByte());
-    ph.messageType    = reader.readUInt8();
+    ph.exchangeFlags  = reinterpret_cast<exch_f const&>(reader.readByte());
+    ph.protocolOpCode = reader.readUInt8();
     ph.exchangeId     = reader.readUInt16();
-    ph.vendorId       = ph.messageFlags.hasVendorId ? reader.readUInt16() : COMMON_VENDOR_ID;
+    ph.vendorId       = ph.exchangeFlags.hasVendorId ? reader.readUInt16() : COMMON_VENDOR_ID;
     ph.protocolId     = reader.readUInt16();
-    ph.ackedMessageId = ph.messageFlags.isAckMessage ? reader.readUInt32() : 0;
+    ph.ackedMessageId = ph.exchangeFlags.isAckMessage ? reader.readUInt32() : 0;
     return ph;
 }
 
@@ -39,7 +39,7 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 Payload MessageCodec::decodePayload(reader_t& reader) {
     Payload msg = {};
     msg.header = decodePayloadHeader(reader);
-    msg.securityExtension = msg.header.messageFlags.hasSecureExtension ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
+    msg.securityExtension = msg.header.exchangeFlags.hasSecureExtension ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     msg.payload = reader.remainingBytes();
     if (msg.payload && msg.payload->size() > 0) {
         msg.TLV.deserialize(msg.payload);
