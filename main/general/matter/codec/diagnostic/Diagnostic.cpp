@@ -40,28 +40,32 @@ namespace Diagnostic {
     }
 };
 
-
-
+//
+inline std::string as_hex(auto const& v) {
+    std::ostringstream oss;
+    oss << std::hex << std::setw(sizeof(v) * 2) << std::setfill('0') << (int64_t)v;
+    return "0x" + oss.str();
+}
 
 //
 Message const& MessageCodec::debugMessage(Message const& message) {
     std::cout << "Message Debug:" << std::endl;
-    std::cout << "  Message ID: " << message.header.messageId << std::endl;
-    std::cout << "  Session ID: " << message.header.sessionId << std::endl;
+    std::cout << "  Message ID: " << as_hex(message.header.messageId) << std::endl;
+    std::cout << "  Session ID: " << as_hex(message.header.sessionId) << std::endl;
     std::cout << "  Security Flags:" << std::endl;
-    std::cout << "    Session Type: " << static_cast<int>(message.header.securityFlags.sessionType) << std::endl;
-    std::cout << "    Unknown: " << static_cast<int>(message.header.securityFlags.unknown) << std::endl;
-    std::cout << "    Has Message Extensions: " << static_cast<int>(message.header.securityFlags.hasMessageExtensions) << std::endl;
-    std::cout << "    Is Control Message: " << static_cast<int>(message.header.securityFlags.isControlMessage) << std::endl;
-    std::cout << "    Has Privacy Enhancements: " << static_cast<int>(message.header.securityFlags.hasPrivacyEnhancements) << std::endl;
+    std::cout << "    Session Type: " << std::to_string(message.header.securityFlags.sessionType) << std::endl;
+    std::cout << "    Unknown: " << std::to_string(message.header.securityFlags.unknown) << std::endl;
+    std::cout << "    Has Message Extensions: " << std::to_string(message.header.securityFlags.hasMessageExtensions) << std::endl;
+    std::cout << "    Is Control Message: " << std::to_string(message.header.securityFlags.isControlMessage) << std::endl;
+    std::cout << "    Has Privacy Enhancements: " << std::to_string(message.header.securityFlags.hasPrivacyEnhancements) << std::endl;
     std::cout << "  Message Flags:" << std::endl;
-    std::cout << "    Has Dest Node ID: " << static_cast<int>(message.header.messageFlags.hasDestNodeId) << std::endl;
-    std::cout << "    Has Dest Group ID: " << static_cast<int>(message.header.messageFlags.hasDestGroupId) << std::endl;
-    std::cout << "    Has Source Node ID: " << static_cast<int>(message.header.messageFlags.hasSourceNodeId) << std::endl;
-    std::cout << "    Version: " << static_cast<int>(message.header.messageFlags.version) << std::endl;
-    std::cout << "  Dest Node ID: " << (message.header.destNodeId ? std::to_string(*message.header.destNodeId) : "None") << std::endl;
-    std::cout << "  Dest Group ID: " << (message.header.destGroupId ? std::to_string(*message.header.destGroupId) : "None") << std::endl;
-    std::cout << "  Source Node ID: " << (message.header.sourceNodeId ? std::to_string(*message.header.sourceNodeId) : "None") << std::endl;
+    std::cout << "    Has Dest Node ID: " << std::to_string(message.header.messageFlags.hasDestNodeId) << std::endl;
+    std::cout << "    Has Dest Group ID: " << std::to_string(message.header.messageFlags.hasDestGroupId) << std::endl;
+    std::cout << "    Has Source Node ID: " << std::to_string(message.header.messageFlags.hasSourceNodeId) << std::endl;
+    std::cout << "    Version: " << std::to_string(message.header.messageFlags.version) << std::endl;
+    std::cout << "  Dest Node ID: " << (message.header.destNodeId ? as_hex(*message.header.destNodeId) : "None") << std::endl;
+    std::cout << "  Dest Group ID: " << (message.header.destGroupId ? as_hex(*message.header.destGroupId) : "None") << std::endl;
+    std::cout << "  Source Node ID: " << (message.header.sourceNodeId ? as_hex(*message.header.sourceNodeId) : "None") << std::endl;
     std::cout << "  Raw Payload Size: " << message.rawPayload->size() << " bytes" << std::endl;
     std::cout << "  Message Extension Size: " << message.messageExtension->size() << " bytes" << std::endl;
     return message;
@@ -76,10 +80,11 @@ Payload const& MessageCodec::debugPayload(Payload const& payload) {
     std::cout << "    Requires Ack: " << std::to_string(payload.header.exchangeFlags.requiresAck) << std::endl;
     std::cout << "    Has Secure Extension: " << std::to_string(payload.header.exchangeFlags.hasSecureExtension) << std::endl;
     std::cout << "    Has Vendor ID: " << std::to_string(payload.header.exchangeFlags.hasVendorId) << std::endl;
-    std::cout << "  Exchange ID: " << std::to_string(payload.header.exchangeId) << std::endl;
-    std::cout << "  Protocol OpCode: " << std::to_string(payload.header.protocolOpCode) << std::endl;
-    std::cout << "  Acked Message ID: " << std::to_string(payload.header.ackedMessageId) << std::endl;
-    std::cout << "  Vendor ID: " << std::to_string(payload.header.vendorId) << std::endl;
+    std::cout << "  Exchange ID: " << as_hex(payload.header.exchangeId) << std::endl;
+    std::cout << "  Protocol ID: " << as_hex(payload.header.protocolId) << std::endl;
+    std::cout << "  Acked Message ID: " << as_hex(payload.header.ackedMessageId) << std::endl;
+    std::cout << "  Vendor ID: " << as_hex(payload.header.vendorId) << std::endl;
+    std::cout << "  Protocol OpCode: " << as_hex(payload.header.protocolOpCode) << std::endl;
     std::cout << "  Payload Size: " << payload.payload->size() << " bytes" << std::endl;
     std::cout << "  Security Extension Size: " << payload.securityExtension->size() << " bytes" << std::endl;
     return payload;
