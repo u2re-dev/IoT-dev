@@ -2,6 +2,8 @@
 #include "../message/Message.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
+
+
 //
 PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
     PacketHeader header{};
@@ -13,7 +15,7 @@ PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
 
     //
     header.sessionId     = reader.readUInt16();
-    header.securityFlags = reinterpret_cast<sec_f const&>(reader.readUInt8());
+    header.securityFlags = reinterpret_cast<secr_f const&>(reader.readUInt8());
     header.messageId     = reader.readUInt32();
 
     //
@@ -73,4 +75,16 @@ bytespan_t MessageCodec::encodeMessage(Message& packet) {
     if (packet.messageExtension && (packet.messageExtension->size() || packet.header.securityFlags.hasMessageExtensions)) throw NotImplementedError("Message extensions not supported when encoding a packet.");
     if (!packet.rawPayload) packet.rawPayload = encodePayload(packet.decodedPayload);
     return concat({encodePacketHeader(packet.header), packet.rawPayload});
+}
+
+//
+Message MessageCodec::buildMessage(PacketHeader const& header, Payload const& payload) {
+    if (payload.header.messageFlags.hasSecureExtension)
+        { throw NotImplementedError("Security extensions not supported when encoding a payload."); }
+
+    //
+    Message pkt;
+    pkt.header         = header;
+    pkt.decodedPayload = payload;
+    return pkt;
 }

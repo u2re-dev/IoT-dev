@@ -179,34 +179,29 @@ class reader_t {
     size_t capacity = 0;
 };
 
+
+
 //
 class writer_t {
-    public:
+public:
     operator bytes_t&() { return data; };
     operator bytes_t const&() const { return data; };
-    operator bytespan_t() const { return bytespan_t(data); };
+    operator bytespan_t() const { return bytespan_t(data, shift); };
 
     //
     inline writer_t() : data(make_bytes()) {}
     inline writer_t(bytes_t const& exists) : data(exists) {}
     inline writer_t(uint8_t* mem, size_t const& length) : data(make_bytes(mem, mem + length)) {}
+    inline writer_t(writer_t const& w) : data(w.data), shift(w.shift + w.data->size()) {}
 
     //
-    inline uintptr_t offset() const {
-        return data->size();
-    }
-
-    //
-    inline writer_t& writeByte(uint8_t const& value) {
-        data->push_back(value);
-        return *this;
-    }
-
-    //
-    inline writer_t& writeUInt8(uint8_t const& value) {
-        data->push_back(value);
-        return *this;
-    }
+    inline uintptr_t offset() const { return data->size(); }
+    inline writer_t& writeByte (uint8_t const& value) { data->push_back(value); return *this; }
+    inline writer_t& writeUInt8(uint8_t const& value) { data->push_back(value); return *this; }
+    inline writer_t& writeBytes(bytespan_t const& val) { return writeBytes(val->data(), val->size()); }
+    inline writer_t& writeBytes(bytes_t const& val) { return writeBytes(val->data(), val->size()); }
+    inline bytespan_t toBytes() const { return bytespan_t(data, shift); }
+    //inline bytespan_t const& toBytes() const { return bytespan_t(data, shift); }
 
     //
     inline writer_t& writeUInt16(uint16_t const& value) {
@@ -216,6 +211,7 @@ class writer_t {
         return *this;
     }
 
+    //
     inline writer_t& writeUInt32(uint32_t const& value) {
         data->reserve(4);
         for (size_t i = 0; i < 4; ++i) {
@@ -224,6 +220,7 @@ class writer_t {
         return *this;
     }
 
+    //
     inline writer_t& writeUInt64(uint64_t const& value) {
         data->reserve(8);
         for (size_t i = 0; i < 8; ++i) {
@@ -232,6 +229,7 @@ class writer_t {
         return *this;
     }
 
+    //
     inline writer_t& writeUInt128(intx::uint128 const& val) {
         data->reserve(16);
         for (size_t i = 0; i < 16; ++i) {
@@ -240,6 +238,7 @@ class writer_t {
         return *this;
     }
 
+    //
     inline writer_t& writeBigIntBE(bigint_t const& val) {
         data->reserve(32);
         for (size_t i = 0; i < 32; ++i) {
@@ -248,6 +247,7 @@ class writer_t {
         return *this;
     }
 
+    //
     inline writer_t& writeBigInt(bigint_t const& val) {
         data->reserve(32);
         for (size_t i = 0; i < 32; ++i) {
@@ -266,11 +266,9 @@ class writer_t {
     }
 
     //
-    inline writer_t& writeBytes(bytespan_t const& val) { return writeBytes(val->data(), val->size()); }
-    inline writer_t& writeBytes(bytes_t const& val) { return writeBytes(val->data(), val->size()); }
-    inline bytes_t const& toBytes() const { return data; }
-
-    private: bytes_t data = {};
+    private:
+        bytes_t data = {};
+        uintptr_t shift = 0;
 };
 
 //
@@ -309,7 +307,7 @@ public:
     inline operator bytes_t() const { return toBytes(); }
 
     //
-    private: void ensureCapacity(size_t const& additionalBytes) {
+    private: inline void ensureCapacity(size_t const& additionalBytes) {
         if (!checkMemory()) { throw std::runtime_error("Buffer overflow: not enough space in the buffer"); }
     }
 
