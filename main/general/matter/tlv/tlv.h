@@ -48,7 +48,7 @@ namespace tlvcpp {
         explicit tlv(std::string const& str, tag_t const& tag = 0) : m_control({ 0b00, e_type::BYTE_STRING, 0b00 }), m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())) { TAGFIX; }
 
         //
-        tlv(const tlv& other);
+        tlv(tlv const& other);
         tlv(tlv&& other) noexcept;
         ~tlv();
 
