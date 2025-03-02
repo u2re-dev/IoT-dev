@@ -50,6 +50,10 @@ public:
     SessionKeys& makeSessionKeys();
 
     //
+    tlvcpp::tlv_tree_node makeByPath(tlvcpp::tlv_tree_node const& path);
+    bytespan_t makeReportDataMessage(Message const& request);
+
+    //
 private: //
     HKDF_HMAC hkdf = {};
     PBKDFParameters params = {};

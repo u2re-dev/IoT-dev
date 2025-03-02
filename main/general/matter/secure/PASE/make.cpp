@@ -5,6 +5,38 @@
 #include "../PASE.hpp"
 
 
+//
+tlvcpp::tlv_tree_node PASE::makeByPath(tlvcpp::tlv_tree_node const& path) {
+    auto attrib  = tlvcpp::tlv_tree_node(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0});
+    auto& status = attrib.add_child(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 1}, 0);
+    auto& data   = attrib.add_child(tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 1}, 1);
+    data.add_child(path.data().control(), 1);
+    if (uint32_t(path.find(4)->data()) == 4) { data.add_child(true, 2); }; // TODO: use data per path's
+
+    // TODO: status
+    //status.add_child(path.data().control(), 1);
+
+    return attrib;
+}
+
+//
+bytespan_t PASE::makeReportDataMessage(Message const& request) {
+    auto resp   = tlvcpp::tlv_tree_node{};
+    resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
+
+    //
+    auto attrib = resp.add_child(tlvcpp::control_t{2, tlvcpp::e_type::STRUCTURE, 1}, 1);
+    for (auto& path : request.decodedPayload.TLV.find(0)->children()) {
+        attrib.add_child(makeByPath(path));
+    }
+
+    //
+    Message outMsg = makeMessage(request, 0x05, resp);
+    return MessageCodec::encodeMessage(outMsg);
+}
+
+
+
 
 //
 bytespan_t PASE::makePASEResponse(Message const& request) {
@@ -37,7 +69,7 @@ bytespan_t PASE::makePAKE2(Message const& request) {
     //
     auto resp = tlvcpp::tlv_tree_node{};
     resp.data() = tlvcpp::control_t{1, tlvcpp::e_type::STRUCTURE, 0};
-    resp.add_child(spake->computeY(), 01);  // works only when Y stored with `spake`
+    resp.add_child(spake->computeY().toBytes(), 01);  // works only when Y stored with `spake`
     resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
     //

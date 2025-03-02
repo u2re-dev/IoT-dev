@@ -9,8 +9,9 @@
 
 //
 #include <std/types.hpp>
+
+//
 #include "./parts/enums.hpp"
-//#include "./parts/debug.hpp"
 
 //
 #define TAGFIX m_control.lab|=m_tag!=0?0b001:0
@@ -43,6 +44,7 @@ namespace tlvcpp {
         tlv(bytespan_t    const&    bn, tag_t const& tag = 0) : m_control({0b00, e_type::BYTE_STRING     , 0b000}), m_tag(tag), m_size(bn->size()), m_payload(bn->data()) { TAGFIX; }
 
         //
+        explicit tlv(bool const& value, tag_t const& tag = 0) : m_control({0b00, e_type::FLOATING_POINT  , 0b000}), m_tag(tag), m_b  (value) { TAGFIX; }
         explicit tlv(size_t size, const uint8_t* payload, tag_t const& tag = 0) : m_control({ 0b00, e_type::BYTE_STRING, 0b00 }), m_tag(tag), m_size(size), m_payload(payload) { TAGFIX; }
         explicit tlv(uint8_t const* str, tag_t const& tag = 0) : m_control({ 0b00, e_type::UTF8_STRING, 0b00 }), m_tag(tag), m_size(std::strlen(reinterpret_cast<char const*>(str))), m_payload(str) { TAGFIX; }
         explicit tlv(std::string const& str, tag_t const& tag = 0) : m_control({ 0b00, e_type::BYTE_STRING, 0b00 }), m_tag(tag), m_size(str.size()), m_payload(reinterpret_cast<const uint8_t*>(str.c_str())) { TAGFIX; }
