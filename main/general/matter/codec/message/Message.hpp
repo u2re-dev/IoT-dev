@@ -23,13 +23,15 @@ struct Message {
 //
 struct MessageCodec {
     static bytespan_t encodeMessage(Message& message);
+    static bytespan_t encodePayload(Payload& payload);
+
+    //
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
     static Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& set);
     static Message decodeMessageF(reader_t packet) { return decodeMessage(packet); };
     static Message decodeMessage(reader_t& packet);
 
     //
-    static bytespan_t encodePayload(Payload& payload);
     static Payload decodePayloadF(reader_t data) { return decodePayload(data); };
     static Payload decodePayload(reader_t& data);
 
