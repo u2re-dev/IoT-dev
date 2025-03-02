@@ -5,24 +5,18 @@
 #include <sstream>
 
 //
+#pragma pack(push, 1)
 struct NotImplementedError : public std::logic_error   { using std::logic_error::logic_error; };
 struct UnexpectedDataError : public std::runtime_error { using std::runtime_error::runtime_error; };
+#pragma pack(pop)
 
 //
 namespace Diagnostic {
+#pragma pack(push, 1)
     struct MsgTypeInfo { std::string type = "", forType = ""; };
-    struct SecureMessageType {
-        static inline std::string toString(uint8_t msgType) {
-            return std::to_string(msgType) + " (Has secure)";
-        }
-    };
-
-    //
-    struct MessageType {
-        static inline std::string toString(uint8_t msgType) {
-            return std::to_string(msgType) + " (No secure)";
-        }
-    };
+    struct SecureMessageType { static inline std::string toString(uint8_t msgType) { return std::to_string(msgType) + " (Has secure)"; } };
+    struct MessageType { static inline std::string toString(uint8_t msgType) { return std::to_string(msgType) + " (No secure)"; } };
+#pragma pack(pop)
 
     //
     inline MsgTypeInfo mapProtocolAndMessageType(uint32_t const& protocolId, uint8_t const& messageType);
