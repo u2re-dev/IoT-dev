@@ -35,6 +35,13 @@ PayloadHeader MessageCodec::decodePayloadHeader(reader_t& reader) {
 
 
 
+// variant II - write TLV as payload (when not const)
+bytespan_t MessageCodec::encodePayload(Payload& payload) {
+    writer_t encodedPH = encodePayloadHeader(payload.header);
+    if (!payload.payload) { writer_t tlv = encodedPH; payload.TLV.serialize(tlv); payload.payload = tlv.toBytes(); return encodedPH.toBytes(); }
+    return concat({encodedPH, payload.payload});
+}
+
 //
 Payload MessageCodec::decodePayload(reader_t& reader) {
     Payload msg = {};
@@ -45,11 +52,4 @@ Payload MessageCodec::decodePayload(reader_t& reader) {
         msg.TLV.deserialize(msg.payload);
     }
     return msg;
-}
-
-// variant II - write TLV as payload (when not const)
-bytespan_t MessageCodec::encodePayload(Payload& payload) {
-    writer_t encodedPH = encodePayloadHeader(payload.header);
-    if (!payload.payload) { writer_t tlv = encodedPH; payload.TLV.serialize(tlv); payload.payload = tlv.toBytes(); return encodedPH.toBytes(); }
-    return concat({encodedPH, payload.payload});
 }

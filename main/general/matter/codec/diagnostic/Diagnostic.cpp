@@ -6,8 +6,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
-
-
+#include <std/hex.hpp>
 
 //
 namespace Diagnostic {
@@ -85,7 +84,9 @@ Payload const& MessageCodec::debugPayload(Payload const& payload) {
     std::cout << "  Acked Message ID: " << as_hex(payload.header.ackedMessageId) << std::endl;
     std::cout << "  Vendor ID: " << as_hex(payload.header.vendorId) << std::endl;
     std::cout << "  Protocol OpCode: " << as_hex(payload.header.protocolOpCode) << std::endl;
-    std::cout << "  Payload Size: " << payload.payload->size() << " bytes" << std::endl;
     std::cout << "  Security Extension Size: " << payload.securityExtension->size() << " bytes" << std::endl;
+    std::cout << "  Payload Size: " << payload.payload->size() << " bytes" << std::endl;
+    std::cout << "  Decoded Payload:" << std::endl;
+    std::cout << "  " << hex::b2h(payload.payload) << std::endl;
     return payload;
 }

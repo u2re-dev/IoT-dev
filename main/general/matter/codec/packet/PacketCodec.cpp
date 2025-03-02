@@ -64,7 +64,7 @@ writer_t MessageCodec::encodePacketHeader(PacketHeader& ph) {
 //
 Message MessageCodec::decodeMessage(reader_t& reader) {
     Message dp = {};
-    dp.header             = decodePacketHeader(reader);;
+    dp.header             = decodePacketHeader(reader);
     dp.messageExtension   = dp.header.securityFlags.hasMessageExtensions ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
     dp.rawPayload         = reader.remainingBytes();
     return dp;

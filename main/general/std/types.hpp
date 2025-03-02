@@ -42,10 +42,10 @@ public:
     }
 
     //
-    inline bytespan_t(bytes_t    const& bptr, uintptr_t const& offset = 0) : holder_(bptr)         { span_ = std::span<uint8_t>(bptr->begin() + offset, bptr->end()); }
-    inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_) { span_ = std::span<uint8_t>(span->begin() + offset, span->end()); }
+    inline bytespan_t(bytes_t    const& bptr, uintptr_t const& offset = 0) : holder_(bptr)        , span_(std::span<uint8_t>(bptr->begin() + offset, bptr->end())) {}
+    inline bytespan_t(bytespan_t const& span, uintptr_t const& offset = 0) : holder_(span.holder_), span_(span.span_) {}
     inline bytespan_t(uint8_t const* ptr, uintptr_t const& size = 0,  bytes_t const& holder = {}) : holder_(holder) {
-        span_ = std::span<uint8_t>(const_cast<uint8_t*>(ptr), size);
+        span_ = std::span<uint8_t>(const_cast<uint8_t*>(ptr), const_cast<uint8_t*>(ptr) + size);
     }
 
     //

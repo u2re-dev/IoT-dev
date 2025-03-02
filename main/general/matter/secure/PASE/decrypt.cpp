@@ -18,7 +18,7 @@ SessionKeys& PASE::makeSessionKeys() {
 }
 
 //
-Message& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const {
+bytespan_t& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const {
     if (message.rawPayload->size() && sessionKeys.I2Rkeys) {
         writer_t nonce_w;
         nonce_w.writeByte(reinterpret_cast<uint8_t const&>(message.header.securityFlags));
@@ -42,12 +42,9 @@ Message& PASE::decryptPayload(Message& message,  bytespan_t const& bytes) const 
             tag->data(), tag->size()
         ), "Decryption Failed");
         mbedtls_ccm_free(&aes);
-
-        //
-        std::cout << "Decoded Payload:" << std::endl;
-        std::cout << hex::b2h(message.rawPayload) << std::endl;
+        return message.rawPayload;
     };
-    return message;
+    return message.rawPayload;
 }
 
 //
