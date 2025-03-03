@@ -3,23 +3,15 @@
 //
 namespace th {
     //
-    uint8_t* TuyaSession::encodeMessage(uint cmd, uint8_t *data, size_t &keyLen) {
-        outLen = tc::encodeTuyaCode(data, keyLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
-        if (outLen > 0)
-        { // debug-log
-            DebugLog("Sent Code");
-            DebugCode(outBuffer, outLen);
-        }
-
-        // TODO: use bytespan_t
-        return outLen > 0 ? outBuffer : nullptr;
+    bytespan_t TuyaSession::encodeMessage(uint const& cmd, bytespan_t const& data) {
+        return tc::encodeTuyaCode(data, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
     }
 
     //
 #ifdef USE_ARDUINO_JSON
-    uint8_t*  TuyaSession::encodeJSON(uint const& cmd, ArduinoJson::JsonDocument &doc)
+    bytespan_t TuyaSession::encodeJSON(uint const& cmd, ArduinoJson::JsonDocument &doc)
 #else
-    uint8_t*  TuyaSession::encodeJSON(uint const& cmd, json &doc)
+    bytespan_t TuyaSession::encodeJSON(uint const& cmd, json &doc)
 #endif
     {   // protocol 3.4 specific
 #ifdef USE_ARDUINO_JSON
@@ -43,14 +35,14 @@ namespace th {
 #endif
 
         //
-        outLen = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
+        auto out = tc::prepareTuyaCode(prepareLen, tc::TuyaCmd{SEQ_NO++, cmd, hmac_key}, outBuffer);
 
         //
 #ifdef TUYA_35_SUPPORT
-        uint8_t *enc = outBuffer + HEADER_OFFSET;
+        uint8_t *enc = outBuffer->data() + HEADER_OFFSET;
         uint8_t *payload = enc + 12;
 #else
-        uint8_t *payload = outBuffer + HEADER_OFFSET;
+        uint8_t *payload = outBuffer->data() + HEADER_OFFSET;
         uint8_t *enc = payload; // 'payload + 15' if tuya protocol 3.3
 #endif
 
@@ -73,20 +65,18 @@ namespace th {
         tc::checksumTuyaCode(outBuffer, hmac_key);
 #endif
 
-        // TODO: use bytespan_t
-        return outLen > 0 ? outBuffer : nullptr;
+        //
+        return out;
     }
 
-
     // when `code == 0x8`
-    uint8_t* TuyaSession::handleJson(uint8_t *payload) {
-        const size_t data_offset = 15;
-        size_t json_len = payloadLength;
+    void TuyaSession::handleJson(bytespan_t const& payload) {
+        const size_t offset = 15;
+        size_t json_len = payload->size();
 
         // protocol 3.4 specific
-        tc::decryptDataECB(hmac_key, payload, json_len, payload);
-        uint8_t *json_part = payload + data_offset;
-        json_len -= data_offset;
+        auto jsonData = bytespan_t(payload, offset);
+        tc::decryptDataECB(hmac_key, payload);
 
         // protocol 3.3 specific
         // tc::decryptDataECB(hmac_key, payload + data_offset, json_len - data_offset, payload + data_offset);
@@ -94,9 +84,9 @@ namespace th {
 
         //
     #ifdef USE_ARDUINO_JSON
-        deserializeJson(current, json_part, json_len);
+        deserializeJson(current, jsonData->data(), json_len);
     #else
-        current = json::parse(json_part, json_part + json_len);
+        current = json::parse(jsonData->data(), jsonData->data() + json_len);
     #endif
     }
 }

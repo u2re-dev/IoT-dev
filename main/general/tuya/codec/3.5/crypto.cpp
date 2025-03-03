@@ -1,12 +1,13 @@
 #include "../libtuya.hpp"
 
 //
-#define AES128 1
-#define AES_BLOCKLEN 16
-#include <mbedtls/gcm.h>
+//#define AES128 1
+//#define AES_BLOCKLEN 16
+//#include <mbedtls/gcm.h>
 
 //
 namespace tc {
+/*
     // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
     uint8_t* decryptDataGCM(uint8_t* key, uint8_t* data, size_t& length,  uint8_t* output) {
         if (!output) { output = data + 12; };
@@ -44,4 +45,5 @@ namespace tc {
         mbedtls_gcm_free(&aes);
         return output;
     }
+*/
 }

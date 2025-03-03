@@ -9,22 +9,40 @@
 namespace tc {
 
     //
-    uint8_t* encryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output, const bool usePadding) {
+    bigint_t encryptDataECB(bigint_t const& key,  bigint_t const& data) {
+        esp_aes_context ctx;
+        esp_aes_init(&ctx);
+        esp_aes_setkey(&ctx, key, 128);
+        bigint_t output = data; esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, &output, &output);
+        esp_aes_free(&ctx);
+        return output;
+    }
+
+    //
+    bigint_t decryptDataECB(bigint_t const& key,  bigint_t const& data) {
+        esp_aes_context ctx;
+        esp_aes_init(&ctx);
+        esp_aes_setkey(&ctx, key, 128);
+        bigint_t output = data; esp_aes_crypt_ecb(&ctx, ESP_AES_DECRYPT, &output, &output);
+        esp_aes_free(&ctx);
+        return output;
+    }
+
+
+
+    //
+    bytespan_t encryptDataECB(bigint_t const& key,  bytespan_t const& data, const bool usePadding) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
 
-        // prepare output to encrypt
-        if (output) memcpy(output, data, length);
-        output = output ? output : data;
-
         // add post-padding
-        const auto padded = ((length + 16 /*- 1*/) >> 4) << 4;
+        const auto padded = ((length + 16 /*- 1*/) >> 4) << 4; auto output = bytespan_t(data->data(), padded);
         if (usePadding) { for (uint I=length;I<padded;I++) { output[I] = (padded - length); }}
 
         //
         for (uint I=0;I<(usePadding ? padded : length);I+=16) {
-            esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, output+I, output+I);
+            esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, output->data()+I, output->data()+I);
         }
 
         // add padding value
@@ -36,15 +54,15 @@ namespace tc {
     }
 
     //
-    uint8_t* decryptDataECB(uint8_t* key,  uint8_t* data, size_t& length,  uint8_t* output) {
+    bytespan_t decryptDataECB(bigint_t const& key,  bytespan_t const& data) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
         esp_aes_setkey(&ctx, key, 128);
 
         //
-        output = output ? output : data;
+        size_t length = data->size();
         for (uint I=0;I<length;I+=16) {
-            esp_aes_crypt_ecb(&ctx, ESP_AES_DECRYPT, data+I, output+I);
+            esp_aes_crypt_ecb(&ctx, ESP_AES_DECRYPT, data->data()+I, data->data()+I);
         }
 
         // re-correction of length (if possible)
@@ -53,6 +71,6 @@ namespace tc {
         esp_aes_free(&ctx);
 
         //
-        return output;
+        return bytespan_t(data->data(), length);
     }
-}
+};

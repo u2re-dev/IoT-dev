@@ -1,6 +1,7 @@
 #pragma once
 
 //
+#include <std/types.hpp>
 #include <cstdint>
 #include "./codec/libtuya.hpp"
 
@@ -11,6 +12,8 @@
 #include <json/json.hpp>
 using json = nlohmann::json;
 #endif
+
+
 
 //
 namespace th
@@ -32,58 +35,55 @@ namespace th
         json sending = {};
         json current = {};
 #endif
-
+        bool linked = false;
         std::string tuya_local_key = "";
         std::string tuya_local_ip = "";
         std::string device_id = "";
         std::string device_uid = "";
 
-        // TODO: replace to bigint
-        uint8_t *tmp = nullptr;      // for sending local_nonce
-        uint8_t *hmac = nullptr;     // length = 32 or 48
-        uint8_t *hmac_key = nullptr; // length = 16
-        uint8_t *hmac_payload = nullptr;
+        //
+        bigint_t local_nonce_crypt = {};
+        bigint_t hmac_key = {};
 
-        // data buffer
-        uint8_t *inBuffer = nullptr;
-        uint8_t *outBuffer = nullptr;
-        size_t inLen = 0, outLen = 0;
-        bool linked = false;
+        //
+        bytespan_t hmac = {};
+        bytespan_t hmac_payload = {};
+
+        //
+        bytes_t inBuffer = {};
+        bytes_t outBuffer = {};
 
         //
     public:
         TuyaSession() { // TODO: replace to bigint
-            tmp = (uint8_t *)calloc(1, 16);
-            hmac_key = (uint8_t *)calloc(1, 16);
-            hmac_payload = (uint8_t *)calloc(1, 16 + 16 + 12);
-
-            // TODO: auto extension when required
-            inBuffer  = (uint8_t *)calloc(1, 512);
-            outBuffer = (uint8_t *)calloc(1, 512);
-            SEQ_NO = 1;
-            linked = false;
+            hmac_payload = make_bytes(16 + 16 + 12);
+            inBuffer  = make_bytes(512);
+            outBuffer = make_bytes(512);
+            SEQ_NO = 1; linked = false;
         }
 
         //
         void init(std::string tuya_local_key, std::string device_id, std::string device_uid);
-        void encodeMessage(uint cmd, uint8_t *data, size_t &keyLen);
-        void encodeLocalNonce();
-        void handleSignal();
 
         //
-        void handleJson(uint8_t const* payload);
-        void sharedNonce(uint8_t const* remote_nonce);
-        void resolveKey(uint8_t const* remote_nonce);
+        bigint_t encodeLocalNonce();
+        bytespan_t encodeMessage(uint const& cmd, bytespan_t const& data);
+        bytespan_t handleSignal(bytespan_t const& inBuffer);
+
+        //
+        bytespan_t handleJson(bytespan_t const& payload);
+        bytespan_t sharedNonce(bigint_t const& remote_nonce);
+        bigint_t resolveKey(bigint_t const& remote_nonce);
 
         //
 #ifdef USE_ARDUINO_JSON
-        void getDPS() { sendJSON(0x10, blank); }
-        void setDPS(ArduinoJson::JsonObject const &dps);
-        void sendJSON(uint cmd, ArduinoJson::JsonDocument &doc);
+        bytes_t getDPS() { return encodeJSON(0x10, blank); }
+        bytes_t setDPS(ArduinoJson::JsonObject const &dps);
+        bytes_t encodeJSON(uint const& cmd, ArduinoJson::JsonDocument &doc);
 #else
-        void getDPS() { sendJSON(0x10, blank); }
-        void setDPS(json const &dps);
-        void sendJSON(uint cmd, json &doc);
+        bytes_t getDPS() { return encodeJSON(0x10, blank); }
+        bytes_t setDPS(json const &dps);
+        bytes_t encodeJSON(uint const& cmd, json &doc);
 #endif
 
         //

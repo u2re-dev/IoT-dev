@@ -2,6 +2,7 @@
 
 //
 namespace tc {
+    /*
     size_t prepareTuyaCode35(size_t& encrypted_length, TuyaCmd const& cmdDesc, uint8_t* output) {
         // write header
         *(uint32_t*)(output+0) = bswap32(0x00006699);
@@ -25,5 +26,5 @@ namespace tc {
         prepareTuyaCode35(encrypted_length, cmdDesc, output);
         memcpy(output + 18, encrypted_data, encrypted_length);
         return ((encrypted_length + 18) + 4);
-    }
+    }*/
 };
