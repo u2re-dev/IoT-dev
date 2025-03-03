@@ -2,11 +2,7 @@
 
 //
 #include <cstdint>
-
-//
-#include <tuya/libtuya.hpp>
-#include <device/hal/network.hpp>
-#include <device/hal/rtc.hpp>
+#include "./codec/libtuya.hpp"
 
 //
 #ifdef USE_ARDUINO_JSON
@@ -20,14 +16,9 @@ using json = nlohmann::json;
 namespace th
 {
     //
-    class TuyaSession
-    {
+    class TuyaSession {
     protected:
         uint32_t SEQ_NO = 1;
-
-#ifdef USE_ARDUINO
-        WiFiClient client;
-#endif
 
         //
 #ifdef USE_ARDUINO_JSON
@@ -61,8 +52,7 @@ namespace th
 
         //
     public:
-        TuyaSession()
-        {   // TODO: replace to bigint
+        TuyaSession() { // TODO: replace to bigint
             tmp = (uint8_t *)calloc(1, 16);
             hmac_key = (uint8_t *)calloc(1, 16);
             hmac_payload = (uint8_t *)calloc(1, 16 + 16 + 12);
@@ -75,10 +65,15 @@ namespace th
         }
 
         //
-        void connectDevice(std::string tuya_local_ip, std::string tuya_local_key, std::string device_id, std::string device_uid);
-        void sendMessage(uint cmd, uint8_t *data, size_t &keyLen);
-        void sendLocalNonce();
+        void init(std::string tuya_local_key, std::string device_id, std::string device_uid);
+        void encodeMessage(uint cmd, uint8_t *data, size_t &keyLen);
+        void encodeLocalNonce();
         void handleSignal();
+
+        //
+        void handleJson(uint8_t const* payload);
+        void sharedNonce(uint8_t const* remote_nonce);
+        void resolveKey(uint8_t const* remote_nonce);
 
         //
 #ifdef USE_ARDUINO_JSON
@@ -93,14 +88,6 @@ namespace th
 
         //
         bool available() { return linked; }
-        bool connected()
-        {
-#ifdef USE_ARDUINO
-            return client.connected();
-#else
-            return false;
-#endif
-        }
     };
 
 };
