@@ -6,7 +6,7 @@ namespace tc {
     bytespan_t prepareTuyaCode(size_t const& length, TuyaCmd const& cmdDesc,  bytes_t& output) {
         // encode as big-endian
         const auto headerLen   = 16;
-        const auto payloadSize = computePayloadSize(output->size(), cmdDesc.HMAC ? true : false);
+        const auto payloadSize = computePayloadSize(length, cmdDesc.HMAC ? true : false);
 
         // write header
         *reinterpret_cast<uint32_t*>(output->data()+0)  = bswap32(0x000055AA);
@@ -15,7 +15,7 @@ namespace tc {
         *reinterpret_cast<uint32_t*>(output->data()+12) = bswap32(payloadSize);
 
         //
-        const auto payload = output->data() + headerLen;
+        auto payload = output->data() + headerLen;
         const auto dataLen = (length + (cmdDesc.HMAC ? 32 : 4));
         for (uint i=0;i<dataLen;i++) { payload[i] = 0; }
 

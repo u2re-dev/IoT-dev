@@ -1,17 +1,58 @@
-//#include <arpa/inet.h>
-#include "./mdns.hpp"
-#include "./udp.hpp"
-
-//
-#include <matter/session/PASE.hpp>
-#include <matter/session/IM.hpp>
-
-//
-#define ENABLE_MATTER_TEST //
+//#define ENABLE_MATTER_TEST
 //#define ENABLE_SPAKE2P_TEST
+#define ENABLE_TUYA_TEST
+
+//
+#ifdef ENABLE_TUYA_TEST
+#include "./mdns.hpp"
+#include "./tcp.hpp"
+#include <tuya/session.hpp>
+
+//
+th::TuyaSession& authTuya(TCPClient& client,  th::TuyaSession& session) {
+    if (!client.sendRequest(session.encodeLocalNonce())) { return session; };
+
+    //
+    while (true) {
+        auto resp = client.receiveResponse();
+        if (resp->size() > 0) {
+            //std::cout << "Server response: " << hex::b2h(resp) << std::endl;
+
+            // make answer (if has)
+            auto msg = session.handleSignal(resp);
+            if (msg->size() > 0) {
+                client.sendRequest(msg);
+            } else { // unsupported...
+                return session;
+            }
+        }
+    }
+
+    //
+    return session;
+}
+
+//
+int main() {
+    TCPClient socket = {}; socket.connectToServer("192.168.0.133", 6668);
+    th::TuyaSession session("6c8c0365643b9efa336aeg", "m<b6(bDuYY_z_R/6");
+    authTuya(socket, session);
+
+    //
+    return 0;
+}
+
+//
+#endif
+
+
 
 //
 #ifdef ENABLE_MATTER_TEST
+#include "./mdns.hpp"
+#include "./udp.hpp"
+#include <matter/session/PASE.hpp>
+#include <matter/session/IM.hpp>
 
 //
 PASE handlePASE(UDP& socket) {

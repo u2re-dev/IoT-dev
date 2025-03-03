@@ -2,7 +2,7 @@
 
 //
 namespace tc {
-    std::array<uint32_t, 2> prepareJSON(uint8_t*data, size_t& length, char const* protocolVersion, uint8_t* output) {
+    std::array<uint32_t, 2> prepareJSON(uint8_t*data, size_t const& length, char const* protocolVersion, uint8_t* output) {
         // protocol 3.4 - encrypted with header
         const auto encLen = ((length + 15 + 16) >> 4) << 4;
         const auto encOffset = 0;
@@ -18,6 +18,6 @@ namespace tc {
         memcpy(output + 15, data, length);
 
         // return encryptable zone
-        return std::array<uint32_t, 2>{encOffset, encLen};
+        return std::array<uint32_t, 2>{encOffset, uint32_t(encLen)};
     }
 };

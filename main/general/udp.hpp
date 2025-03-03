@@ -43,7 +43,7 @@ public:
     //
     inline bytespan_t handleRequest() {
         socklen_t client_len = sizeof(client_addr);
-        size_t received = recvfrom(sockfd, buffer->data(), buffer->size() - 1, 0, (struct sockaddr*)&client_addr, &client_len);
+        size_t received = recvfrom(sockfd, buffer->data(), buffer->size() - 1, 0, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
 
         //
         if (received < 0) { std::cerr << "Error: Failed to receive message." << std::endl; return {}; }; (*buffer)[received] = '\0';

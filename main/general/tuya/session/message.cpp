@@ -21,7 +21,7 @@ namespace th {
         size_t jsonLen = bset.size();
 #endif
 
-    //
+        //
 #ifdef TUYA_35_SUPPORT // protocol 3.5 specific
         const size_t HEADER_OFFSET = 18;
         size_t withHeadLen = jsonLen + 15;
@@ -83,10 +83,10 @@ namespace th {
         // uint8_t* json_part = payload + data_offset; json_len -= data_offset;
 
         //
-    #ifdef USE_ARDUINO_JSON
+#ifdef USE_ARDUINO_JSON
         deserializeJson(current, jsonData->data(), json_len);
-    #else
+#else
         current = json::parse(jsonData->data(), jsonData->data() + json_len);
-    #endif
+#endif
     }
 }

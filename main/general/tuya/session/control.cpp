@@ -1,15 +1,17 @@
 #include "../session.hpp"
+#include <chrono>
 
 //
 namespace th {
 #ifdef USE_ARDUINO_JSON
-    void TuyaSession::setDPS(ArduinoJson::JsonObject const &dps)
+    bytespan_t TuyaSession::setDPS(ArduinoJson::JsonObject const &dps)
 #else
-    void TuyaSession::setDPS(json const &dps)
+    bytespan_t TuyaSession::setDPS(json const &dps)
 #endif
     {
         sending["protocol"] = 5;
-        sending["t"] = uint64_t(getUnixTime()) * 1000ull;
+        //sending["t"] = uint64_t(getUnixTime()) * 1000ull;
+        sending["t"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();;
 
         //
         data["dps"] = dps;
@@ -28,6 +30,6 @@ namespace th {
         // sendJSON(0x7, sending);
 
         // protocol 3.4
-        //return encodeJSON(0xd, sending);
+        return encodeJSON(0xd, sending);
     }
 }

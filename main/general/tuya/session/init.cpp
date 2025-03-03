@@ -3,11 +3,11 @@
 //
 namespace th {
     //
-    void TuyaSession::init(std::string tuya_local_key, std::string device_id, std::string device_uid) {
-        this->tuya_local_ip  = tuya_local_ip;
+    void TuyaSession::init(std::string device_id, std::string tuya_local_key, std::string device_uid) {
         this->tuya_local_key = tuya_local_key;
         this->device_id  = device_id;
         this->device_uid = device_uid;
+        this->hmac_key = *reinterpret_cast<tc::block_t const*>(this->tuya_local_key.c_str());
 
         // padding from IV
         //hmac_key = hmac_payload + 12;
@@ -24,10 +24,10 @@ namespace th {
 
     //
     bytespan_t TuyaSession::handleSignal(bytespan_t const& inBuffer) {
-        auto payload = tc::getTuyaPayload(inBuffer);
-        const auto code  = tc::getTuyaCmd(payload->data());
-        if (code == 0x4) { auto nonce = *reinterpret_cast<bigint_t const*>(payload->data()); auto ptr = encodeMessage(0x5u, sharedNonce(nonce)); resolveKey(nonce); return ptr; } else
+        const auto payload = tc::getTuyaPayload(inBuffer);
+        const auto code    = tc::getTuyaCmd(inBuffer->data());
+        if (code == 0x4) { auto nonce = *reinterpret_cast<tc::block_t const*>(payload->data()); auto ptr = encodeMessage(0x5u, hmac = sharedNonce(nonce)); hmac_key = resolveKey(nonce); return ptr; } else
         if (code == 0x8) { handleJson(payload); };
-        return payload;
+        return {};
     }
 };
