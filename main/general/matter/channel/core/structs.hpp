@@ -11,7 +11,6 @@
 #include <std/types.hpp>
 
 //
-struct PBKDFParamRequest { bigint_t rand = 0; uint16_t sess = 0; uint8_t pass = 0; };
 struct SessionKeys { intx::uint128 I2Rkeys = 0, R2Ikeys = 0, AttestationChallenge = 0; };
 
 //

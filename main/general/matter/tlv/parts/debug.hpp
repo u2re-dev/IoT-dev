@@ -2,6 +2,9 @@
 #define DBDB5449_91AD_407E_A3CF_C2769A3D3E70
 
 //
+#include <std/hex.hpp>
+
+//
 #include "./utils.hpp"
 #include "../tlv_tree.h"
 #include "../tlv.h"

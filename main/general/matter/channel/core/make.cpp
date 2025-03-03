@@ -1,40 +1,22 @@
-#ifndef A3E1DE45_C06A_44C2_9B2F_34F686879D28
-#define A3E1DE45_C06A_44C2_9B2F_34F686879D28
+#ifndef BA234649_B621_49F7_A8E9_F250EA2F4A9B
+#define BA234649_B621_49F7_A8E9_F250EA2F4A9B
 
 //
-#include "../PASE.hpp"
-
-//
+#include "../channel.hpp"
 #include "../../tlv/parts/debug.hpp"
 
 
-
 //
-uint8_t PASE::handlePayload(Payload const& payload) {
-    switch (payload.header.protocolCode) {
-        case 0x20: return handlePASERequest(payload);
-        case 0x22: return handlePAKE1(payload);
-        case 0x24: return handlePAKE3(payload);
-        default: return 0;
-    }
-    return payload.header.protocolCode;
-}
-
-//
-Message PASE::decodeMessage(bytespan_t const& bytes) const {
-    auto reader  = reader_t(bytes);
-    auto message = MessageCodec::decodeMessage(reader);
-    message.decodedPayload = MessageCodec::decodePayloadF(decryptPayload(message, bytes));
-    MessageCodec::debugMessage(message);
-    MessageCodec::debugPayload(message.decodedPayload);
-    tlvcpp::debug_print_recursive(message.decodedPayload.TLV);
-    return message;
+bytespan_t Channel::makeAckMessage(Message const& request) {
+    Message outMsg = makeMessage(request, 0x10);
+    return MessageCodec::encodeMessage(outMsg);
 }
 
 
 
+
 //
-Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_t const& set) {
+Message Channel::makeMessage(Message const& request, uint8_t messageType, bytespan_t const& set) {
     Message outMsg = {};
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
     outMsg.header.sessionId  = request.header.sessionId;
@@ -49,7 +31,7 @@ Message PASE::makeMessage(Message const& request, uint8_t messageType, bytespan_
 }
 
 //
-Message PASE::makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& TLV) {
+Message Channel::makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& TLV) {
     Message outMsg = {};
     outMsg.header.messageId  = (counter++); ///- request.header.messageId;
     outMsg.header.sessionId  = request.header.sessionId;

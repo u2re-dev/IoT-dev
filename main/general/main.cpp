@@ -15,23 +15,26 @@ int main() {
     MDNS comission = {};
     UDP socket = {};
     PASE pase = {};
-    pase.init();
 
     //
+    pase.init();
     comission.init();
     comission.service();
     comission.commit();
 
     //
     socket.init();
+
+    //
+    Channel& channel = pase.getChannel();
     while (true) {
         auto resp = socket.handleRequest();
         if (resp) {
-            auto msg  = pase.decodeMessage(resp);
+            auto msg  = channel.decodeMessage(resp);
             auto type = pase.handlePayload(msg.decodedPayload);
-            if (type) { socket.sendResponse(pase.makeAckMessage(msg)); };
+            if (type) { socket.sendResponse(channel.makeAckMessage(msg)); };
             switch (type) {
-                case 0x24: socket.sendResponse(pase.makeReportStatus(msg)); break;
+                //case 0x24: socket.sendResponse(channel.makeReportStatus(msg)); break;
                 case 0x20: socket.sendResponse(pase.makePASEResponse(msg)); break;
                 case 0x22: socket.sendResponse(pase.makePAKE2(msg)); break;
                 default: break;
