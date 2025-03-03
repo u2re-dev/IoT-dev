@@ -10,7 +10,7 @@ SessionKeys& PASE::makeSessionKeys() {
     auto keys = crypto::hkdf_len(hkdf.Ke, info);
 
     // TODO: better interpret code
-    return (channel.setSessionKeys(SessionKeys {
+    return (session.setSessionKeys(SessionKeys {
         *reinterpret_cast<intx::uint128*>(keys->data()),
         *reinterpret_cast<intx::uint128*>(keys->data() + 16),
         *reinterpret_cast<intx::uint128*>(keys->data() + 32)

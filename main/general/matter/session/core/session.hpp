@@ -14,24 +14,24 @@
 #include <std/types.hpp>
 
 //
-#include "../codec/message/Message.hpp"
-#include "../tlv/parts/enums.hpp"
-#include "../tlv/tlv_tree.h"
-#include "../tlv/tlv.h"
+#include "../../codec/message/Message.hpp"
+#include "../../tlv/parts/enums.hpp"
+#include "../../tlv/tlv_tree.h"
+#include "../../tlv/tlv.h"
 
 //
-#include "./core/structs.hpp"
+#include "./structs.hpp"
 
 //
-class Channel {
+class Session {
 public:
     inline void init() { counter = rng.generate(); }
-    inline Channel() { init(); }
-    inline Channel(Channel const& channel) : sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
-    inline Channel(SessionKeys const& sessionKeys) : sessionKeys(sessionKeys) { counter = rng.generate(); }
+    inline Session() { init(); }
+    inline Session(Session const& channel) : sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
+    inline Session(SessionKeys const& sessionKeys) : sessionKeys(sessionKeys) { counter = rng.generate(); }
 
     //
-    Channel& operator =(Channel const& channel) {
+    Session& operator =(Session const& channel) {
         sessionKeys = channel.sessionKeys;
         counter = channel.counter;
         return *this;

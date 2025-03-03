@@ -3,7 +3,7 @@
 #include "./udp.hpp"
 
 //
-#include <matter/secure/PASE.hpp>
+#include <matter/session/PASE.hpp>
 
 //
 #define ENABLE_MATTER_TEST //
@@ -11,36 +11,46 @@
 
 //
 #ifdef ENABLE_MATTER_TEST
-int main() {
-    MDNS comission = {};
-    UDP socket = {};
+
+//
+PASE handlePASE(UDP& socket) {
     PASE pase = {};
+    Session& session = pase.getSession();
 
     //
-    pase.init();
+    while (true) {
+        auto resp = socket.handleRequest();
+        if (resp) {
+            auto msg  = session.decodeMessage(resp);
+            auto type = pase.handlePayload(msg.decodedPayload);
+            if (type) {
+                socket.sendResponse(session.makeAckMessage(msg));
+                socket.sendResponse(pase.makeResponse(msg));
+            };
+            if (pase.status() == 0) return pase;
+        }
+    }
+
+    //
+    return pase;
+}
+
+//
+int main() {
+    MDNS comission = {};
+
+    //
     comission.init();
     comission.service();
     comission.commit();
 
     //
+    UDP socket = {};
     socket.init();
 
     //
-    Channel& channel = pase.getChannel();
-    while (true) {
-        auto resp = socket.handleRequest();
-        if (resp) {
-            auto msg  = channel.decodeMessage(resp);
-            auto type = pase.handlePayload(msg.decodedPayload);
-            if (type) { socket.sendResponse(channel.makeAckMessage(msg)); };
-            switch (type) {
-                //case 0x24: socket.sendResponse(channel.makeReportStatus(msg)); break;
-                case 0x20: socket.sendResponse(pase.makePASEResponse(msg)); break;
-                case 0x22: socket.sendResponse(pase.makePAKE2(msg)); break;
-                default: break;
-            }
-        }
-    }
+    PASE pase = handlePASE(socket);
+
 
     //
     return 0;

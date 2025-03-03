@@ -24,7 +24,7 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
     secp.add_child(params.salt, 02);
 
     //
-    Message outMsg = channel.makeMessage(request, 0x21, resp);
+    Message outMsg = session.makeMessage(request, 0x21, resp);
     auto encoded = MessageCodec::encodeMessage(outMsg); // before sending, make spake keys
     spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, outMsg.decodedPayload.payload));
     return encoded;
@@ -41,7 +41,7 @@ bytespan_t PASE::makePAKE2(Message const& request) {
     resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
     //
-    Message outMsg = channel.makeMessage(request, 0x23, resp);
+    Message outMsg = session.makeMessage(request, 0x23, resp);
     return MessageCodec::encodeMessage(outMsg);
 }
 

@@ -2,12 +2,11 @@
 #define F7238F9D_58D1_493D_8864_642346EAAD7F
 
 //
-#include "../channel.hpp"
+#include "./session.hpp"
 #include "../../tlv/parts/debug.hpp"
 
-
 //
-bytespan_t& Channel::decryptPayload(Message& message,  bytespan_t const& bytes) const {
+bytespan_t& Session::decryptPayload(Message& message,  bytespan_t const& bytes) const {
     if (message.rawPayload->size() && sessionKeys.I2Rkeys) {
         writer_t nonce_w;
         nonce_w.writeByte(reinterpret_cast<uint8_t const&>(message.header.securityFlags));
@@ -37,7 +36,7 @@ bytespan_t& Channel::decryptPayload(Message& message,  bytespan_t const& bytes) 
 }
 
 //
-Message Channel::decodeMessage(bytespan_t const& bytes) const {
+Message Session::decodeMessage(bytespan_t const& bytes) const {
     auto reader  = reader_t(bytes);
     auto message = MessageCodec::decodeMessage(reader);
     message.decodedPayload = MessageCodec::decodePayloadF(decryptPayload(message, bytes));
@@ -47,5 +46,5 @@ Message Channel::decodeMessage(bytespan_t const& bytes) const {
     return message;
 }
 
-
+//
 #endif

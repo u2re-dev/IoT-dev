@@ -1,4 +1,4 @@
-#include "./cluster.hpp"
+#include "../IM.hpp"
 
 //
 tlvcpp::tlv_tree_node Cluster::makeByPath(tlvcpp::tlv_tree_node const& path) {
@@ -26,13 +26,13 @@ bytespan_t Cluster::makeReportDataMessage(Message const& request) {
     }
 
     //
-    Message outMsg = channel.makeMessage(request, 0x05, resp);
+    Message outMsg = session.makeMessage(request, 0x05, resp);
     return MessageCodec::encodeMessage(outMsg);
 }
 
 //
 bytespan_t Cluster::makeReportStatus(Message const& request, uint16_t const& status) {
-    Message outMsg = channel.makeMessage(request, 0x40, make_bytes(8));
+    Message outMsg = session.makeMessage(request, 0x40, make_bytes(8));
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+0) = 0;
     *reinterpret_cast<uint32_t*>(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;

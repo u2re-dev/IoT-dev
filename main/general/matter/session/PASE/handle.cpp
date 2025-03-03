@@ -30,7 +30,7 @@ uint8_t PASE::handlePAKE3(Payload const& payload) {
     if (payload.header.protocolCode != 0x24) return 0;
     bigint_t hAY = payload.TLV.find(01)->data(); // TODO: fix bigint conversion (directly)
     if (hkdf.hAY != hAY) { throw std::runtime_error("hAY not match in MAKE3 phase (received value)"); }
-    return payload.header.protocolCode;
+    status_ = 0; return payload.header.protocolCode;
 }
 
 //
