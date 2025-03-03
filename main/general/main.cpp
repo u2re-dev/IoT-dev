@@ -4,6 +4,7 @@
 
 //
 #include <matter/session/PASE.hpp>
+#include <matter/session/IM.hpp>
 
 //
 #define ENABLE_MATTER_TEST //
@@ -21,11 +22,12 @@ PASE handlePASE(UDP& socket) {
     while (true) {
         auto resp = socket.handleRequest();
         if (resp) {
-            auto msg  = session.decodeMessage(resp);
-            auto type = pase.handlePayload(msg.decodedPayload);
-            if (type) {
-                socket.sendResponse(session.makeAckMessage(msg));
-                socket.sendResponse(pase.makeResponse(msg));
+            auto msg = session.decodeMessage(resp);
+            if (msg.decodedPayload.header.protocolCode) {
+                if (msg.decodedPayload.header.exchangeFlags.requiresAck) {
+                    socket.sendResponse(session.makeAckMessage(msg));
+                }
+                socket.sendResponse(pase.handleMessage(msg));
             };
             if (pase.status() == 0) return pase;
         }
@@ -33,6 +35,30 @@ PASE handlePASE(UDP& socket) {
 
     //
     return pase;
+}
+
+//
+Cluster handleIM(UDP& socket, Session const& raw) {
+    Cluster im = raw;
+    Session& session = im.getSession();
+
+    //
+    while (true) {
+        auto resp = socket.handleRequest(); // and handle last incoming message
+        if (resp) {
+            auto msg = session.decodeMessage(resp);
+            if (msg.decodedPayload.header.protocolCode) {
+                if (msg.decodedPayload.header.exchangeFlags.requiresAck) {
+                    socket.sendResponse(session.makeAckMessage(msg));
+                }
+                socket.sendResponse(im.handleMessage(msg));
+            };
+            if (im.status() == 0) return im;
+        }
+    }
+
+    //
+    return im;
 }
 
 //

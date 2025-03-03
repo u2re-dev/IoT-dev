@@ -46,4 +46,13 @@ bytespan_t PASE::makePAKE2(Message const& request) {
 }
 
 //
+bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status) {
+    Message outMsg = session.makeMessage(request, 0x40, make_bytes(8));
+    *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+0) = 0;
+    *reinterpret_cast<uint32_t*>(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
+    *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;
+    return MessageCodec::encodeMessage(outMsg);
+}
+
+//
 #endif

@@ -13,7 +13,6 @@ public:
     //
     tlvcpp::tlv_tree_node makeByPath(tlvcpp::tlv_tree_node const& path);
     bytespan_t makeReportDataMessage(Message const& request);
-    bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0);
 
     //
     SessionKeys& makeSessionKeys();
@@ -21,7 +20,20 @@ public:
     Session const& getSession() const { return session; }
 
     //
+    inline int const& status() const { return status_; }
+    inline bytespan_t handleMessage(Message const& message) {
+        switch (message.decodedPayload.header.protocolCode) {
+            case 0x02: return makeReportDataMessage(message); // when PASE final phase (confirm status)
+            //case 0x04: //return makeReportStatus(message, 0);
+            default: return {};
+        }
+        return {};
+    }
+
+
+    //
 private: Session session = {};
+int status_ = -1;
 };
 
 //

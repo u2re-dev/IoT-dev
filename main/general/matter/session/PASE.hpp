@@ -33,9 +33,10 @@ public:
     inline PASE(Session const& session) : session(session) {  }
 
     //
-    SessionKeys& makeSessionKeys();
     bytespan_t makePASEResponse(Message const& request);
     bytespan_t makePAKE2(Message const& request);
+    bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0);
+    SessionKeys& makeSessionKeys();
 
     //
     uint8_t handlePASERequest(Payload const& payload);
@@ -43,31 +44,18 @@ public:
     uint8_t handlePAKE3(Payload const& payload);
 
     //
-    Session makeSession() { return Session(makeSessionKeys()); }
-    Session& getSession() { return session; }
-    Session const& getSession() const { return session; }
-
-    //
+    inline Session makeSession() { return Session(makeSessionKeys()); }
+    inline Session& getSession() { return session; }
+    inline Session const& getSession() const { return session; }
     inline int const& status() const { return status_; }
-    inline bytespan_t makeResponse(Message const& message) {
+    inline bytespan_t handleMessage(Message const& message) {
         switch (message.decodedPayload.header.protocolCode) {
-            case 0x24: return {};//socket.sendResponse(channel.makeReportStatus(msg)); break;
-            case 0x20: return makePASEResponse(message); break;
-            case 0x22: return makePAKE2(message); break;
-            default: break;
+            case 0x20: { handlePASERequest(message.decodedPayload); return makePASEResponse(message); break; };
+            case 0x22: { handlePAKE1(message.decodedPayload); return makePAKE2(message); break; };
+            case 0x24: { handlePAKE3(message.decodedPayload); return makeReportStatus(message, 0); };
+            default: return {};
         }
         return {};
-    }
-
-    //
-    inline uint8_t handlePayload(Payload const& payload) {
-        switch (payload.header.protocolCode) {
-            case 0x20: return handlePASERequest(payload);
-            case 0x22: return handlePAKE1(payload);
-            case 0x24: return handlePAKE3(payload);
-            default: return 0;
-        }
-        return payload.header.protocolCode;
     }
 
     //
