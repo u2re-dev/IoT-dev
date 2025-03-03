@@ -38,19 +38,13 @@ PASE handlePASE(UDP& socket) {
 //
 int main() {
     MDNS comission = {};
-
-    //
     comission.init();
     comission.service();
     comission.commit();
 
     //
-    UDP socket = {};
-    socket.init();
-
-    //
+    UDP socket = {}; socket.init();
     PASE pase = handlePASE(socket);
-
 
     //
     return 0;
