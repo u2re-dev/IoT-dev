@@ -2,29 +2,25 @@
 
 //
 namespace tc {
-    /*
-    size_t prepareTuyaCode35(size_t& encrypted_length, TuyaCmd const& cmdDesc, uint8_t* output) {
-        // write header
-        *(uint32_t*)(output+0) = bswap32(0x00006699);
+    const uint32_t header_len = 18;
 
-        // encode as big-endian
-        *(uint16_t*)(output+4)  = 0u;
-        *(uint32_t*)(output+6)  = bswap32(cmdDesc.SEQ_NO);
-        *(uint32_t*)(output+10) = bswap32(cmdDesc.CMD_ID);
-        *(uint32_t*)(output+14) = bswap32(encrypted_length);
-
-        // all of those is a part encryption/encoding stage
-        // before payload goes 12-bytes IV
-        // after payload goes 16-bytes AES-GCM tag
-        const uint32_t header_len = 18;
-        *(uint32_t*)(output + header_len + encrypted_length) = bswap32(0x00009966);
-        return ((encrypted_length + header_len) + 4);
+    // all of those is a part encryption/encoding stage
+    // before payload goes 12-bytes IV
+    // after payload goes 16-bytes AES-GCM tag
+    bytespan_t prepareTuyaCode35(size_t const& gcm_iv_data_tag_size, TuyaCmd const& cmdDesc,  bytes_t& output) {
+        *reinterpret_cast<uint32_t*>(output->data() + 0)  = bswap32(0x00006699);
+        *reinterpret_cast<uint16_t*>(output->data() + 0)  = bswap16(0); // CRC16 (not implemented)
+        *reinterpret_cast<uint32_t*>(output->data() + 6)  = bswap32(cmdDesc.SEQ_NO);
+        *reinterpret_cast<uint32_t*>(output->data() + 10) = bswap32(cmdDesc.CMD_ID);
+        *reinterpret_cast<uint32_t*>(output->data() + 14) = bswap32(gcm_iv_data_tag_size);
+        *reinterpret_cast<uint32_t*>(output->data() + (header_len + gcm_iv_data_tag_size)) = bswap32(0x00009966);
+        return bytespan_t(output->data(), (header_len + gcm_iv_data_tag_size) + 4);
     }
 
     //
-    size_t encodeTuyaCode35(uint8_t* encrypted_data, size_t& encrypted_length, TuyaCmd const& cmdDesc, uint8_t* output) {
-        prepareTuyaCode35(encrypted_length, cmdDesc, output);
-        memcpy(output + 18, encrypted_data, encrypted_length);
-        return ((encrypted_length + 18) + 4);
-    }*/
+    bytespan_t encodeTuyaCode35(bytespan_t const& gcm_iv_data_tag, TuyaCmd const& cmdDesc, bytes_t& output) {
+        auto out = prepareTuyaCode35(gcm_iv_data_tag, cmdDesc, output);
+        memcpy(out->data() + header_len, gcm_iv_data_tag->data(), gcm_iv_data_tag->size());
+        return out;
+    }
 };

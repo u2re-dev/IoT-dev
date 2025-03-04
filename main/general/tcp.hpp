@@ -48,7 +48,7 @@ public:
 
         //
         buffer  = make_bytes(1024);
-        reserve = make_bytes(1024);
+        //reserve = make_bytes(1024);
         std::cout << "Connected to server at " << ip_address << ":" << port << std::endl;
         return 0;
     }
@@ -89,7 +89,7 @@ private:
     //
     sockaddr_in server_addr = {};
     bytes_t buffer = {};
-    bytes_t reserve = {};
+    //bytes_t reserve = {};
 };
 
 //

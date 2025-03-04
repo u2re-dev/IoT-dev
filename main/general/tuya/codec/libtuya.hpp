@@ -6,8 +6,7 @@
 
 //
 namespace tc { //
-    using block_t = intx::uint128;
-    static const char* local_nonce = "0123456789abcdef";
+    using block_t = intx::uint128; static const char* local_nonce = "0123456789abcdef";
     struct TuyaCmd { uint32_t SEQ_NO = 0, CMD_ID = 0; block_t HMAC = 0; };
 
     // tuya 3.4
@@ -39,11 +38,11 @@ namespace tc { //
 
     //
     // ESP32-S3 or CardPuter won't support native AES GCM, but tuya protocol 3.5 requires it
-    //bytespan_t decryptDataGCM(block_t const& key,  bytespan_t const& data);
-    //bytespan_t encryptDataGCM(block_t const& key,  bytespan_t const& data);
+    bytespan_t decryptDataGCM(block_t const& key, bytespan_t& iv_payload_tag);
+    bytespan_t encryptDataGCM(block_t const& key, bytespan_t& iv_payload_tag);
 
     //
-    //size_t prepareTuyaCode35(size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
-    //size_t encodeTuyaCode35(uint8_t* encrypted_data, size_t& length, TuyaCmd const& cmdDesc = {}, uint8_t* output = nullptr);
+    bytespan_t prepareTuyaCode35(size_t const& length, TuyaCmd const& cmdDesc,  bytes_t& output);
+    bytespan_t encodeTuyaCode35(bytespan_t const& encrypted_data, TuyaCmd const& cmdDesc, bytes_t& output);
     //std::array<uint32_t, 2> prepareJSON(uint8_t*data, size_t& length, char const* protocolVersion, uint8_t* output);
 };

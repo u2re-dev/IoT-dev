@@ -30,38 +30,29 @@ namespace th { //
 #endif
 
         //
-        std::string tuya_local_ip = "";
         std::string tuya_local_key = "";
         std::string device_id = "";
         std::string device_uid = "";
 
         //
-        tc::block_t local_nonce_crypt = {};
-        tc::block_t hmac_key = {};
+        tc::block_t local_nonce_crypt = 0;
+        tc::block_t hmac_key = 0;
 
         //
-        bytespan_t hmac = {};
-        bytespan_t hmac_payload = {};
-
-        //
-        bytes_t inBuffer = {};
+        bytespan_t hmac   = {};
         bytes_t outBuffer = {};
 
         //
     public:
-        TuyaSession() { // TODO: replace to bigint
-            hmac_payload = make_bytes(16 + 16 + 12);
-            inBuffer  = make_bytes(512);
+        TuyaSession() {
+            SEQ_NO  = 1; linked = false;
             outBuffer = make_bytes(512);
-            SEQ_NO = 1; linked = false;
         }
 
         //
-        TuyaSession(std::string device_id, std::string tuya_local_key, std::string device_uid = "") { // TODO: replace to bigint
-            hmac_payload = make_bytes(16 + 16 + 12);
-            inBuffer  = make_bytes(512);
+        TuyaSession(std::string device_id, std::string tuya_local_key, std::string device_uid = "") {
+            SEQ_NO  = 1; linked = false;
             outBuffer = make_bytes(512);
-            SEQ_NO = 1; linked = false;
             init(device_id, tuya_local_key, device_uid);
         }
 

@@ -9,15 +9,11 @@ namespace th {
         this->device_uid = device_uid;
         this->hmac_key = *reinterpret_cast<tc::block_t const*>(this->tuya_local_key.c_str());
 
-        // padding from IV
-        //hmac_key = hmac_payload + 12;
-
         // parse from string and use it
         //uint8_t ip[4] = {0, 0, 0, 0};
         //ipv4_parse((uint8_t *)tuya_local_ip.c_str(), tuya_local_ip.size(), ip);
 
         //
-        //memcpy(hmac_key, tuya_local_key.c_str(), 16);
         SEQ_NO = 1;
         linked = false;
     }

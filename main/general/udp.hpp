@@ -36,7 +36,7 @@ public:
 
         //
         buffer  = make_bytes(1024);
-        reserve = make_bytes(1024);
+        //reserve = make_bytes(1024);
         return 0;
     }
 
@@ -69,7 +69,7 @@ private:
     sockaddr_in6 server_addr = {};
     sockaddr_in6 client_addr = {};
     bytes_t buffer  = {}; //buffer[0] = '\0';
-    bytes_t reserve = {};
+    //bytes_t reserve = {};
 };
 
 //
