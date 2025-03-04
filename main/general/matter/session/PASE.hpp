@@ -28,9 +28,9 @@ struct PBKDFParamRequest { bigint_t rand = 0; uint16_t sess = 0; uint8_t pass = 
 //
 class PASE {
 public:
-    inline void init() { session = Session(); }
+    inline void init() { session = Session(); status_ = -1; }
     inline PASE() { init(); }
-    inline PASE(Session const& session) : session(session) {  }
+    inline PASE(Session const& session) : session(session), status_(-1) {  }
 
     //
     bytespan_t makePASEResponse(Message const& request);

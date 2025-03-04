@@ -33,7 +33,7 @@ namespace tc { //
     // encode message code
     bytespan_t prepareTuyaCode(size_t const& length, TuyaCmd const& cmdDesc,  bytes_t& output);
     bytespan_t checksumTuyaCode(bytespan_t& code, block_t const& HMAC = 0);
-    bytespan_t checksumTuyaCode(bytes_t& code, block_t const& HMAC = 0);
+    bytespan_t checksumTuyaCode(bytes_t const& code, block_t const& HMAC = 0);
     bytespan_t encodeTuyaCode(bytespan_t const& encrypted_data, TuyaCmd const& cmdDesc, bytes_t& output);
 
     //

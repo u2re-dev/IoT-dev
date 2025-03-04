@@ -14,16 +14,10 @@
 
 //
 class UDP {
-public:
-
-    //
-    ~UDP() { close(sockfd); }
-
-    //
+public: ~UDP() { close(sockfd); }
     inline int init() {
-        //
         if ((sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-        { std::cerr << "Error: Unable to create socket. " << std::to_string(sockfd) << std::endl; return 1; }
+            { std::cerr << "Error: Unable to create socket. " << std::to_string(sockfd) << std::endl; return 1; }
 
         //
         server_addr.sin6_family = AF_INET6;
@@ -31,21 +25,18 @@ public:
         server_addr.sin6_port   = htons(port);
 
         //
-        bound = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
-        if (bound < 0) { std::cerr << "Error: Unable to bind socket to port " << port << ". " << bound << std::endl; close(sockfd); return 1; }
+        if ((bound = bind(sockfd, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr))) < 0)
+            { std::cerr << "Error: Unable to bind socket to port " << port << ". " << bound << std::endl; close(sockfd); return 1; }
 
         //
-        buffer  = make_bytes(1024);
-        //reserve = make_bytes(1024);
-        return 0;
+        std::cout << "Listening UDP port: " << port << std::endl;
+        buffer  = make_bytes(1024); return 0;
     }
 
     //
     inline bytespan_t handleRequest() {
         socklen_t client_len = sizeof(client_addr);
         size_t received = recvfrom(sockfd, buffer->data(), buffer->size() - 1, 0, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
-
-        //
         if (received < 0) { std::cerr << "Error: Failed to receive message." << std::endl; return {}; }; (*buffer)[received] = '\0';
 
         //
@@ -56,20 +47,20 @@ public:
     //
     inline bool sendResponse(bytespan_t const& stream) {
         std::cout << "Sending message: " << hex::b2h(stream) << std::endl;
-        sendto(sockfd, stream->data(), stream->size(), 0, (struct sockaddr const *)&client_addr, sizeof(client_addr));
+        if (sendto(sockfd, stream->data(), stream->size(), 0, reinterpret_cast<struct sockaddr*>(&client_addr), sizeof(client_addr)) < 0) {
+            std::cerr << "ERROR: Failed to sending message!" << std::endl;
+        };
         return true;
     }
 
-//
-private:
+private: //
     int bound = -1, sockfd = -1;
     const int port = 5540;
 
     //
     sockaddr_in6 server_addr = {};
     sockaddr_in6 client_addr = {};
-    bytes_t buffer  = {}; //buffer[0] = '\0';
-    //bytes_t reserve = {};
+    bytes_t buffer  = {};
 };
 
 //

@@ -1,10 +1,9 @@
-//#define ENABLE_MATTER_TEST
+#define ENABLE_MATTER_TEST
 //#define ENABLE_SPAKE2P_TEST
-#define ENABLE_TUYA_TEST
+//#define ENABLE_TUYA_TEST
 
 //
 #ifdef ENABLE_TUYA_TEST
-#include "./mdns.hpp"
 #include "./tcp.hpp"
 #include <tuya/session.hpp>
 
@@ -111,7 +110,8 @@ int main() {
 
     //
     UDP socket = {}; socket.init();
-    PASE pase = handlePASE(socket);
+    auto pase = handlePASE(socket);
+    auto im   = handleIM(socket, pase.makeSession());
 
     //
     return 0;

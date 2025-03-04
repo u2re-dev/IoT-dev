@@ -2,7 +2,6 @@
 #define F7AB558A_0FFF_42EB_A8A1_D86920D78416
 #include "./core/session.hpp"
 
-
 //
 class Cluster {
 public:
@@ -29,7 +28,6 @@ public:
         }
         return {};
     }
-
 
     //
 private: Session session = {};

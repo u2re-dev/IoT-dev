@@ -4,8 +4,12 @@
 //
 namespace tlvcpp {
     // from another
-    tlv::tlv(tlv const& other) : m_tag(other.m_tag), m_value(other.m_value), m_control(other.m_control),  m_payload(other.m_payload) {};
-    tlv::tlv(tlv &&other) noexcept { m_tag = std::move(other.m_tag); m_value = std::move(other.m_value);m_control = std::move(other.m_control); m_payload = std::move(other.m_payload); other.m_tag = 0;}
+    tlv::tlv(tlv const& other) : m_control(other.m_control), m_tag(other.m_tag), m_value(other.m_value), m_payload(other.m_payload) {};
+    tlv::tlv(tlv const& other, tag_t const& tag) : m_control(other.m_control), m_tag(tag), m_value(other.m_value), m_payload(other.m_payload) {};
+
+    //
+    tlv::tlv(tlv &&other) noexcept { m_tag = std::move(other.m_tag); m_value = std::move(other.m_value); m_control = std::move(other.m_control); m_payload = std::move(other.m_payload); other.m_tag = 0;}
+    tlv::tlv(tlv &&other, tag_t const& tag) noexcept { m_tag = tag; m_value = std::move(other.m_value);m_control = std::move(other.m_control); m_payload = std::move(other.m_payload); other.m_tag = 0;}
 
     //
     tlv::~tlv() {}

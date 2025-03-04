@@ -11,23 +11,18 @@
 namespace tc {
 
     //
-    uint32_t crc32(uint8_t const* data, size_t length) {
-        uint32_t crc = 0xFFFFFFFF;
-        for (size_t i = 0; i < length; i++) {
-            crc ^= data[i];
-            for (int j = 0; j < 8; j++) {
-                if (crc & 1) {
-                    crc = (crc >> 1) ^ 0xEDB88320;
-                } else {
-                    crc >>= 1;
-                }
-            }
+    uint32_t crc32(uint8_t const* data, size_t const& length) {
+        auto crc = ~uint32_t(0);
+        for (size_t i = 0; i < length; i++) { crc ^= data[i];
+
+            // may be replaced by table...
+            for (int j = 0; j < 8; j++) { crc = (crc >> 1) ^ ((crc & 1) ? (0b1110'1101'1011'1000'1000'0011'0010'0000) : 0); }
         }
         return (~crc);
     }
 
     // TODO? needs to merge into payload part?
-    bytespan_t checksumTuyaCode(bytes_t& code, block_t const& HMAC) { bytespan_t span = code; return checksumTuyaCode(span, HMAC); };
+    bytespan_t checksumTuyaCode(bytes_t const& code, block_t const& HMAC) { bytespan_t span = code; return checksumTuyaCode(span, HMAC); };
     bytespan_t checksumTuyaCode(bytespan_t& code, block_t const& HMAC) {
         const auto headerLen   = 16;
         const auto payloadSize = bswap32(*reinterpret_cast<uint32_t const*>(code->data()+12));

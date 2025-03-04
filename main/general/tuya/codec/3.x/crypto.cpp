@@ -13,7 +13,7 @@ namespace tc {
     block_t encryptDataECB(block_t const& key,  block_t const& data) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
-        esp_aes_setkey(&ctx, &key, 128);
+        esp_aes_setkey(&ctx, reinterpret_cast<uint8_t const*>(&key), 128);
         block_t output = data; esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, &output, &output);
         esp_aes_free(&ctx);
         return output;
@@ -23,7 +23,7 @@ namespace tc {
     block_t decryptDataECB(block_t const& key,  block_t const& data) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
-        esp_aes_setkey(&ctx, &key, 128);
+        esp_aes_setkey(&ctx, reinterpret_cast<uint8_t const*>(&key), 128);
         block_t output = data; esp_aes_crypt_ecb(&ctx, ESP_AES_DECRYPT, &output, &output);
         esp_aes_free(&ctx);
         return output;
@@ -35,22 +35,20 @@ namespace tc {
     bytespan_t encryptDataECB(block_t const& key,  bytespan_t const& data, const bool usePadding) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
-        esp_aes_setkey(&ctx, key, 128);
+        esp_aes_setkey(&ctx, reinterpret_cast<uint8_t const*>(&key), 128);
 
         // add post-padding
-        const auto padded = ((length + 16 /*- 1*/) >> 4) << 4; auto output = bytespan_t(data->data(), padded);
-        if (usePadding) { for (uint I=length;I<padded;I++) { output[I] = (padded - length); }}
+        const auto padded = ((data->size() + 16 /*- 1*/) >> 4) << 4;
+        auto output = usePadding ? bytespan_t(data->data(), padded) : data;
+        if (usePadding) { for (uint I=data->size();I<padded;I++) { output[I] = (padded - data->size()); }}
 
         //
-        for (uint I=0;I<(usePadding ? padded : length);I+=16) {
+        for (uint I=0;I<output->size();I+=16) {
             esp_aes_crypt_ecb(&ctx, ESP_AES_ENCRYPT, output->data()+I, output->data()+I);
         }
 
         // add padding value
-        if (usePadding) { length = padded; };
         esp_aes_free(&ctx);
-
-        //
         return output;
     }
 
@@ -58,7 +56,7 @@ namespace tc {
     bytespan_t decryptDataECB(block_t const& key,  bytespan_t const& data) {
         esp_aes_context ctx;
         esp_aes_init(&ctx);
-        esp_aes_setkey(&ctx, key, 128);
+        esp_aes_setkey(&ctx, reinterpret_cast<uint8_t const*>(&key), 128);
 
         //
         size_t length = data->size();
@@ -147,4 +145,5 @@ namespace tc {
     }
 };
 
+//
 #endif
