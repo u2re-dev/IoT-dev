@@ -5,8 +5,6 @@
 #include "../message/Message.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
-
-
 //
 writer_t MessageCodec::encodePayloadHeader(PayloadHeader& ph) {
     writer_t writer = {};

@@ -4,8 +4,6 @@
 //
 #include "../PASE.hpp"
 
-
-
 //
 uint8_t PASE::handlePASERequest(Payload const& payload) {
     if (payload.header.protocolCode != 0x20) return 0;

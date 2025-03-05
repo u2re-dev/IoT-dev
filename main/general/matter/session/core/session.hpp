@@ -8,9 +8,6 @@
 #include <stdexcept>
 
 //
-#include <mbedtls/aes.h>
-#include <mbedtls/ccm.h>
-#include <raii/misc.hpp>
 #include <std/types.hpp>
 
 //
@@ -44,7 +41,11 @@ public:
     Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {});
     Message makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& payload);
     Message decodeMessage(bytespan_t const& bytes) const;
+    bytespan_t encodeMessage(Message& message) const;
+
+    //, sessionKeys
     bytespan_t& decryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
+    bytespan_t& encryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
 
     //
     SessionKeys& setSessionKeys(SessionKeys const& sk) { sessionKeys = sk; return sessionKeys; }

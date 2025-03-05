@@ -16,20 +16,22 @@ struct Message {
 
     //
     bytespan_t messageExtension = {};
+    bytespan_t cryptPayload = {};
     bytespan_t rawPayload = {};
 };
 #pragma pack(pop)
 
 //
+struct SessionKeys  { intx::uint128 I2Rkeys = 0, R2Ikeys = 0, AttestationChallenge = 0; };
 struct MessageCodec {
-    static bytespan_t encodeMessage(Message& message);
+    static bytespan_t encodeMessage(Message& message, SessionKeys const& keys = {});
     static bytespan_t encodePayload(Payload& payload);
 
     //
     static Message buildMessage(PacketHeader const& header, Payload const& payload);
     static Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& set);
-    static Message decodeMessageF(reader_t packet) { return decodeMessage(packet); };
-    static Message decodeMessage(reader_t& packet);
+    static Message decodeMessageF(reader_t packet, SessionKeys const& keys = {}) { return decodeMessage(packet, keys); };
+    static Message decodeMessage(reader_t& packet, SessionKeys const& keys = {});
 
     //
     static Payload decodePayloadF(reader_t data) { return decodePayload(data); };
@@ -47,4 +49,8 @@ private:
     static PayloadHeader decodePayloadHeader(reader_t& reader);
     static writer_t encodePacketHeader(PacketHeader& ph);
     static writer_t encodePayloadHeader(PayloadHeader& ph);
+
+    //
+    static bytespan_t& encryptPayload(Message& message, bytespan_t const& aad, SessionKeys const& keys = {});
+    static bytespan_t& decryptPayload(Message& message, bytespan_t const& aad, SessionKeys const& keys = {});
 };

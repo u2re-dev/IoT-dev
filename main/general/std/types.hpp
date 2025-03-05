@@ -171,6 +171,10 @@ class reader_t {
     inline operator bytes_t() const { return make_bytes(memory->data() + offset, memory->data() + capacity); }
 
     //
+    inline bytespan_t& getMemory() { return memory; }
+    inline bytespan_t const& getMemory() const { return memory; }
+
+    //
     private: inline void checkSize(size_t const& n) const { if (capacity < (offset + n)) throw "Unexpected end of data"; }
 
     //

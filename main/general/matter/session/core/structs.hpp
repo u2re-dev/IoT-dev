@@ -11,9 +11,6 @@
 #include <std/types.hpp>
 
 //
-struct SessionKeys { intx::uint128 I2Rkeys = 0, R2Ikeys = 0, AttestationChallenge = 0; };
-
-//
 struct RNG {
     std::random_device dev;
     std::mt19937 rng;

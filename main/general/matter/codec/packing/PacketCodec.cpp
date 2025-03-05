@@ -2,8 +2,6 @@
 #include "../message/Message.hpp"
 #include "../diagnostic/Diagnostic.hpp"
 
-
-
 //
 PacketHeader MessageCodec::decodePacketHeader(reader_t& reader) {
     PacketHeader header = {};
@@ -59,22 +57,27 @@ writer_t MessageCodec::encodePacketHeader(PacketHeader& ph) {
     return writer;
 }
 
-
-
 //
-Message MessageCodec::decodeMessage(reader_t& reader) {
+Message MessageCodec::decodeMessage(reader_t& reader, SessionKeys const& keys) {
     Message dp = {};
-    dp.header             = decodePacketHeader(reader);
-    dp.messageExtension   = dp.header.securityFlags.hasMessageExtensions ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
-    dp.rawPayload         = reader.remainingBytes();
+    dp.header           = decodePacketHeader(reader);
+    dp.messageExtension = dp.header.securityFlags.hasMessageExtensions ? bytespan_t(reader.readBytes(reader.readUInt16())) : bytespan_t{};
+    dp.cryptPayload     = reader.remainingBytes(); bytespan_t aadWith = reader.getMemory();
+    dp.decodedPayload   = MessageCodec::decodePayloadF(MessageCodec::decryptPayload(dp, aadWith, keys));
     return dp;
 }
 
 //
-bytespan_t MessageCodec::encodeMessage(Message& packet) {
-    if (packet.messageExtension && (packet.messageExtension->size() || packet.header.securityFlags.hasMessageExtensions)) throw NotImplementedError("Message extensions not supported when encoding a packet.");
-    if (!packet.rawPayload) packet.rawPayload = encodePayload(packet.decodedPayload);
-    return concat({encodePacketHeader(packet.header), packet.rawPayload});
+bytespan_t MessageCodec::encodeMessage(Message& pt, SessionKeys const& keys) {
+    if (pt.messageExtension && (pt.messageExtension->size() || pt.header.securityFlags.hasMessageExtensions))
+        { throw NotImplementedError("Message extensions not supported when encoding a packet."); };
+
+    //
+    auto aad = encodePacketHeader(pt.header);
+    if (!pt.rawPayload) { pt.rawPayload = encodePayload(pt.decodedPayload); };
+    if ( pt.rawPayload && !pt.cryptPayload)
+        { pt.cryptPayload = encryptPayload(pt, aad, keys); }
+    return concat({aad, pt.cryptPayload});
 }
 
 //

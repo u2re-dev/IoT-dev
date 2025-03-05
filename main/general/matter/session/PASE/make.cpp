@@ -4,8 +4,6 @@
 //
 #include "../PASE.hpp"
 
-
-
 //
 bytespan_t PASE::makePASEResponse(Message const& request) {
     if (request.decodedPayload.header.protocolCode != 0x20) return {};
@@ -25,7 +23,9 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
 
     //
     Message outMsg = session.makeMessage(request, 0x21, resp);
-    auto encoded = MessageCodec::encodeMessage(outMsg); // before sending, make spake keys
+    decltype(auto) encoded = session.encodeMessage(outMsg);
+
+    //
     spake = std::make_shared<Spake2p>(params, req.pass, Spake2p::computeContextHash(request.decodedPayload.payload, outMsg.decodedPayload.payload));
     return encoded;
 }
@@ -42,7 +42,7 @@ bytespan_t PASE::makePAKE2(Message const& request) {
 
     //
     Message outMsg = session.makeMessage(request, 0x23, resp);
-    return MessageCodec::encodeMessage(outMsg);
+    return session.encodeMessage(outMsg);
 }
 
 //
@@ -51,7 +51,20 @@ bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+0) = 0;
     *reinterpret_cast<uint32_t*>(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;
-    return MessageCodec::encodeMessage(outMsg);
+    return session.encodeMessage(outMsg);
+}
+
+//
+SessionKeys& PASE::makeSessionKeys() {
+    auto info = hex::s2b("SessionKeys");
+    auto keys = crypto::hkdf_len(hkdf.Ke, info);
+
+    // TODO: better interpret code
+    return (session.setSessionKeys(SessionKeys {
+        *reinterpret_cast<intx::uint128*>(keys->data()),
+        *reinterpret_cast<intx::uint128*>(keys->data() + 16),
+        *reinterpret_cast<intx::uint128*>(keys->data() + 32)
+    }));
 }
 
 //

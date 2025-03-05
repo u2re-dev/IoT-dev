@@ -9,7 +9,7 @@
 //
 bytespan_t Session::makeAckMessage(Message const& request) {
     Message outMsg = makeMessage(request, 0x10);
-    return MessageCodec::encodeMessage(outMsg);
+    return MessageCodec::encodeMessage(outMsg, sessionKeys);
 }
 
 //
@@ -40,6 +40,20 @@ Message Session::makeMessage(Message const& request, uint8_t messageType, tlvcpp
     outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
     outMsg.decodedPayload.TLV = TLV; // planned to replace by TLV encoding
     return outMsg;
+}
+
+//
+Message Session::decodeMessage(bytespan_t const& bytes) const {
+    auto message = MessageCodec::decodeMessageF(bytes, sessionKeys);
+    MessageCodec::debugMessage(message);
+    MessageCodec::debugPayload(message.decodedPayload);
+    tlvcpp::debug_print_recursive(message.decodedPayload.TLV);
+    return message;
+}
+
+//
+bytespan_t Session::encodeMessage(Message& message) const {
+    return MessageCodec::encodeMessage(message, sessionKeys);
 }
 
 //
