@@ -33,9 +33,9 @@ Message makeMsgByReq(Message const& request) {
 
 
 
-// ProtocolCode::AckMessage (currently in PASE)
-bytespan_t Session::makeAckMessage(Message const& request) {
-    Message outMsg = makeMessage(request, 0x10);
+//
+bytespan_t Session::makeAckMessage(Message const& request, uint32_t const& opCode) {
+    Message outMsg = makeMessage(request, opCode);
     return MessageCodec::encodeMessage(outMsg, sessionKeys);
 }
 
@@ -68,7 +68,7 @@ Message Session::decodeMessage(bytespan_t const& bytes) const {
 
 //
 bytespan_t Session::encodeMessage(Message& message) const {
-    return MessageCodec::encodeMessage(debugMessage(message), sessionKeys);
+    return MessageCodec::encodeMessage(message, sessionKeys);
 }
 
 //

@@ -75,8 +75,7 @@ bytespan_t MessageCodec::encodeMessage(Message& pt, SessionKeys const& keys) {
     //
     auto aad = encodePacketHeader(pt.header);
     if (!pt.rawPayload) { pt.rawPayload = encodePayload(pt.decodedPayload); };
-    if ( pt.rawPayload && !pt.cryptPayload)
-        { pt.cryptPayload = encryptPayload(pt, aad, keys); }
+    if (pt.rawPayload && !pt.cryptPayload) { pt.cryptPayload = encryptPayload(pt, aad.toBytes(), keys); }
     return concat({aad, pt.cryptPayload});
 }
 

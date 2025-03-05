@@ -50,3 +50,8 @@ bytespan_t Cluster::makeReportDataMessage(Message const& request) {
     Message outMsg = session.makeMessage(request, IMProtocolCode::ReportDataMessage, resp);
     return session.encodeMessage(outMsg);
 }
+
+// I don't know ack op code
+bytespan_t Cluster::makeAckMessage(Message const& request) {
+    return session.makeAckMessage(request, 0x10);
+}

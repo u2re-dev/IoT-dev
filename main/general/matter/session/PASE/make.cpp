@@ -55,6 +55,11 @@ bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status
 }
 
 //
+bytespan_t PASE::makeAckMessage(Message const& request) {
+    return session.makeAckMessage(request, ProtocolCode::AckMessage);
+}
+
+//
 SessionKeys& PASE::makeSessionKeys() {
     auto info = hex::s2b("SessionKeys");
     auto keys = crypto::hkdf_len(hkdf.Ke, info);

@@ -47,6 +47,7 @@ public:
     bytespan_t makePASEResponse(Message const& request);
     bytespan_t makePAKE2(Message const& request);
     bytespan_t makeReportStatus(Message const& request, uint16_t const& status = 0);
+    bytespan_t makeAckMessage(Message const& request);
     SessionKeys& makeSessionKeys();
 
     //

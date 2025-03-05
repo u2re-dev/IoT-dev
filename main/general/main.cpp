@@ -65,7 +65,7 @@ PASE handlePASE(UDP& socket) {
             auto msg = session.decodeMessage(resp);
             if (msg.decodedPayload.header.protocolCode) {
                 if (msg.decodedPayload.header.exchangeFlags.requiresAck) {
-                    socket.sendResponse(session.makeAckMessage(msg));
+                    socket.sendResponse(pase.makeAckMessage(msg));
                 }
                 socket.sendResponse(pase.handleMessage(msg));
             };
@@ -89,7 +89,7 @@ Cluster handleIM(UDP& socket, Session const& raw) {
             auto msg = session.decodeMessage(resp);
             if (msg.decodedPayload.header.protocolCode) {
                 if (msg.decodedPayload.header.exchangeFlags.requiresAck) {
-                    socket.sendResponse(session.makeAckMessage(msg));
+                    socket.sendResponse(im.makeAckMessage(msg));
                 }
                 socket.sendResponse(im.handleMessage(msg));
             };

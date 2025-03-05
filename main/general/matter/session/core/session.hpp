@@ -44,8 +44,9 @@ public:
     //
     Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {});
     Message makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& payload);
-    bytespan_t makeAckMessage(Message const& request);
 
+    // ProtocolCode::AckMessage (currently in PASE)
+    bytespan_t makeAckMessage(Message const& request, uint32_t const& opCode = 0x10);
 
     //
     Message decodeMessage(bytespan_t const& bytes) const;

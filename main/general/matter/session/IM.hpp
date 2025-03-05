@@ -47,6 +47,7 @@ public:
     //
     tlvcpp::tlv_tree_node makeByPath(tlvcpp::tlv_tree_node const& path);
     bytespan_t makeReportDataMessage(Message const& request);
+    bytespan_t makeAckMessage(Message const& request);
 
     //
     SessionKeys& makeSessionKeys();
