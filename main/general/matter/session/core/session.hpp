@@ -19,34 +19,38 @@
 //
 #include "./structs.hpp"
 
-
-
 //
 class Session {
 public:
-    inline void init() { counter = rng.generate(); }
     inline Session(uint16_t const& sessionId = 0) : sessionId(sessionId) { init(); }
-    inline Session(Session const& channel, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
-    inline Session(Session const& channel, SessionKeys const& sessionKeys, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(sessionKeys), counter(channel.counter), rng(channel.rng)  {  }
     inline Session(SessionKeys const& sessionKeys, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(sessionKeys) { counter = rng.generate(); }
 
     //
+    inline Session(Session const& channel) : sessionId(channel.sessionId), sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
+    inline Session(Session const& channel, uint16_t const& sessionId) : sessionId(sessionId), sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
+    inline Session(Session const& channel, SessionKeys const& sessionKeys, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(sessionKeys), counter(channel.counter), rng(channel.rng)  {  }
+
+
+    //
+    inline void init() { counter = rng.generate(); }
     Session& operator =(Session const& channel) {
+        sessionId = channel.sessionId;
         sessionKeys = channel.sessionKeys;
         counter = channel.counter;
         return *this;
     }
 
+
     //
     Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {});
     Message makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& payload);
-    Message decodeMessage(bytespan_t const& bytes) const;
-    bytespan_t encodeMessage(Message& message) const;
     bytespan_t makeAckMessage(Message const& request);
 
-    //, sessionKeys
-    bytespan_t& decryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
-    bytespan_t& encryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
+
+    //
+    Message decodeMessage(bytespan_t const& bytes) const;
+    bytespan_t encodeMessage(Message& message) const;
+
 
     //
     SessionKeys& setSessionKeys(SessionKeys const& sk) { sessionKeys = sk; return sessionKeys; }

@@ -5,6 +5,34 @@
 #include "./session.hpp"
 #include "../../tlv/parts/debug.hpp"
 
+
+
+//
+Message& debugMessage(Message& message) {
+    MessageCodec::debugMessage(message);
+    MessageCodec::debugPayload(message.decodedPayload);
+    tlvcpp::debug_print_recursive(message.decodedPayload.TLV);
+    return message;
+}
+
+//
+Message makeMsgByReq(Message const& request) {
+    Message outMsg = {};
+    outMsg.header.securityFlags = request.header.securityFlags;
+    outMsg.decodedPayload.header.exchangeFlags.requiresAck = 0;
+    outMsg.decodedPayload.header.exchangeId = request.decodedPayload.header.exchangeId;
+    outMsg.decodedPayload.header.protocolId = request.decodedPayload.header.protocolId;
+    outMsg.decodedPayload.header.vendorId   = request.decodedPayload.header.vendorId;
+    if (request.header.sourceNodeId) { outMsg.header.destNodeId = request.header.sourceNodeId; };
+    if (request.header.destNodeId) { outMsg.header.sourceNodeId = request.header.destNodeId; };
+    if (request.decodedPayload.header.exchangeFlags.requiresAck) {
+        outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
+    }
+    return outMsg;
+}
+
+
+
 // ProtocolCode::AckMessage (currently in PASE)
 bytespan_t Session::makeAckMessage(Message const& request) {
     Message outMsg = makeMessage(request, 0x10);
@@ -13,56 +41,34 @@ bytespan_t Session::makeAckMessage(Message const& request) {
 
 //
 Message Session::makeMessage(Message const& request, uint8_t protocolCode, bytespan_t const& set) {
-    Message outMsg = {};
-    outMsg.header.messageId     = (counter++);
-    outMsg.header.sessionId     = sessionId;
-    outMsg.header.securityFlags = request.header.securityFlags;
-    if (request.header.sourceNodeId) { outMsg.header.destNodeId = request.header.sourceNodeId; };
-    if (request.header.destNodeId) { outMsg.header.sourceNodeId = request.header.destNodeId; };
-    outMsg.decodedPayload.header.exchangeFlags.requiresAck = 0;
-    outMsg.decodedPayload.header.vendorId     = request.decodedPayload.header.vendorId;
-    outMsg.decodedPayload.header.exchangeId   = request.decodedPayload.header.exchangeId;
-    outMsg.decodedPayload.header.protocolId   = request.decodedPayload.header.protocolId;
-    outMsg.decodedPayload.header.protocolCode = protocolCode;
+    auto outMsg = makeMsgByReq(request);
+    outMsg.header.sessionId = sessionId;
+    outMsg.header.messageId = counter++;
     outMsg.decodedPayload.payload = set;
-    if (request.decodedPayload.header.exchangeFlags.requiresAck) {
-        outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
-    }
+    outMsg.decodedPayload.header.protocolCode = protocolCode;
     return outMsg;
 }
 
 //
-Message Session::makeMessage(Message const& request, uint8_t protocolCode, tlvcpp::tlv_tree_node const& TLV) {
-    Message outMsg = {};
-    outMsg.header.messageId     = (counter++);
-    outMsg.header.sessionId     = sessionId;
-    outMsg.header.securityFlags = request.header.securityFlags;
-    if (request.header.sourceNodeId) { outMsg.header.destNodeId = request.header.sourceNodeId; };
-    if (request.header.destNodeId) { outMsg.header.sourceNodeId = request.header.destNodeId; };
-    outMsg.decodedPayload.header.exchangeFlags.requiresAck = 0;
-    outMsg.decodedPayload.header.vendorId     = request.decodedPayload.header.vendorId;
-    outMsg.decodedPayload.header.exchangeId   = request.decodedPayload.header.exchangeId;
-    outMsg.decodedPayload.header.protocolId   = request.decodedPayload.header.protocolId;
-    outMsg.decodedPayload.header.protocolCode = protocolCode;
-    outMsg.decodedPayload.TLV = TLV;
-    if (request.decodedPayload.header.exchangeFlags.requiresAck) {
-        outMsg.decodedPayload.header.ackedMessageId = request.header.messageId;
-    }
-    return outMsg;
+Message Session::makeMessage(Message const& request, uint8_t OP, tlvcpp::tlv_tree_node const& TLV) {
+    auto outMsg = makeMsgByReq(request);
+    outMsg.header.sessionId = sessionId;
+    outMsg.header.messageId = counter++;
+    outMsg.decodedPayload.header.protocolCode = OP;
+    outMsg.decodedPayload.TLV = TLV; return outMsg;
 }
+
+
 
 //
 Message Session::decodeMessage(bytespan_t const& bytes) const {
     auto message = MessageCodec::decodeMessageF(bytes, sessionKeys);
-    MessageCodec::debugMessage(message);
-    MessageCodec::debugPayload(message.decodedPayload);
-    tlvcpp::debug_print_recursive(message.decodedPayload.TLV);
-    return message;
+    return debugMessage(message);
 }
 
 //
 bytespan_t Session::encodeMessage(Message& message) const {
-    return MessageCodec::encodeMessage(message, sessionKeys);
+    return MessageCodec::encodeMessage(debugMessage(message), sessionKeys);
 }
 
 //
