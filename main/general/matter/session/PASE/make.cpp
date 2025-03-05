@@ -6,7 +6,7 @@
 
 //
 bytespan_t PASE::makePASEResponse(Message const& request) {
-    if (request.decodedPayload.header.protocolCode != 0x20) return {};
+    if (request.decodedPayload.header.protocolCode != ProtocolCode::PASERequest) return {};
 
     // TODO: fix memory lost
     bigint_t rand = mpi_t().random();
@@ -22,7 +22,7 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
     secp.add_child(params.salt, 02);
 
     //
-    Message outMsg = session.makeMessage(request, 0x21, resp);
+    Message outMsg = session.makeMessage(request, ProtocolCode::PASEResponse, resp);
     decltype(auto) encoded = session.encodeMessage(outMsg);
 
     //
@@ -32,7 +32,7 @@ bytespan_t PASE::makePASEResponse(Message const& request) {
 
 //
 bytespan_t PASE::makePAKE2(Message const& request) {
-    if (request.decodedPayload.header.protocolCode != 0x22) return {};
+    if (request.decodedPayload.header.protocolCode != ProtocolCode::PASEPake1) return {};
 
     //
     auto resp = tlvcpp::tlv_tree_node{};
@@ -41,13 +41,13 @@ bytespan_t PASE::makePAKE2(Message const& request) {
     resp.add_child((hkdf = spake->computeHKDFFromX(X_)).hBX, 02);
 
     //
-    Message outMsg = session.makeMessage(request, 0x23, resp);
+    Message outMsg = session.makeMessage(request, ProtocolCode::PASEPake2, resp);
     return session.encodeMessage(outMsg);
 }
 
 //
 bytespan_t PASE::makeReportStatus(Message const& request, uint16_t const& status) {
-    Message outMsg = session.makeMessage(request, 0x40, make_bytes(8));
+    Message outMsg = session.makeMessage(request, ProtocolCode::ReportStatus, make_bytes(8));
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+0) = 0;
     *reinterpret_cast<uint32_t*>(outMsg.decodedPayload.payload->data()+2) = request.decodedPayload.header.protocolId;
     *reinterpret_cast<uint16_t*>(outMsg.decodedPayload.payload->data()+6) = status;

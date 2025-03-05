@@ -1,7 +1,6 @@
 #ifndef D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE
 #define D4F62BFA_CBF0_4D2C_A09D_95C7B1FF78AE
 
-
 //
 #include <iostream>
 
@@ -20,14 +19,12 @@
 #include <raii/group.hpp>
 #include <raii/crypto.hpp>
 
-
 //
 constexpr  uint8_t H_VERSION             = 0x01;
 constexpr uint16_t SER_VERSION           = 0x0001;
 constexpr size_t CRYPTO_GROUP_SIZE_BYTES = 32;
 constexpr size_t CRYPTO_W_SIZE_BYTES     = CRYPTO_GROUP_SIZE_BYTES + 8;
 constexpr size_t PBKDF2_OUTLEN           = CRYPTO_W_SIZE_BYTES     * 2;
-
 
 //
 struct HKDF_HMAC { intx::uint128 Ke = 0; bigint_t hAY = 0, hBX = 0; };
@@ -36,9 +33,6 @@ struct W0W1L { ecp_t L; mpi_t w0, w1, rand; };
 
 //
 using uncomp_t = bytespan_t;
-
-
-//
 class Spake2p {
 public:
     inline ~Spake2p() {}
@@ -102,14 +96,14 @@ private:
         auto transcript = crypto::hash(computeTranscript(X, Y, Z, V));
 
         // TODO: use better references (don't copy memory)
-        decltype(auto) Ka = intx::uint128(transcript >> 0), Ke = intx::uint128(transcript >> 128);
+        decltype(auto) Ka = intx::uint128(transcript >> uint(0)), Ke = intx::uint128(transcript >> uint(128));
 
         //
         auto info = hex::s2b("ConfirmationKeys");
         auto KcAB = crypto::hkdf(Ka, info);
 
         // TODO: use better references (don't copy memory)
-        decltype(auto) KcA = intx::uint128(KcAB >> 0), KcB = intx::uint128(KcAB >> 128);
+        decltype(auto) KcA = intx::uint128(KcAB >> uint(0)), KcB = intx::uint128(KcAB >> uint(128));
 
         //
         HKDF_HMAC result = {};

@@ -26,6 +26,17 @@
 struct PBKDFParamRequest { bigint_t rand = 0; uint16_t sess = 0; uint8_t pass = 0; };
 
 //
+enum ProtocolCode : uint32_t {
+    AckMessage = 0x10,
+    PASERequest = 0x20,
+    PASEResponse = 0x21,
+    PASEPake1 = 0x22,
+    PASEPake2 = 0x23,
+    PASEPake3 = 0x24,
+    ReportStatus = 0x40
+};
+
+//
 class PASE {
 public:
     inline void init() { session = Session(); status_ = -1; }
@@ -44,15 +55,15 @@ public:
     uint8_t handlePAKE3(Payload const& payload);
 
     //
-    inline Session makeSession() { return Session(makeSessionKeys()); }
+    inline Session makeSession() { return Session(session, makeSessionKeys(), req.sess); }
     inline Session& getSession() { return session; }
     inline Session const& getSession() const { return session; }
     inline int const& status() const { return status_; }
     inline bytespan_t handleMessage(Message const& message) {
         switch (message.decodedPayload.header.protocolCode) {
-            case 0x20: { handlePASERequest(message.decodedPayload); return makePASEResponse(message); break; };
-            case 0x22: { handlePAKE1(message.decodedPayload); return makePAKE2(message); break; };
-            case 0x24: { handlePAKE3(message.decodedPayload); return makeReportStatus(message, 0); };
+            case ProtocolCode::PASERequest: { handlePASERequest(message.decodedPayload); return makePASEResponse(message); break; };
+            case ProtocolCode::PASEPake1: { handlePAKE1(message.decodedPayload); return makePAKE2(message); break; };
+            case ProtocolCode::PASEPake3: { handlePAKE3(message.decodedPayload); return makeReportStatus(message, 0); };
             default: return {};
         }
         return {};

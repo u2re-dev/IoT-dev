@@ -19,13 +19,16 @@
 //
 #include "./structs.hpp"
 
+
+
 //
 class Session {
 public:
     inline void init() { counter = rng.generate(); }
-    inline Session() { init(); }
-    inline Session(Session const& channel) : sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
-    inline Session(SessionKeys const& sessionKeys) : sessionKeys(sessionKeys) { counter = rng.generate(); }
+    inline Session(uint16_t const& sessionId = 0) : sessionId(sessionId) { init(); }
+    inline Session(Session const& channel, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(channel.sessionKeys), counter(channel.counter), rng(channel.rng) {  }
+    inline Session(Session const& channel, SessionKeys const& sessionKeys, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(sessionKeys), counter(channel.counter), rng(channel.rng)  {  }
+    inline Session(SessionKeys const& sessionKeys, uint16_t const& sessionId = 0) : sessionId(sessionId), sessionKeys(sessionKeys) { counter = rng.generate(); }
 
     //
     Session& operator =(Session const& channel) {
@@ -35,13 +38,11 @@ public:
     }
 
     //
-    bytespan_t makeAckMessage(Message const& request);
-
-    //
     Message makeMessage(Message const& request, uint8_t messageType, bytespan_t const& payload = {});
     Message makeMessage(Message const& request, uint8_t messageType, tlvcpp::tlv_tree_node const& payload);
     Message decodeMessage(bytespan_t const& bytes) const;
     bytespan_t encodeMessage(Message& message) const;
+    bytespan_t makeAckMessage(Message const& request);
 
     //, sessionKeys
     bytespan_t& decryptPayload(Message& message,  bytespan_t const& bytes = {}) const;
@@ -55,6 +56,7 @@ public:
 private: //
     SessionKeys sessionKeys = {};
     uintptr_t counter = 0;
+    uint16_t sessionId = 0;
     RNG rng = {};
 };
 
